@@ -1,0 +1,75 @@
+const db = require('../startup/database');
+
+// Create a new crop for the logged-in user
+const createCrop = (req, res) => {
+  const { cropCalendar } = req.body;
+  const userId = req.userId;
+
+  const sql = `
+    INSERT INTO ongoingCultivations (userId) VALUES (?)
+  `;
+  db.query(sql, [userId], (err, result) => {
+    if (err) {
+      return res.status(500).send('Error creating ongoing cultivation: ' + err);
+    }
+
+    const ongoingCultivationId = result.insertId;
+
+    const sql2 = `
+      INSERT INTO ongoingCultivationsCrops (ongoingCultivationId, cropCalendar) VALUES (?, ?)
+    `;
+    db.query(sql2, [ongoingCultivationId, cropCalendar], (err, result) => {
+      if (err) {
+        return res.status(500).send('Error creating ongoing cultivation crop: ' + err);
+      }
+      res.status(201).send('Crop created successfully.');
+    });
+  });
+};
+
+// View crops for the logged-in user
+const viewCrops = (req, res) => {
+  const userId = req.userId;
+
+  const sql = `
+    SELECT c.id, c.cropCalendar, cc.cropName
+    FROM ongoingCultivations oc
+    JOIN ongoingCultivationsCrops c ON oc.id = c.ongoingCultivationId
+    JOIN cropCalender cc ON c.cropCalendar = cc.id
+    WHERE oc.userId = ?
+  `;
+  db.query(sql, [userId], (err, results) => {
+    if (err) {
+      return res.status(500).send('Error fetching crops: ' + err);
+    }
+    res.status(200).json(results);
+  });
+};
+
+// Delete a crop for the logged-in user
+const deleteCrop = (req, res) => {
+  const { cropId } = req.params;
+  const userId = req.userId;
+
+  const sql = `
+    DELETE c, oc
+    FROM ongoingCultivationsCrops c
+    JOIN ongoingCultivations oc ON c.ongoingCultivationId = oc.id
+    WHERE c.id = ? AND oc.userId = ?
+  `;
+  db.query(sql, [cropId, userId], (err, result) => {
+    if (err) {
+      return res.status(500).send('Error deleting crop: ' + err);
+    }
+    if (result.affectedRows === 0) {
+      return res.status(404).send('Crop not found or not authorized to delete');
+    }
+    res.status(200).send('Crop deleted successfully.');
+  });
+};
+
+module.exports = {
+  createCrop,
+  viewCrops,
+  deleteCrop
+};
