@@ -2,15 +2,7 @@ const jwt = require("jsonwebtoken");
 const db = require("../startup/database");
 const asyncHandler = require("express-async-handler");
 // const {loginUserSchema} =require('../validations/userAuth-validation')
-//const loginUserSchema=require('../validations/userAuth-validation')
-// const {
-//   loginUserSchema,
-//   signupUserSchema,
-//   updatePhoneNumberSchema,
-//   signupCheckerSchema,
-//   updateFirstLastNameSchema
-// } = require("../validations/UserAuth-validation");
-//const { updatePhoneNumberSchema } = require('../validations/userAuth-validation');
+const ValidationSchema=require('../validations/userAuth-validation')
 const userAuthDao = require("../dao/userAuth-dao");
 const userProfileDao = require("../dao/userAuth-dao");
 const signupDao = require('../dao/userAuth-dao');
@@ -18,9 +10,8 @@ const signupDao = require('../dao/userAuth-dao');
 exports.loginUser = async (req, res) => {
   try {
     console.log("hi..the sec key is", process.env.JWT_SECRET);
-    // await loginUserSchema.validateAsync(req.body);
-
-    const phonenumber = req.body.phonenumber;
+    
+    const { phonenumber } = await ValidationSchema.loginUserSchema.validateAsync(req.body);
     console.log("hi phonenumber", phonenumber);
 
     const users = await userAuthDao.loginUser(phonenumber);
@@ -69,9 +60,7 @@ exports.SignupUser = asyncHandler(async (req, res) => {
   try {
     // Validate the request body using Joi schema
     // await signupUserSchema.validateAsync(req.body);
-
-    const { firstName, lastName, phoneNumber, NICnumber } = req.body;
-
+    const { firstName, lastName, phoneNumber, NICnumber } = await ValidationSchema.signupUserSchema.validateAsync(req.body);
     // Format phone number to ensure "+" is added at the start, if not present
     const formattedPhoneNumber = `+${String(phoneNumber).replace(/^\+/, "")}`;
 
@@ -140,7 +129,7 @@ exports.getProfileDetails = asyncHandler(async (req, res) => {
 
 exports.updatePhoneNumber = asyncHandler(async (req, res) => {
   const userId = req.user.id; // Extract userId from token
-  const { newPhoneNumber } = req.body; // New phone number from request body
+  const { newPhoneNumber } = await ValidationSchema.updatePhoneNumberSchema.validateAsync(req.body);
 
   // Validate the request body
   // await updatePhoneNumberSchema.validateAsync(req.body);
@@ -171,8 +160,7 @@ exports.signupChecker = asyncHandler(async (req, res) => {
   try {
       // Validate the request body
       // await signupCheckerSchema.validateAsync(req.body);
-
-      const { phoneNumber, NICnumber } = req.body;
+      const { phoneNumber, NICnumber  } = await ValidationSchema.signupCheckerSchema.validateAsync(req.body);
 
       // Call the DAO to check if the details exist in the database
       const results = await signupDao.checkSignupDetails(phoneNumber, NICnumber);
@@ -220,7 +208,8 @@ exports.signupChecker = asyncHandler(async (req, res) => {
 exports.updateFirstLastName = asyncHandler(async (req, res) => {
   try {
       // Validate the request body
-      const { firstName, lastName } = await updateFirstLastNameSchema.validateAsync(req.body);
+      
+      const { firstName, lastName } = await ValidationSchema.updateFirstLastNameSchema.validateAsync(req.body);
       const userId = req.user.id;
 
       // Update first and last name using DAO
