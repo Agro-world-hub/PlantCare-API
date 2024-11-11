@@ -1,11 +1,24 @@
-// const Joi = require('joi');
+const Joi = require("joi");
 
-// // Validator schema for creating a post
-// exports.createPostSchema = Joi.object({
-//     chatHeadingId: Joi.number().integer().required().label('Chat Heading ID'),
-//     chatId: Joi.number().integer().required().label('Chat ID'),
-//     heading: Joi.string().required().label('Heading'),
-//     message: Joi.string().required().label('Message'),
-// });
+//get all posts
+exports.getPostsSchema = Joi.object({
+  page: Joi.number().integer().min(1).default(1).label("Page"),
+  limit: Joi.number().integer().min(1).default(10).label("Limit"),
+});
 
-// just started. has a issue with table
+exports.getRepliesSchema = Joi.object({
+  chatId: Joi.number().integer().required().label("Chat ID"),
+});
+
+// Validation for creating a reply
+exports.createReplySchema = Joi.object({
+  chatId: Joi.number().integer().required().label("Chat ID"),
+  replyMessage: Joi.string().required().label("Reply Message"),
+  replyId: Joi.any().optional(),
+});
+
+// Validation for creating a post
+exports.createPostSchema = Joi.object({
+  heading: Joi.string().required().label("Heading"),
+  message: Joi.string().required().label("Message"),
+});

@@ -4,6 +4,8 @@ const {
   getProfileDetails,
   updatePhoneNumber,
   SignUp,
+  signupChecker,
+  updateFirstLastName
 } = require("../Controllers/userAuth.controller");
 const auth = require("../Middlewares/auth.middleware");
 const userAuthEp = require("../end-point/userAuth-ep");
@@ -17,5 +19,14 @@ router.post("/user-login", userAuthEp.loginUser);
 router.get("/user-profile", auth, userAuthEp.getProfileDetails);
 
 router.put("/user-updatePhone", auth, userAuthEp.updatePhoneNumber);
+
+// router.post("/user-register-checker", signupChecker );
+router.post("/user-register-checker", userAuthEp.signupChecker );
+
+// router.put("/user-update-names", auth, updateFirstLastName );
+router.put("/user-update-names", auth, userAuthEp.updateFirstLastName );
+
+
+
 
 module.exports = router;

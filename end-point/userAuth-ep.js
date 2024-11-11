@@ -3,19 +3,22 @@ const db = require("../startup/database");
 const asyncHandler = require("express-async-handler");
 // const {loginUserSchema} =require('../validations/userAuth-validation')
 //const loginUserSchema=require('../validations/userAuth-validation')
-const {
-  loginUserSchema,
-  signupUserSchema,
-  updatePhoneNumberSchema,
-} = require("../validations/UserAuth-validation");
+// const {
+//   loginUserSchema,
+//   signupUserSchema,
+//   updatePhoneNumberSchema,
+//   signupCheckerSchema,
+//   updateFirstLastNameSchema
+// } = require("../validations/UserAuth-validation");
 //const { updatePhoneNumberSchema } = require('../validations/userAuth-validation');
 const userAuthDao = require("../dao/userAuth-dao");
 const userProfileDao = require("../dao/userAuth-dao");
+const signupDao = require('../dao/userAuth-dao');
 
 exports.loginUser = async (req, res) => {
   try {
     console.log("hi..the sec key is", process.env.JWT_SECRET);
-    await loginUserSchema.validateAsync(req.body);
+    // await loginUserSchema.validateAsync(req.body);
 
     const phonenumber = req.body.phonenumber;
     console.log("hi phonenumber", phonenumber);
@@ -65,7 +68,7 @@ exports.loginUser = async (req, res) => {
 exports.SignupUser = asyncHandler(async (req, res) => {
   try {
     // Validate the request body using Joi schema
-    await signupUserSchema.validateAsync(req.body);
+    // await signupUserSchema.validateAsync(req.body);
 
     const { firstName, lastName, phoneNumber, NICnumber } = req.body;
 
@@ -140,7 +143,7 @@ exports.updatePhoneNumber = asyncHandler(async (req, res) => {
   const { newPhoneNumber } = req.body; // New phone number from request body
 
   // Validate the request body
-  await updatePhoneNumberSchema.validateAsync(req.body);
+  // await updatePhoneNumberSchema.validateAsync(req.body);
 
   // Call the DAO to update the phone number
   const results = await userAuthDao.updateUserPhoneNumber(
@@ -161,4 +164,91 @@ exports.updatePhoneNumber = asyncHandler(async (req, res) => {
     status: "success",
     message: "Phone number updated successfully",
   });
+});
+
+
+exports.signupChecker = asyncHandler(async (req, res) => {
+  try {
+      // Validate the request body
+      // await signupCheckerSchema.validateAsync(req.body);
+
+      const { phoneNumber, NICnumber } = req.body;
+
+      // Call the DAO to check if the details exist in the database
+      const results = await signupDao.checkSignupDetails(phoneNumber, NICnumber);
+
+      let phoneNumberExists = false;
+      let NICnumberExists = false;
+
+      // Iterate over the results to determine existence of each field
+      results.forEach((user) => {
+          if (user.phoneNumber === `+${String(phoneNumber).replace(/^\+/, "")}`) {
+              phoneNumberExists = true;
+          }
+          if (user.NICnumber === NICnumber) {
+              NICnumberExists = true;
+          }
+      });
+
+      // Respond based on the existence of the data
+      if (phoneNumberExists && NICnumberExists) {
+          return res.status(200).json({ message: "This Phone Number and NIC already exist." });
+      } else if (phoneNumberExists) {
+          return res.status(200).json({ message: "This Phone Number already exists." });
+      } else if (NICnumberExists) {
+          return res.status(200).json({ message: "This NIC already exists." });
+      }
+
+      // If no matching records were found, return a success message
+      res.status(200).json({ message: "Both fields are available!" });
+
+  } catch (err) {
+      console.error("Error in signupChecker:", err);
+
+      if (err.isJoi) {
+          return res.status(400).json({
+              status: 'error',
+              message: err.details[0].message,
+          });
+      }
+
+      res.status(500).json({ message: "Internal Server Error!" });
+  }
+});
+
+
+exports.updateFirstLastName = asyncHandler(async (req, res) => {
+  try {
+      // Validate the request body
+      const { firstName, lastName } = await updateFirstLastNameSchema.validateAsync(req.body);
+      const userId = req.user.id;
+
+      // Update first and last name using DAO
+      const affectedRows = await userAuthDao.updateFirstLastName(userId, firstName, lastName);
+
+      // If no rows were affected, return user not found error
+      if (affectedRows === 0) {
+          return res.status(404).json({
+              status: 'error',
+              message: 'User not found'
+          });
+      }
+
+      // Successful update
+      return res.status(200).json({
+          status: 'success',
+          message: 'First and last name updated successfully'
+      });
+  } catch (err) {
+      console.error("Error updating first and last name:", err);
+
+      if (err.isJoi) {
+          return res.status(400).json({
+              status: 'error',
+              message: err.details[0].message,
+          });
+      }
+
+      res.status(500).json({ error: "Internal Server Error" });
+  }
 });

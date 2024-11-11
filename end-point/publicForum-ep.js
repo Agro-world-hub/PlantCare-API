@@ -1,24 +1,138 @@
-// const jwt = require('jsonwebtoken');
-// const asyncHandler = require("express-async-handler");
-// const { createPostSchema } = require('../validations/createPost-validation'); // Import the validator
-// const PostDAO = require('../dao/PostDAO'); // Import the Post DAO
+const asyncHandler = require("express-async-handler");
 
-// // Controller for creating a post
-// exports.createPost = asyncHandler(async (req, res) => {
-//     const userId = req.user.id; // Get the user ID from the request
-//     const { chatHeadingId, chatId, heading, message } = req.body; // Destructure request body
+const {
+  getPostsSchema,
+  getRepliesSchema,
+  createReplySchema,
+  createPostSchema,
+} = require("../validations/publicForum-validation");
+const postsDao = require("../dao/publicForum-dao");
 
-//     // Validate incoming request data
-//     await createPostSchema.validateAsync(req.body);
+exports.getPosts = asyncHandler(async (req, res) => {
+  try {
+    // Validate query parameters
+    const { page, limit } = await getPostsSchema.validateAsync(req.query);
+    const offset = (page - 1) * limit;
 
-//     try {
-//         // Call the DAO method to create a post
-//         const postId = await PostDAO.createPost(userId, chatHeadingId, chatId, heading, message);
-//         res.status(201).json({ message: 'Post created', postId }); // Send success response with post ID
-//     } catch (err) {
-//         console.error("Error creating post:", err);
-//         res.status(500).json({ status: 'error', message: 'An error occurred while creating the post.' });
-//     }
-// });
+    // Fetch posts using DAO
+    const posts = await postsDao.getPaginatedPosts(limit, offset);
 
-// just started. has a issue with table
+    // Fetch the total number of posts using DAO
+    const totalPosts = await postsDao.getTotalPostsCount();
+
+    // Send the response
+    res.status(200).json({
+      total: totalPosts,
+      posts,
+    });
+  } catch (err) {
+    console.error("Error fetching posts:", err);
+
+    if (err.isJoi) {
+      return res.status(400).json({
+        status: "error",
+        message: err.details[0].message,
+      });
+    }
+
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+exports.getReplies = asyncHandler(async (req, res) => {
+  try {
+    // Validate the request parameter
+    const { chatId } = await getRepliesSchema.validateAsync(req.params);
+
+    // Fetch replies using DAO
+    const replies = await postsDao.getRepliesByChatId(chatId);
+
+    // Send the response
+    res.status(200).json(replies);
+  } catch (err) {
+    console.error("Error fetching replies:", err);
+
+    if (err.isJoi) {
+      return res.status(400).json({
+        status: "error",
+        message: err.details[0].message,
+      });
+    }
+
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+exports.createReply = asyncHandler(async (req, res) => {
+  try {
+    // Validate the request body
+    const { chatId, replyMessage } = await createReplySchema.validateAsync(
+      req.body
+    );
+    const replyId = req.user.id;
+
+    // Create reply using DAO
+    const newReplyId = await postsDao.createReply(
+      chatId,
+      replyId,
+      replyMessage
+    );
+
+    // Send the response
+    res.status(201).json({ message: "Reply created", replyId: newReplyId });
+  } catch (err) {
+    console.error("Error creating reply:", err);
+
+    if (err.isJoi) {
+      return res.status(400).json({
+        status: "error",
+        message: err.details[0].message,
+      });
+    }
+
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+exports.createPost = asyncHandler(async (req, res) => {
+  try {
+    // Validate the request body
+    const { heading, message } = await createPostSchema.validateAsync(req.body);
+    const userId = req.user.id;
+
+    console.log("Heading:", heading);
+    console.log("Message:", message);
+    console.log("File received:", req.file); // Log file received
+
+    let postimage = null;
+
+    // Check if an image was uploaded
+    if (req.file) {
+      postimage = req.file.buffer; // Store image in buffer as binary data
+    } else {
+      console.log("No image uploaded");
+    }
+
+    // Create post using DAO
+    const newPostId = await postsDao.createPost(
+      userId,
+      heading,
+      message,
+      postimage
+    );
+
+    // Send the response
+    res.status(201).json({ message: "Post created", postId: newPostId });
+  } catch (err) {
+    console.error("Error creating post:", err);
+
+    if (err.isJoi) {
+      return res.status(400).json({
+        status: "error",
+        message: err.details[0].message,
+      });
+    }
+
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});

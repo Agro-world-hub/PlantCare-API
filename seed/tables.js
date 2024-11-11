@@ -8,7 +8,8 @@ const createUsersTable = () => {
       lastName VARCHAR(50) NOT NULL,
       phoneNumber VARCHAR(12) NOT NULL,
       NICnumber VARCHAR(12) NOT NULL,
-      profileImage VARCHAR(150),
+      profileImage LONGBLOB,
+      farmerQr LONGBLOB,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `;
@@ -23,15 +24,36 @@ const createUsersTable = () => {
     });
 };
 
+const createAdminUserRolesTable = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS adminroles (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      role VARCHAR(100) NOT NULL
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating adminUserRoles table: ' + err);
+            } else {
+                resolve('adminUserRoles table created successfully.');
+            }
+        });
+    });
+};
+
 const createAdminUsersTable = () => {
     const sql = `
-    CREATE TABLE IF NOT EXISTS adminUsers (
+    CREATE TABLE IF NOT EXISTS adminusers (
       id INT AUTO_INCREMENT PRIMARY KEY,
       mail VARCHAR(50) NOT NULL,
       userName VARCHAR(30) NOT NULL,
-      password VARCHAR(20) NOT NULL,
-      role VARCHAR(20) NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      password VARCHAR(255) NOT NULL,
+      role INT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (role) REFERENCES adminroles(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
     )
   `;
     return new Promise((resolve, reject) => {
@@ -56,11 +78,13 @@ const createContentTable = () => {
       descriptionEnglish  TEXT NOT NULL,
       descriptionSinhala TEXT NOT NULL,
       descriptionTamil TEXT NOT NULL,
-      image VARCHAR(150),
+      image LONGBLOB,
       status VARCHAR(15) NOT NULL,
+      publishDate TIMESTAMP,
+      expireDate TIMESTAMP NULL DEFAULT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       createdBy INT,
-      FOREIGN KEY (createdBy) REFERENCES adminUsers(id)
+      FOREIGN KEY (createdBy) REFERENCES adminusers(id)
         ON DELETE SET NULL
         ON UPDATE CASCADE
     )
@@ -71,17 +95,19 @@ const createContentTable = () => {
                 reject('Error creating content table: ' + err);
             } else {
                 resolve('Content table created successfully.');
-            }    
-        });  
+            }
+        });
     });
 };
 
 
 const createCropCalenderTable = () => {
     const sql = `
-    CREATE TABLE IF NOT EXISTS cropCalender (
+    CREATE TABLE IF NOT EXISTS cropcalender (
       id INT AUTO_INCREMENT PRIMARY KEY,
       cropName VARCHAR(50) NOT NULL,
+      sinhalaCropName VARCHAR(50) NOT NULL,
+      tamilCropName VARCHAR(50) NOT NULL,
       variety VARCHAR(50) NOT NULL,
       sinhalaVariety VARCHAR(50) NOT NULL,
       tamilVariety VARCHAR(50) NOT NULL,
@@ -91,7 +117,7 @@ const createCropCalenderTable = () => {
       SpecialNotes TEXT,
       sinhalaSpecialNotes TEXT,
       tamilSpecialNotes TEXT,
-      image VARCHAR(150),
+      image LONGBLOB,
       cropColor VARCHAR(10),
       SuitableAreas TEXT NOT NULL,
       Category VARCHAR(255) NOT NULL,
@@ -149,7 +175,7 @@ const createCropCalenderDaysTable = () => {
 
 const createOngoingCultivationsTable = () => {
     const sql = `
-    CREATE TABLE IF NOT EXISTS ongoingCultivations (
+    CREATE TABLE IF NOT EXISTS ongoingcultivations (
       id INT AUTO_INCREMENT PRIMARY KEY,
       userId INT,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -171,22 +197,54 @@ const createOngoingCultivationsTable = () => {
 
 
 
+const createXlsxHistoryTable = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS xlsxhistory (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      xlName VARCHAR(50) NOT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      startTime TIME DEFAULT NULL,
+      endTime TIME DEFAULT NULL,
+      date DATE DEFAULT NULL
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating xlsxhistory table: ' + err);
+            } else {
+                resolve('xlsxhistory table created successfully.');
+            }
+        });
+    });
+};
+
+
+
+
+
+
 const createMarketPriceTable = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS marketprice (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      titleEnglish TEXT NOT NULL,
-      titleSinhala TEXT NOT NULL,
-      titleTamil TEXT NOT NULL,
-      descriptionEnglish TEXT NOT NULL,
-      descriptionSinhala TEXT NOT NULL,
-      descriptionTamil TEXT NOT NULL,
-      image VARCHAR(150),
+      cropId INT(11) DEFAULT NULL,
+      xlindex INT(11) DEFAULT NULL,
+      grade VARCHAR(1) COLLATE utf8mb4_general_ci DEFAULT NULL,
+      price DECIMAL(10,2) DEFAULT NULL,
+      date DATE DEFAULT NULL,
+      startTime TIME DEFAULT NULL,
+      endTime TIME DEFAULT NULL,
       status VARCHAR(20) NOT NULL,
-      price VARCHAR(5) NOT NULL,
-      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      createdBy INT,
+      createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      createdBy INT(11) DEFAULT NULL,
+      FOREIGN KEY (cropId) REFERENCES cropcalender(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE,
       FOREIGN KEY (createdBy) REFERENCES adminUsers(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE,
+      FOREIGN KEY (xlindex) REFERENCES xlsxhistory(id)
         ON DELETE SET NULL
         ON UPDATE CASCADE
     )
@@ -203,9 +261,38 @@ const createMarketPriceTable = () => {
 };
 
 
+const createMarketPriceServeTable = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS marketpriceserve (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      marketPriceId INT(11) DEFAULT NULL,
+      xlindex INT(11) DEFAULT NULL,
+      newPrice DECIMAL(10,2) DEFAULT NULL,
+      collectionCenterId INT(11) DEFAULT NULL,
+      FOREIGN KEY (marketPriceId) REFERENCES marketprice(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+      FOREIGN KEY (collectionCenterId) REFERENCES collectioncenter(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating marketpriceserve table: ' + err);
+            } else {
+                resolve('mmarketpriceserve table created successfully.');
+            }
+        });
+    });
+};
+
+
+
 const createOngoingCultivationsCropsTable = () => {
     const sql = `
-    CREATE TABLE IF NOT EXISTS ongoingCultivationsCrops (
+    CREATE TABLE IF NOT EXISTS ongoingcultivationscrops (
       id INT AUTO_INCREMENT PRIMARY KEY,
       ongoingCultivationId INT,
       cropCalendar INT,
@@ -435,6 +522,7 @@ const createOwnershipOwnerFixedAsset = () => {
 };
 
 //07
+
 const createOwnershipLeastFixedAsset = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS ownershipleastfixedasset (
@@ -442,7 +530,8 @@ const createOwnershipLeastFixedAsset = () => {
       buildingAssetId INT NULL,
       landAssetId INT NULL,
       startDate DATETIME NOT NULL,
-      duration INT(8) NOT NULL,
+      durationYears INT(8) NOT NULL,
+      durationMonths INT(8) NOT NULL,
       leastAmountAnnually DECIMAL(8, 2) NOT NULL,
       FOREIGN KEY (buildingAssetId) REFERENCES buildingfixedasset(id)
         ON DELETE SET NULL
@@ -551,20 +640,30 @@ const createCurrentAssetRecord = () => {
 
 const createSlaveCropCalenderDaysTable = () => {
     const sql = `
-      CREATE TABLE IF NOT EXISTS slaveCropcalendardays (
+      CREATE TABLE IF NOT EXISTS slavecropcalendardays (
       id INT AUTO_INCREMENT PRIMARY KEY,
       userId INT(11) NULL,
       cropCalendarId INT(11) NULL,
-      cropCalendarDaysId INT(11) NULL,
+      taskIndex INT(255) NULL,
+      days INT(11) NULL,
+      taskTypeEnglish TEXT COLLATE latin1_swedish_ci NULL,
+      taskTypeSinhala TEXT COLLATE utf8_unicode_ci NULL,
+      taskTypeTamil TEXT COLLATE utf8_unicode_ci NULL,
+      taskCategoryEnglish TEXT COLLATE latin1_swedish_ci NULL,
+      taskCategorySinhala TEXT COLLATE utf8_unicode_ci NULL,
+      taskCategoryTamil TEXT COLLATE utf8_unicode_ci NULL,
+      taskEnglish TEXT COLLATE latin1_swedish_ci NULL,
+      taskSinhala TEXT COLLATE utf8_unicode_ci NULL,
+      taskTamil TEXT COLLATE utf8_unicode_ci NULL,
+      taskDescriptionEnglish TEXT COLLATE latin1_swedish_ci NULL,
+      taskDescriptionSinhala TEXT COLLATE utf8_unicode_ci NULL,
+      taskDescriptionTamil TEXT COLLATE utf8_unicode_ci NULL,
       status VARCHAR(20), 
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id)
           ON DELETE CASCADE
           ON UPDATE CASCADE,
       FOREIGN KEY (cropCalendarId) REFERENCES cropCalender(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-      FOREIGN KEY (cropCalendarDaysId) REFERENCES cropcalendardays(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
   );
@@ -580,53 +679,54 @@ const createSlaveCropCalenderDaysTable = () => {
     });
 };
 
-const createChatHeadTable = () => {
+const createpublicforumposts = () => {
     const sql = `
-      CREATE TABLE IF NOT EXISTS chathead (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      userId INT(11) NULL,
-      chatTitle VARCHAR(20) NOT NULL,
-      chatDescription TEXT NOT NULL,
-      image VARCHAR(150) NOT NULL,
-      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (userId) REFERENCES users(id)
-          ON DELETE CASCADE
-          ON UPDATE CASCADE
+      CREATE TABLE IF NOT EXISTS publicforumposts (
+            id int AUTO_INCREMENT PRIMARY KEY,
+            userId int NOT NULL,
+            heading varchar(255) NOT NULL,
+            message text NOT NULL,
+            createdAt timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            postimage longblob,
+            FOREIGN KEY (userId) REFERENCES users(id)
+                ON DELETE CASCADE
+                ON UPDATE CASCADE
   );
     `;
     return new Promise((resolve, reject) => {
         db.query(sql, (err, result) => {
             if (err) {
-                reject('Error chat head table: ' + err);
+                reject('Error publicforumposts table: ' + err);
             } else {
-                resolve('chat head table created successfully.');
+                resolve('publicforumposts table created successfully.');
             }
         });
     });
 };
 
-const createReplyChat = () => {
+const createpublicforumreplies = () => {
     const sql = `
-      CREATE TABLE IF NOT EXISTS replychat (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      userId INT(11) NULL,
-      chatHeadId INT(11) NULL,
-      chatDescription TEXT NOT NULL,
-      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (userId) REFERENCES users(id)
-          ON DELETE CASCADE
-          ON UPDATE CASCADE,
-      FOREIGN KEY (chatHeadId) REFERENCES chathead(id)
-          ON DELETE CASCADE
-          ON UPDATE CASCADE
+      CREATE TABLE IF NOT EXISTS publicforumreplies (
+        id int AUTO_INCREMENT PRIMARY KEY,
+        chatId int NOT NULL,
+        replyId int NOT NULL,
+        replyMessage text NOT NULL,
+        createdAt timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (replyId) REFERENCES users(id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE,
+        FOREIGN KEY (chatId) REFERENCES publicforumposts(id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE
+
   );
     `;
     return new Promise((resolve, reject) => {
         db.query(sql, (err, result) => {
             if (err) {
-                reject('Error reply chat table: ' + err);
+                reject('Error publicforumreplies table: ' + err);
             } else {
-                resolve('reply chat table created successfully.');
+                resolve('publicforumreplies table created successfully.');
             }
         });
     });
@@ -641,22 +741,31 @@ const createCollectionOfficer = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS collectionofficer (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      firstName VARCHAR(50) NOT NULL,
-      lastName VARCHAR(50) NOT NULL,
+      centerId INT NOT NULL,
+      firstNameEnglish VARCHAR(50) NOT NULL,
+      firstNameSinhala VARCHAR(50) NOT NULL,
+      firstNameTamil VARCHAR(50) NOT NULL,
+      lastNameEnglish VARCHAR(50) NOT NULL,
+      lastNameSinhala VARCHAR(50) NOT NULL,
+      lastNameTamil VARCHAR(50) NOT NULL,
       phoneNumber01 VARCHAR(12) NOT NULL,
       phoneNumber02 VARCHAR(12) NOT NULL,
-      image VARCHAR(150) NOT NULL,
+      image LONGBLOB,
+      QRcode LONGBLOB,
       nic VARCHAR(12) NOT NULL,
       email VARCHAR(50) NOT NULL,
       password VARCHAR(20) NOT NULL,
       passwordUpdated  VARCHAR(20) NOT NULL,
       houseNumber VARCHAR(10) NOT NULL,
       streetName VARCHAR(50) NOT NULL,
+      city VARCHAR(50) NOT NULL,
       district VARCHAR(25) NOT NULL,
       province VARCHAR(25) NOT NULL,
       country VARCHAR(25) NOT NULL,
       languages VARCHAR(255) NOT NULL,
-      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (centerId) REFERENCES collectioncenter(id)
+
     )
   `;
     return new Promise((resolve, reject) => {
@@ -676,10 +785,11 @@ const createCollectionOfficerCompanyDetails = () => {
     CREATE TABLE IF NOT EXISTS collectionofficercompanydetails (
       id INT AUTO_INCREMENT PRIMARY KEY,
       collectionOfficerId INT,
-      companyName VARCHAR(255) NOT NULL,
+      companyNameEnglish VARCHAR(255) NOT NULL,
+      companyNameSinhala VARCHAR(255) NOT NULL,
+      companyNameTamil VARCHAR(255) NOT NULL,
       jobRole VARCHAR(50) NOT NULL,
       IRMname VARCHAR(75) NOT NULL,
-      managerContactNumber VARCHAR(12) NOT NULL,
       companyEmail VARCHAR(50) NOT NULL,
       assignedDistrict VARCHAR(25) NOT NULL,
       employeeType VARCHAR(25) NOT NULL,
@@ -733,17 +843,22 @@ const createRegisteredFarmerPayments = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       userId INT,
       collectionOfficerId INT,
-      cropName VARCHAR(25) NOT NULL,
-      quality VARCHAR(25) NOT NULL,
-      unitPrice DECIMAL(8, 2) NOT NULL,
-      weight INT NOT NULL,
+      cropId INT,
+      gradeAprice DECIMAL(8, 2) NOT NULL,
+      gradeBprice DECIMAL(8, 2) NOT NULL,
+      gradeCprice DECIMAL(8, 2) NOT NULL,
+      gradeAquan INT(11) NOT NULL,
+      gradeBquan INT(11) NOT NULL,
+      gradeCquan INT(11) NOT NULL,
       total DECIMAL(8, 2) NOT NULL,
-      image VARCHAR(25) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id)
         ON DELETE SET NULL
         ON UPDATE CASCADE,
       FOREIGN KEY (collectionOfficerId) REFERENCES collectionofficer(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE,
+      FOREIGN KEY (cropId) REFERENCES cropCalender(id)
         ON DELETE SET NULL
         ON UPDATE CASCADE
     )
@@ -787,28 +902,298 @@ const createUserBankDetails = () => {
 };
 
 
+const createCollectionCenter = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS collectioncenter (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      regCode VARCHAR(30) NOT NULL,
+      centerName VARCHAR(30) NOT NULL,
+      contact01 VARCHAR(13) NOT NULL,
+      contact02 VARCHAR(13) NOT NULL,
+      buildingNumber VARCHAR(50) NOT NULL,
+      street VARCHAR(50) NOT NULL,
+      district VARCHAR(30) NOT NULL,
+      province VARCHAR(30) NOT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating collectioncenter table: ' + err);
+            } else {
+                resolve('collectioncenter table created successfully.');
+            }
+        });
+    });
+};
+
+
+
+
+const createCollectionCenterOfficer = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS collectioncenterofficer (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      centerId INT,
+      name VARCHAR(30) NOT NULL,
+      role VARCHAR(13) NOT NULL,
+      contact01 VARCHAR(13) NOT NULL,
+      contact02 VARCHAR(50) NOT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (centerId) REFERENCES collectioncenter(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating collectioncenterofficer table: ' + err);
+            } else {
+                resolve('collectioncenterofficer table created successfully.');
+            }
+        });
+    });
+};
+
+const createFarmerComplains  = () => {
+    const sql = `
+   CREATE TABLE IF NOT EXISTS farmerComplains (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    farmerId INT,
+    coId INT,
+    refNo VARCHAR(20) NOT NULL,
+    language VARCHAR(50) NOT NULL,
+    complain TEXT NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (farmerId) REFERENCES users(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE,
+    FOREIGN KEY (coId) REFERENCES collectionofficer(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE
+)
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating market place users table: ' + err);
+            } else {
+                resolve('market place users table created successfully.');
+            }
+        });
+    });
+};
+
+
+
+
+
+
+//Seed for market Place Application
+
+const createMarketPlaceUsersTable = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS marketplaceusers (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      firstName VARCHAR(50) NOT NULL,
+      lastName VARCHAR(50) NOT NULL,
+      phoneNumber VARCHAR(12) NOT NULL,
+      NICnumber VARCHAR(12) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating market place users table: ' + err);
+            } else {
+                resolve('market place users table created successfully.');
+            }
+        });
+    });
+};
+
+
+const createMarketPlacePackages = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS marketplacepackages (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(50) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating market place users package: ' + err);
+            } else {
+                resolve('market place package table created successfully.');
+            }
+        });
+    });
+};
+
+
+const createMarketPlaceItems = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS marketplaceitems (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      cropId INT,
+      displayName VARCHAR(50) NOT NULL,
+      normalPrice DECIMAL(8, 2) NOT NULL,
+      discountedPrice DECIMAL(8, 2) NOT NULL,
+      promo BOOLEAN  NOT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (cropId) REFERENCES cropcalender(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating market place items table: ' + err);
+            } else {
+                resolve('market place items table created successfully.');
+            }
+        });
+    });
+};
+
+
+const createPackageDetails = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS packagedetails (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      packageId INT,
+      mpItemId INT,
+      quantity INT(11) NOT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (packageId) REFERENCES marketplacepackages(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE,
+      FOREIGN KEY (mpItemId) REFERENCES marketplaceitems(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating package details table: ' + err);
+            } else {
+                resolve('package details table created successfully.');
+            }
+        });
+    });
+};
+
+
+const createPromoItems = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS promoitems (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      mpItemId INT,
+      discount DECIMAL(8, 2) NOT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (mpItemId) REFERENCES marketplaceitems(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating promo items table: ' + err);
+            } else {
+                resolve('promo items table created successfully.');
+            }
+        });
+    });
+};
+
+
+const createCart = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS cart (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      userId INT,
+      status VARCHAR(13) NOT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (userId) REFERENCES users(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating cart table: ' + err);
+            } else {
+                resolve('cart table created successfully.');
+            }
+        });
+    });
+};
+
+
+const createCartItems = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS cartitems (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      cartId INT,
+      mpItemId INT,
+      quantity DECIMAL(8, 2) NOT NULL,
+      total DECIMAL(8, 2) NOT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (cartId) REFERENCES cart(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE,
+      FOREIGN KEY (mpItemId) REFERENCES marketplaceitems(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating cart table: ' + err);
+            } else {
+                resolve('cart table created successfully.');
+            }
+        });
+    });
+};
+
+
 module.exports = {
     createUsersTable,
+    createAdminUserRolesTable,
     createAdminUsersTable,
     createContentTable,
     createCropCalenderTable,
     createCropCalenderDaysTable,
     createOngoingCultivationsTable,
+    createXlsxHistoryTable,
     createMarketPriceTable,
+    createMarketPriceServeTable,
     createOngoingCultivationsCropsTable,
     createCurrentAssetTable,
-    createChatHeadTable,
-    createReplyChat,
+    createpublicforumposts,
+    createpublicforumreplies,
 
-    createFixedAsset,                    //1
-    createBuldingFixedAsset,             //2
-    createLandFixedAsset,                //3
-    createMachToolsFixedAsset,           //4
-    createMachToolsWarrantyFixedAsset,   //5
-    createOwnershipOwnerFixedAsset,      //6
-    createOwnershipLeastFixedAsset,      //7
-    createOwnershipPermitFixedAsset,     //8
-    createOwnershipSharedFixedAsset,     //9
+    createFixedAsset, //1
+    createBuldingFixedAsset, //2
+    createLandFixedAsset, //3
+    createMachToolsFixedAsset, //4
+    createMachToolsWarrantyFixedAsset, //5
+    createOwnershipOwnerFixedAsset, //6
+    createOwnershipLeastFixedAsset, //7
+    createOwnershipPermitFixedAsset, //8
+    createOwnershipSharedFixedAsset, //9
     createCurrentAssetRecord,
 
 
@@ -819,5 +1204,17 @@ module.exports = {
     createCollectionOfficerCompanyDetails,
     createCollectionOfficerBankDetails,
     createRegisteredFarmerPayments,
-    createUserBankDetails
+    createUserBankDetails,
+    createCollectionCenter,
+    createCollectionCenterOfficer,
+    createFarmerComplains,
+
+    //Seed for market Place Application
+    createMarketPlaceUsersTable,
+    createMarketPlacePackages,
+    createMarketPlaceItems,
+    createPackageDetails,
+    createPromoItems,
+    createCart,
+    createCartItems
 };

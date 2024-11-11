@@ -1,14 +1,17 @@
 require('dotenv').config();
 const { createUsersTable } = require('./tables');
 const { createAdminUsersTable } = require('./tables');
+const { createAdminUserRolesTable } = require('./tables');
 const { createContentTable } = require('./tables');
 const { createCropCalenderTable } = require('./tables');
 const { createCropCalenderDaysTable } = require('./tables');
 const { createOngoingCultivationsTable } = require('./tables');
+const { createXlsxHistoryTable } = require('./tables');
 const { createMarketPriceTable } = require('./tables');
+const { createMarketPriceServeTable } = require('./tables');
 const { createOngoingCultivationsCropsTable } = require('./tables');
-const { createChatHeadTable } = require('./tables');
-const { createReplyChat } = require('./tables');
+const { createpublicforumposts } = require('./tables');
+const { createpublicforumreplies } = require('./tables');
 
 const { createFixedAsset } = require('./tables');
 const { createBuldingFixedAsset } = require('./tables');
@@ -32,17 +35,40 @@ const { createCollectionOfficerCompanyDetails } = require('./tables');
 const { createCollectionOfficerBankDetails } = require('./tables');
 const { createRegisteredFarmerPayments } = require('./tables');
 const { createUserBankDetails } = require('./tables');
+const { createCollectionCenter } = require('./tables');
+const { createCollectionCenterOfficer } = require('./tables');
+const { createFarmerComplains } = require('./tables');
 
+//Seed for market Place Application
+const { createMarketPlaceUsersTable } = require('./tables');
+const { createMarketPlacePackages } = require('./tables');
+const { createMarketPlaceItems } = require('./tables');
+const { createPackageDetails } = require('./tables');
+const { createPromoItems } = require('./tables');
+const { createCart } = require('./tables');
+const { createCartItems } = require('./tables');
 
 const {createSuperAdmin} = require('./admin')
+const {insertRoles} = require('./adminRoles')
+
+
+const { createExpiredContentCleanupEvent} = require('./events');
+const {createExpiredXlsxHistoryCleanupEvent} = require('./events');
+const {createContentPublishingEvent} = require('./events');
+const {createMarketPricePublishingEvent} = require('./events');
+
 
 
 const runSeeds = async () => {
   try {
     const messageUsers = await createUsersTable();
     console.log(messageUsers);
+    const messageAdminRoles = await createAdminUserRolesTable();
+    console.log(messageAdminRoles);
     const messageAdmin = await createAdminUsersTable();
     console.log(messageAdmin);
+    const messageInsertRoles = await insertRoles();
+    console.log(messageInsertRoles);
     const messageAdminCreate = await createSuperAdmin();
     console.log(messageAdminCreate);
     const messageContentTableCreate = await createContentTable();
@@ -53,16 +79,20 @@ const runSeeds = async () => {
     console.log(messageCropCallenderDays);
     const messageOngoingCultivation = await createOngoingCultivationsTable();
     console.log(messageOngoingCultivation);
+    createXlsxHistoryTable
+    const messageXlsxHistory = await createXlsxHistoryTable();
+    console.log(messageXlsxHistory);
     const messageMarketPrice = await createMarketPriceTable();
     console.log(messageMarketPrice);
+    
     const createOngoingCultivationsCro = await createOngoingCultivationsCropsTable();
     console.log(createOngoingCultivationsCro);
     const messageCurrentAsset = await createCurrentAssetTable();
     console.log(messageCurrentAsset);
 
-    const messageCreateChatHeadTable = await createChatHeadTable();
+    const messageCreateChatHeadTable = await createpublicforumposts();
     console.log(messageCreateChatHeadTable);
-    const messageCreateReplyChat = await createReplyChat();
+    const messageCreateReplyChat = await createpublicforumreplies();
     console.log(messageCreateReplyChat);
 
     
@@ -95,7 +125,8 @@ const runSeeds = async () => {
 
 
 
-
+    const messagecreateCollectionCenter = await createCollectionCenter();
+    console.log(messagecreateCollectionCenter);
     const messageCreateCollectionOfficer = await createCollectionOfficer();
     console.log(messageCreateCollectionOfficer);
     const messageCreateCollectionOfficerCompanyDetails = await createCollectionOfficerCompanyDetails();
@@ -106,6 +137,44 @@ const runSeeds = async () => {
     console.log(messageCreateRegisteredFarmerPayments);
     const messageCreateUserBankDetails = await createUserBankDetails();
     console.log(messageCreateUserBankDetails);
+    
+    const messagecreateCollectionCenterOfficer = await createCollectionCenterOfficer();
+    console.log(messagecreateCollectionCenterOfficer);
+
+    const messagecreateFarmerComplains = await createFarmerComplains();
+    console.log(messagecreateFarmerComplains);
+
+    const messageMarketPriceServeTable = await createMarketPriceServeTable();
+    console.log(messageMarketPriceServeTable);
+
+
+    //Seed for market Place Application
+    const messageCreateMarketPlaceUsersTable = await createMarketPlaceUsersTable();
+    console.log(messageCreateMarketPlaceUsersTable);
+    const messageCreateMarketPlacePackages = await createMarketPlacePackages();
+    console.log(messageCreateMarketPlacePackages);
+    const messageCreateMarketPlaceItems = await createMarketPlaceItems();
+    console.log(messageCreateMarketPlaceItems);
+    const messageCreatePackageDetails = await createPackageDetails();
+    console.log(messageCreatePackageDetails);
+    const messageCreatePromoItems = await createPromoItems();
+    console.log(messageCreatePromoItems);
+    const messageCreateCart = await createCart();
+    console.log(messageCreateCart);
+    const messageCreateCartItems = await createCartItems();
+    console.log(messageCreateCartItems);
+
+
+    const messagecreateExpiredContentCleanupEvent = await createExpiredContentCleanupEvent();
+    console.log(messagecreateExpiredContentCleanupEvent);
+    const messagecreateExpiredXlsxHistoryCleanupEvent = await createExpiredXlsxHistoryCleanupEvent();
+    console.log(messagecreateExpiredXlsxHistoryCleanupEvent);
+    const messagecreateContentPublishingEvent = await createContentPublishingEvent();
+    console.log(messagecreateContentPublishingEvent);
+    const messagecreateMarketPricePublishingEvent = await createMarketPricePublishingEvent();
+    console.log(messagecreateMarketPricePublishingEvent);
+    
+    
   } catch (err) {
     console.error(err);
   } finally {

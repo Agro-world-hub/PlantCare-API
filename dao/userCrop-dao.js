@@ -4,7 +4,7 @@ const asyncHandler = require("express-async-handler");
 
 exports.getCropByCategory = (categorie) => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM cropCalender WHERE Category=?";
+    const sql = "SELECT * FROM cropcalender WHERE Category=?";
     db.query(sql, [categorie], (err, results) => {
       if (err) {
         console.error("Error executing query:", err);
@@ -19,7 +19,7 @@ exports.getCropByCategory = (categorie) => {
 // Function to get crop details by crop ID
 exports.getCropById = (cropId) => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM cropCalender WHERE id = ?";
+    const sql = "SELECT * FROM cropcalender WHERE id = ?";
     db.query(sql, [cropId], (err, results) => {
       if (err) {
         reject(err); // Return the error if the query fails
@@ -35,7 +35,7 @@ exports.getCropCalendarFeed = (userId, cropId) => {
   return new Promise((resolve, reject) => {
     const sql = `
         SELECT * 
-        FROM ongoingCultivations oc, ongoingCultivationsCrops ocr, cropcalendardays cd 
+        FROM ongoingcultivations oc, ongoingcultivationscrops ocr, cropcalendardays cd 
         WHERE oc.id = ocr.ongoingCultivationId 
         AND ocr.cropCalendar = cd.cropId 
         AND oc.userId = ? 
@@ -85,13 +85,13 @@ const query = (sql, params) => {
 
 // Check if the user has an ongoing cultivation
 exports.checkOngoingCultivation = (userId) => {
-  const sql = "SELECT id FROM ongoingCultivations WHERE userId = ?";
+  const sql = "SELECT id FROM ongoingcultivations WHERE userId = ?";
   return query(sql, [userId]);
 };
 
 // Create a new ongoing cultivation for the user
 exports.createOngoingCultivation = (userId) => {
-  const sql = "INSERT INTO ongoingCultivations(userId) VALUES (?)";
+  const sql = "INSERT INTO ongoingcultivations(userId) VALUES (?)";
   return query(sql, [userId]);
 };
 
@@ -109,6 +109,92 @@ exports.checkEnrollCrop = (cultivationId) => {
 
 // Enroll the crop into the ongoing cultivation
 exports.enrollOngoingCultivationCrop = (cultivationId, cropId) => {
-  const sql = "INSERT INTO ongoingCultivationsCrops(ongoingCultivationId, cropCalendar) VALUES (?, ?)";
+  const sql = "INSERT INTO ongoingcultivationscrops(ongoingCultivationId, cropCalendar) VALUES (?, ?)";
   return query(sql, [cultivationId, cropId]);
+};
+
+exports.enrollSlaveCrop = (userId, cropId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      INSERT INTO slavecropcalendardays (
+        userId, cropCalendarId, taskIndex, days, taskTypeEnglish, taskTypeSinhala, taskTypeTamil,
+        taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, taskEnglish, taskSinhala, taskTamil,
+        taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, status
+      )
+      SELECT ?, ccd.cropId, ccd.taskIndex, ccd.days, ccd.taskTypeEnglish, ccd.taskTypeSinhala, ccd.taskTypeTamil,
+             ccd.taskCategoryEnglish, ccd.taskCategorySinhala, ccd.taskCategoryTamil, ccd.taskEnglish, ccd.taskSinhala,
+             ccd.taskTamil, ccd.taskDescriptionEnglish, ccd.taskDescriptionSinhala, ccd.taskDescriptionTamil, 'pending'
+      FROM cropcalendardays ccd
+      WHERE ccd.cropId = ?;
+    `;
+    db.query(sql, [userId, cropId], (err, result) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(result);
+      }
+    });
+  });
+};
+
+//slave calender
+exports.getSlaveCropCalendarDaysByUserAndCrop = (userId, cropCalendarId) => {
+  return new Promise((resolve, reject) => {
+      const sql = `
+          SELECT * 
+          FROM slavecropcalendardays 
+          WHERE userId = ? AND cropCalendarId = ?
+      `;
+      db.query(sql, [userId, cropCalendarId], (err, results) => {
+          if (err) {
+              reject(err);
+          } else {
+              resolve(results);
+          }
+      });
+  });
+};
+
+//slave calender-status update
+exports.getTaskById = (id) => {
+  return new Promise((resolve, reject) => {
+      const sql = "SELECT taskIndex, status, createdAt, cropCalendarId, userId FROM slavecropcalendardays WHERE id = ?";
+      db.query(sql, [id], (err, results) => {
+          if (err) {
+              reject(err);
+          } else {
+              resolve(results);
+          }
+      });
+  });
+};
+
+exports.getPreviousTasks = (taskIndex, cropCalendarId, userId) => {
+  return new Promise((resolve, reject) => {
+      const sql = `
+          SELECT id, taskIndex, createdAt, status 
+          FROM slavecropcalendardays 
+          WHERE taskIndex < ? AND cropCalendarId = ? AND userId = ? 
+          ORDER BY taskIndex ASC`;
+      db.query(sql, [taskIndex, cropCalendarId, userId], (err, results) => {
+          if (err) {
+              reject(err);
+          } else {
+              resolve(results);
+          }
+      });
+  });
+};
+
+exports.updateTaskStatus = (id, status) => {
+  return new Promise((resolve, reject) => {
+      const sql = "UPDATE slavecropcalendardays SET status = ?, createdAt = CURRENT_TIMESTAMP WHERE id = ?";
+      db.query(sql, [status, id], (err, results) => {
+          if (err) {
+              reject(err);
+          } else {
+              resolve(results);
+          }
+      });
+  });
 };

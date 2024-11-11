@@ -27,13 +27,20 @@ exports.ongoingCultivationSchema = Joi.object({
 
 exports.enrollSchema = Joi.object({
   cropId: Joi.string().required().messages({
-    'string.base': `"Crop ID" should be a string`,
-    'string.empty': `"Crop ID" cannot be an empty field`,
-    'any.required': `"Crop ID" is required`,
+    "string.base": `"Crop ID" should be a string`,
+    "string.empty": `"Crop ID" cannot be an empty field`,
+    "any.required": `"Crop ID" is required`,
   }),
 });
 
+exports.getSlaveCropCalendarDaysSchema = Joi.object({
+  cropCalendarId: Joi.string().required().label("Crop Calendar ID"),
+});
 
+exports.updateCropCalendarStatusSchema = Joi.object({
+  id: Joi.number().required().label("Task ID"),
+  status: Joi.string().valid("pending", "completed").required().label("Status"),
+});
 
 // module.exports = {
 //   ongoingCultivationSchema,

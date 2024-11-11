@@ -4,7 +4,7 @@ const db = require('../startup/database');
 
 const getAllMarketData = () => {
   return new Promise((resolve, reject) => {
-    const sql = 'SELECT * FROM marketPrice';
+    const sql = 'SELECT * FROM marketprice';
     db.query(sql, (err, results) => {
       if (err) {
         reject('Error executing query: ' + err);

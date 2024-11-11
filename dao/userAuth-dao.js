@@ -77,3 +77,45 @@ exports.updateUserPhoneNumber = (userId, newPhoneNumber) => {
     });
   });
 };
+
+exports.checkSignupDetails = (phoneNumber, NICnumber) => {
+  return new Promise((resolve, reject) => {
+      let conditions = [];
+      let params = [];
+
+      if (phoneNumber) {
+          const formattedPhoneNumber = `+${String(phoneNumber).replace(/^\+/, "")}`;
+          conditions.push("phoneNumber = ?");
+          params.push(formattedPhoneNumber);
+      }
+
+      if (NICnumber) {
+          conditions.push("NICnumber = ?");
+          params.push(NICnumber);
+      }
+
+      const checkQuery = `SELECT * FROM users WHERE ${conditions.join(" OR ")}`;
+      
+      db.query(checkQuery, params, (err, results) => {
+          if (err) {
+              reject(err);
+          } else {
+              resolve(results);
+          }
+      });
+  });
+};
+
+
+exports.updateFirstLastName = (userId, firstName, lastName) => {
+  return new Promise((resolve, reject) => {
+      const sql = 'UPDATE users SET firstName = ?, lastName = ? WHERE id = ?';
+      db.query(sql, [firstName, lastName, userId], (err, results) => {
+          if (err) {
+              reject(err);
+          } else {
+              resolve(results.affectedRows); // Return affected rows
+          }
+      });
+  });
+};
