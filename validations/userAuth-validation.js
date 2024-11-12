@@ -47,13 +47,7 @@ exports.loginUserSchema = Joi.object({
 exports.signupUserSchema = Joi.object({
     firstName: Joi.string().min(2).max(50).required().label('First Name'),
     lastName: Joi.string().min(2).max(50).required().label('Last Name'),
-    phoneNumber: Joi.string()
-        .pattern(/^\+?\d{10,15}$/)
-        .required()
-        .label('Phone Number')
-        .messages({
-            "string.pattern.base": "Phone number must be a valid format with 10-15 digits."
-        }),
+    phoneNumber: Joi.number().required().label('Mobile Number'),
     NICnumber: Joi.string()
         .min(9)
         .max(12)

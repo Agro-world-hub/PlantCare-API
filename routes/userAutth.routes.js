@@ -26,7 +26,4 @@ router.post("/user-register-checker", userAuthEp.signupChecker );
 // router.put("/user-update-names", auth, updateFirstLastName );
 router.put("/user-update-names", auth, userAuthEp.updateFirstLastName );
 
-
-
-
 module.exports = router;

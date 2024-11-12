@@ -4,7 +4,7 @@ const asyncHandler = require("express-async-handler");
 
 exports.getCropByCategory = (categorie) => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM cropcalender WHERE Category=?";
+    const sql = "SELECT * FROM cropgroup WHERE Category=?";
     db.query(sql, [categorie], (err, results) => {
       if (err) {
         console.error("Error executing query:", err);
