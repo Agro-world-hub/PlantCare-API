@@ -4,7 +4,7 @@ const asyncHandler = require("express-async-handler");
 
 exports.getCropByCategory = (categorie) => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM cropgroup WHERE Category=?";
+    const sql = "SELECT * FROM cropgroup WHERE category=?";
     db.query(sql, [categorie], (err, results) => {
       if (err) {
         console.error("Error executing query:", err);
@@ -17,9 +17,9 @@ exports.getCropByCategory = (categorie) => {
 };
 
 // Function to get crop details by crop ID
-exports.getCropById = (cropId) => {
+exports.getCropVariety = (cropId) => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM cropcalender WHERE id = ?";
+    const sql = "SELECT * FROM cropvariety WHERE cropGroupId = ?";
     db.query(sql, [cropId], (err, results) => {
       if (err) {
         reject(err); // Return the error if the query fails
@@ -29,6 +29,23 @@ exports.getCropById = (cropId) => {
     });
   });
 };
+
+exports.getCropCalenderDetails = (id,method, naofcul) => {
+  return new Promise((resolve, reject) => {
+
+    const sql = `SELECT * FROM cropcalender WHERE cropVarietyId = ? AND method = ? AND natOfCul = ?`;
+
+    // Execute the query
+    db.query(sql, [id, method, naofcul], (err, results) => {
+      if (err) {
+        reject(err); // Return the error if the query fails
+      } else {
+        resolve(results); // Return the results if successful
+      }
+    });
+  });
+};
+
 
 // Function to fetch the crop calendar feed based on userId and cropId
 exports.getCropCalendarFeed = (userId, cropId) => {

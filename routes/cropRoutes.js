@@ -18,7 +18,9 @@ router.get("/get-all-crop/:categorie", userCrop.getCropByCategory);
 router.get("/crop-feed/:cropid", auth, userCrop.CropCalanderFeed);
 
 //working
-router.get("/get-crop/:id", userCrop.getCropById);
+router.get("/get-crop-variety/:id", userCrop.getCropVariety);
+
+router.get("/get-crop-calender-details/:id/:naofcul/:method", userCrop.getCropCalenderDetails);
 
 //router.get("/enroll-crop/:cropId", auth, enroll);
 router.get("/enroll-crop/:cropId", auth, userCrop.enroll);

@@ -61,7 +61,7 @@ exports.getCropByCategory = asyncHandler(async (req, res) => {
 });
 
 // Endpoint to get crop by ID
-exports.getCropById = asyncHandler(async (req, res) => {
+exports.getCropVariety = asyncHandler(async (req, res) => {
   try {
     // Validate the cropId parameter
     await getCropByIdSchema.validateAsync(req.params);
@@ -69,7 +69,7 @@ exports.getCropById = asyncHandler(async (req, res) => {
     const cropId = req.params.id;
 
     // Use the DAO to get crop details by crop ID
-    const results = await cropDao.getCropById(cropId);
+    const results = await cropDao.getCropVariety(cropId);
 
   //   if (results[0].image) {
   //     const base64Image = Buffer.from(results[0].image).toString('base64');
@@ -84,12 +84,40 @@ exports.getCropById = asyncHandler(async (req, res) => {
       });
     }
 
-    res.status(200).json([results[0]]);
+    res.status(200).json(results);
   } catch (err) {
     console.error("Error fetching crop details:", err);
     res.status(500).json({ message: "Internal Server Error !" });
   }
 });
+
+exports.getCropCalenderDetails = asyncHandler(async (req, res) => {
+  try {
+    // Validate the cropGroupId and variety parameters
+   
+
+    const id = req.params.id; // Using cropGroupId from URL
+    const method = req.params.method; 
+    const naofcul = req.params.naofcul;
+    
+    // Use the DAO to get crop details by cropId, variety, and lang
+    const results = await cropDao.getCropCalenderDetails(id, method, naofcul); // Pass lang to DAO function
+    console.log("Results:", results);
+
+    if (results.length === 0) {
+      return res.status(404).json({
+        status: "error",
+        message: "Crop variety not found",
+      });
+    }
+
+    res.status(200).json(results);
+  } catch (err) {
+    console.error("Error fetching crop variety details:", err);
+    res.status(500).json({ message: "Internal Server Error !" });
+  }
+});
+
 
 exports.CropCalanderFeed = asyncHandler(async (req, res) => {
   try {
