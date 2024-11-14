@@ -130,6 +130,7 @@ exports.enrollOngoingCultivationCrop = (cultivationId, cropId, extent, startDate
 };
 
 exports.enrollSlaveCrop = (userId, cropId, startDate) => {
+  console.log("enrollSlaveCrop", userId, cropId, startDate);
   return new Promise((resolve, reject) => {
     const sql = `
       INSERT INTO slavecropcalendardays (

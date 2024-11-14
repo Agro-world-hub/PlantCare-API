@@ -216,10 +216,10 @@ exports.enroll = asyncHandler(async (req, res) => {
   try {
     const cropId = req.params.cropId;
     const extent = req.params.extent;
-    const startDate = req.params.stratDate;
+    const startDate = req.params.startDate;
     const userId = req.user.id;
 
-    console.log("User ID:", userId, "Crop ID:", cropId);
+    console.log("User ID:", userId, "Crop ID:", cropId, "Extent:", extent, "Start Date:", startDate);
 
     // Check if the user already has an ongoing cultivation
     let cultivationId;
