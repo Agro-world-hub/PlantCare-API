@@ -197,6 +197,7 @@ exports.OngoingCultivaionGetById = asyncHandler(async (req, res) => {
           message: "No ongoing cultivation found for this user",
         });
       }
+      console.log("Ongoing cul Results:", results);
 
       // Successful response
       res.status(200).json(results);
@@ -212,53 +213,10 @@ exports.OngoingCultivaionGetById = asyncHandler(async (req, res) => {
 ///
 
 exports.enroll = asyncHandler(async (req, res) => {
-  // try {
-  //   const cropId = req.params.cropId;
-  //   const userId = req.user.id;
-
-  //   console.log("User ID:", userId, "Crop ID:", cropId);
-
-  //   // Check if the user already has an ongoing cultivation
-  //   let cultivationId;
-  //   const ongoingCultivationResult = await checkOngoingCultivation(userId);
-
-  //   if (!ongoingCultivationResult[0]) {
-  //     // If no ongoing cultivation exists, create one
-  //     const newCultivationResult = await createOngoingCultivation(userId);
-  //     cultivationId = newCultivationResult.insertId;
-  //     console.log("Created new ongoing cultivation with ID:", cultivationId);
-  //   } else {
-  //     cultivationId = ongoingCultivationResult[0].id;
-  //     console.log("Existing ongoing cultivation ID:", cultivationId);
-  //   }
-
-  //   // Check the crop count
-  //   const cropCountResult = await checkCropCount(cultivationId);
-  //   const cropCount = cropCountResult[0].count;
-
-  //   if (cropCount >= 3) {
-  //     return res.json({ message: "You have already enrolled in 3 crops" });
-  //   }
-
-  //   // Check if the crop is already enrolled
-  //   const enrolledCrops = await checkEnrollCrop(cultivationId);
-  //   if (enrolledCrops.some(crop => crop.cropCalendar == cropId)) {
-  //     return res.json({ message: "You are already enrolled in this crop!" });
-  //   }
-
-  //   // Enroll the crop
-  //   await enrollOngoingCultivationCrop(cultivationId, cropId);
-  //   console.log("Successfully enrolled in crop ID:", cropId);
-
-  //   return res.json({ message: "Enrollment successful" });
-
-  // } catch (err) {
-  //   console.error("Error during enrollment:", err);
-  //   res.status(500).json({ message: "Internal Server Error" });
-  // }
-
   try {
     const cropId = req.params.cropId;
+    const extent = req.params.extent;
+    const startDate = req.params.stratDate;
     const userId = req.user.id;
 
     console.log("User ID:", userId, "Crop ID:", cropId);
@@ -297,10 +255,10 @@ exports.enroll = asyncHandler(async (req, res) => {
     }
 
     // Enroll the crop
-    await enrollOngoingCultivationCrop(cultivationId, cropId);
-    const responseenrollSlaveCrop= await enrollSlaveCrop(userId, cropId);
+    await enrollOngoingCultivationCrop(cultivationId, cropId, extent, startDate);
+    const responseenrollSlaveCrop= await enrollSlaveCrop(userId, cropId, startDate);
     
-    console.log("Successfully enrolled in crop ID:", cropId);
+    console.log("Successfully enrolled in crop ID:", cropId,"with extent:", extent, "and start date:", startDate);
     console.log("hi responseenrollSlaveCrop.....:", responseenrollSlaveCrop);
 
     return res.json({ message: "Enrollment successful" });

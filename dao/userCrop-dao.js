@@ -73,10 +73,9 @@ exports.getOngoingCultivationsByUserId = (userId, callback) => {
     SELECT * 
     FROM ongoingcultivations c 
     JOIN ongoingcultivationscrops oc ON c.id = oc.ongoingCultivationId
-    JOIN cropcalender cr ON oc.cropCalendar = cr.id 
+    JOIN cropvariety cr ON oc.cropCalendar = cr.id 
     WHERE c.userId = ?
   `;
-
   db.query(sql, [userId], (err, results) => {
     if (err) {
       console.error("Database error:", err);
@@ -125,26 +124,26 @@ exports.checkEnrollCrop = (cultivationId) => {
 };
 
 // Enroll the crop into the ongoing cultivation
-exports.enrollOngoingCultivationCrop = (cultivationId, cropId) => {
-  const sql = "INSERT INTO ongoingcultivationscrops(ongoingCultivationId, cropCalendar) VALUES (?, ?)";
-  return query(sql, [cultivationId, cropId]);
+exports.enrollOngoingCultivationCrop = (cultivationId, cropId, extent, startDate ) => {
+  const sql = "INSERT INTO ongoingcultivationscrops(ongoingCultivationId, cropCalendar,  extent , startedAt) VALUES (?, ?,?,?)";
+  return query(sql, [cultivationId, cropId, extent, startDate]);
 };
 
-exports.enrollSlaveCrop = (userId, cropId) => {
+exports.enrollSlaveCrop = (userId, cropId, startDate) => {
   return new Promise((resolve, reject) => {
     const sql = `
       INSERT INTO slavecropcalendardays (
-        userId, cropCalendarId, taskIndex, days, taskTypeEnglish, taskTypeSinhala, taskTypeTamil,
+        userId, cropCalendarId, taskIndex, startingDate, taskTypeEnglish, taskTypeSinhala, taskTypeTamil,
         taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, taskEnglish, taskSinhala, taskTamil,
-        taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, status
+        taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, status, imageLink, videoLink, reqImages
       )
-      SELECT ?, ccd.cropId, ccd.taskIndex, ccd.days, ccd.taskTypeEnglish, ccd.taskTypeSinhala, ccd.taskTypeTamil,
+      SELECT ?, ccd.cropId, ccd.taskIndex, DATE_ADD(?, INTERVAL ccd.days DAY), ccd.taskTypeEnglish, ccd.taskTypeSinhala, ccd.taskTypeTamil,
              ccd.taskCategoryEnglish, ccd.taskCategorySinhala, ccd.taskCategoryTamil, ccd.taskEnglish, ccd.taskSinhala,
-             ccd.taskTamil, ccd.taskDescriptionEnglish, ccd.taskDescriptionSinhala, ccd.taskDescriptionTamil, 'pending'
+             ccd.taskTamil, ccd.taskDescriptionEnglish, ccd.taskDescriptionSinhala, ccd.taskDescriptionTamil, 'pending', ccd.imageLink, ccd.videoLink, ccd.reqImages
       FROM cropcalendardays ccd
       WHERE ccd.cropId = ?;
     `;
-    db.query(sql, [userId, cropId], (err, result) => {
+    db.query(sql, [userId, startDate, cropId], (err, result) => {
       if (err) {
         reject(err);
       } else {
@@ -153,6 +152,7 @@ exports.enrollSlaveCrop = (userId, cropId) => {
     });
   });
 };
+
 
 //slave calender
 exports.getSlaveCropCalendarDaysByUserAndCrop = (userId, cropCalendarId) => {

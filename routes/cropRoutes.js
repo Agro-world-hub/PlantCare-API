@@ -23,7 +23,7 @@ router.get("/get-crop-variety/:id", userCrop.getCropVariety);
 router.get("/get-crop-calender-details/:id/:naofcul/:method", userCrop.getCropCalenderDetails);
 
 //router.get("/enroll-crop/:cropId", auth, enroll);
-router.get("/enroll-crop/:cropId", auth, userCrop.enroll);
+router.get("/enroll-crop/:cropId/:extent/:startDate", auth, userCrop.enroll);
 
 //working
 router.get("/get-user-ongoing-cul", auth, userCrop.OngoingCultivaionGetById);
