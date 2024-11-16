@@ -28,6 +28,9 @@ router.get("/enroll-crop/:cropId/:extent/:startDate", auth, userCrop.enroll);
 //working
 router.get("/get-user-ongoing-cul", auth, userCrop.OngoingCultivaionGetById);
 
+router.get("/get-user-ongoingculscrops/:id", userCrop.getOngoingCultivationCropByid);
+
+router.post("/update-ongoingcultivation", auth, userCrop.UpdateOngoingCultivationScrops);
 // router.post("/enrollslave", auth, insertTasksToSlaveCropCalendarDays);
 
 //get data from slave crop cal not working.........

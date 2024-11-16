@@ -68,6 +68,27 @@ exports.getCropCalendarFeed = (userId, cropId) => {
   });
 };
 
+// exports.getOngoingCultivationsByUserId = (userId, callback) => {
+//   const sql = `
+//     SELECT 
+//   oc.id AS ongoingcultivationscropsId,
+//   c.*,               
+//   oc.*,             
+//   cr.*               
+// FROM ongoingcultivations c
+// LEFT JOIN ongoingcultivationscrops oc ON c.id = oc.ongoingCultivationId
+// LEFT JOIN cropvariety cr ON oc.cropCalendar = cr.id
+// WHERE c.userId = ?;
+//   `;
+//   db.query(sql, [userId], (err, results) => {
+//     if (err) {
+//       console.error("Database error:", err);
+//       return callback(err, null);
+//     }
+//     callback(null, results);
+//   });
+// };
+
 exports.getOngoingCultivationsByUserId = (userId, callback) => {
   const sql = `
     SELECT * 
@@ -119,7 +140,7 @@ exports.checkCropCount = (cultivationId) => {
 
 // Check if the crop is already enrolled for the cultivation
 exports.checkEnrollCrop = (cultivationId) => {
-  const sql = "SELECT cropCalendar FROM ongoingcultivationscrops WHERE ongoingCultivationId = ?";
+  const sql = "SELECT cropCalendar, id FROM ongoingcultivationscrops WHERE ongoingCultivationId = ?";
   return query(sql, [cultivationId]);
 };
 
@@ -129,22 +150,102 @@ exports.enrollOngoingCultivationCrop = (cultivationId, cropId, extent, startDate
   return query(sql, [cultivationId, cropId, extent, startDate]);
 };
 
-exports.enrollSlaveCrop = (userId, cropId, startDate) => {
-  console.log("enrollSlaveCrop", userId, cropId, startDate);
+exports.getEnrollOngoingCultivationCrop = (cultivationId) => {
+  const sql = `
+    SELECT cropCalendar, id 
+    FROM ongoingcultivationscrops 
+    WHERE ongoingCultivationId = ?
+  `;
+  return new Promise((resolve, reject) => {
+    db.query(sql, [cultivationId], (err, results) => {
+      if (err) {
+        console.error("Database error in ongoingcultivationscrops:", err);
+        reject(err);
+      } else {
+        resolve(results);
+      }
+    });
+  });
+};
+
+
+exports.getEnrollOngoingCultivationCropByid = (id) => {
+  const sql = `
+    SELECT * 
+    FROM ongoingcultivationscrops 
+    WHERE id = ?
+  `;
+  return new Promise((resolve, reject) => {
+    db.query(sql, [id], (err, results) => {
+      if (err) {
+        console.error("Database error in ongoingcultivationscrops:", err);
+        reject(err);
+      } else {
+        resolve(results);
+      }
+    });
+  });
+};
+
+exports.updateOngoingCultivationCrop = (onCulscropID, extent, formattedStartDate) => {
+  return new Promise((resolve, reject) => {
+    const sql = "UPDATE ongoingcultivationscrops SET extent = ?, startedAt = ? WHERE id = ?";
+    db.query(sql, [extent, formattedStartDate, onCulscropID], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
+    });
+  });
+};
+
+// Fetch days related to onCulscropID from slavecropcalendardays table
+exports.getSlaveCropCalendarDays = (onCulscropID) => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT id, days FROM slavecropcalendardays WHERE onCulscropID = ?";
+    db.query(sql, [onCulscropID], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
+    });
+  });
+};
+
+// Update the starting date in the slavecropcalendardays table
+exports.updateSlaveCropCalendarDay = (id, formattedDate) => {
+  return new Promise((resolve, reject) => {
+    const sql = "UPDATE slavecropcalendardays SET startingDate = ? WHERE id = ?";
+    db.query(sql, [formattedDate, id], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
+    });
+  });
+};
+
+
+
+exports.enrollSlaveCrop = (userId, cropId, startDate, onCulscropID) => {
+  console.log("enrollSlaveCrop", userId, cropId, startDate, onCulscropID);
   return new Promise((resolve, reject) => {
     const sql = `
       INSERT INTO slavecropcalendardays (
-        userId, cropCalendarId, taskIndex, startingDate, taskTypeEnglish, taskTypeSinhala, taskTypeTamil,
+        userId, cropCalendarId, taskIndex, startingDate, days, taskTypeEnglish, taskTypeSinhala, taskTypeTamil,
         taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, taskEnglish, taskSinhala, taskTamil,
-        taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, status, imageLink, videoLink, reqImages
+        taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, status, imageLink, videoLink, reqImages, onCulscropID
       )
-      SELECT ?, ccd.cropId, ccd.taskIndex, DATE_ADD(?, INTERVAL ccd.days DAY), ccd.taskTypeEnglish, ccd.taskTypeSinhala, ccd.taskTypeTamil,
+      SELECT ?, ccd.cropId, ccd.taskIndex, DATE_ADD(?, INTERVAL ccd.days DAY), ccd.days, ccd.taskTypeEnglish, ccd.taskTypeSinhala, ccd.taskTypeTamil,
              ccd.taskCategoryEnglish, ccd.taskCategorySinhala, ccd.taskCategoryTamil, ccd.taskEnglish, ccd.taskSinhala,
-             ccd.taskTamil, ccd.taskDescriptionEnglish, ccd.taskDescriptionSinhala, ccd.taskDescriptionTamil, 'pending', ccd.imageLink, ccd.videoLink, ccd.reqImages
+             ccd.taskTamil, ccd.taskDescriptionEnglish, ccd.taskDescriptionSinhala, ccd.taskDescriptionTamil, 'pending', ccd.imageLink, ccd.videoLink, ccd.reqImages, ?
       FROM cropcalendardays ccd
       WHERE ccd.cropId = ?;
     `;
-    db.query(sql, [userId, startDate, cropId], (err, result) => {
+    db.query(sql, [userId, startDate, onCulscropID, cropId], (err, result) => {
       if (err) {
         reject(err);
       } else {
@@ -153,6 +254,7 @@ exports.enrollSlaveCrop = (userId, cropId, startDate) => {
     });
   });
 };
+
 
 
 //slave calender
@@ -176,7 +278,7 @@ exports.getSlaveCropCalendarDaysByUserAndCrop = (userId, cropCalendarId) => {
 //slave calender-status update
 exports.getTaskById = (id) => {
   return new Promise((resolve, reject) => {
-      const sql = "SELECT taskIndex, status, createdAt, cropCalendarId, userId FROM slavecropcalendardays WHERE id = ?";
+      const sql = "SELECT taskIndex, status, createdAt, cropCalendarId, days, startingDate, userId FROM slavecropcalendardays WHERE id = ?";
       db.query(sql, [id], (err, results) => {
           if (err) {
               reject(err);
@@ -190,7 +292,7 @@ exports.getTaskById = (id) => {
 exports.getPreviousTasks = (taskIndex, cropCalendarId, userId) => {
   return new Promise((resolve, reject) => {
       const sql = `
-          SELECT id, taskIndex, createdAt, status 
+          SELECT id, taskIndex, createdAt, status , days
           FROM slavecropcalendardays 
           WHERE taskIndex < ? AND cropCalendarId = ? AND userId = ? 
           ORDER BY taskIndex ASC`;
@@ -204,6 +306,23 @@ exports.getPreviousTasks = (taskIndex, cropCalendarId, userId) => {
   });
 };
 
+// exports.getNextTask = (taskIndex, cropCalendarId, userId) => {
+//   return new Promise((resolve, reject) => {
+//       const sql = `
+//           SELECT id, taskIndex, createdAt, status , days
+//           FROM slavecropcalendardays 
+//           WHERE taskIndex = ? AND cropCalendarId = ? AND userId = ? 
+//           ORDER BY taskIndex ASC`;
+//       db.query(sql, [taskIndex, cropCalendarId, userId], (err, results) => {
+//           if (err) {
+//               reject(err);
+//           } else {
+//               resolve(results);
+//           }
+//       });
+//   });
+// };
+
 exports.updateTaskStatus = (id, status) => {
   return new Promise((resolve, reject) => {
       const sql = "UPDATE slavecropcalendardays SET status = ?, createdAt = CURRENT_TIMESTAMP WHERE id = ?";
@@ -216,3 +335,5 @@ exports.updateTaskStatus = (id, status) => {
       });
   });
 };
+
+
