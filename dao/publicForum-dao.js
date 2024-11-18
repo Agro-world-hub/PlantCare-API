@@ -94,8 +94,6 @@ exports.createReply = (chatId, replyId, replyMessage) => {
   });
 };
 
-// DAO method to create a new post
-
 exports.createPost = (userId, heading, message, postimage) => {
   return new Promise((resolve, reject) => {
     const sql =
