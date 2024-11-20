@@ -248,7 +248,6 @@ exports.updateFirstLastName = asyncHandler(async(req, res) => {
             });
         }
 
-<<<<<<< HEAD
       res.status(500).json({ error: "Internal Server Error" });
   }
 });
@@ -359,8 +358,3 @@ exports.registerBankDetails = (req, res) => {
       });
   });
 };
-=======
-        res.status(500).json({ error: "Internal Server Error" });
-    }
-});
->>>>>>> 3c06686a269f06e1fa939301de613d468b834f74

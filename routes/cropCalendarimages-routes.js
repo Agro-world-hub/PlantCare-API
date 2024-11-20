@@ -1,10 +1,9 @@
 const express = require('express');
-<<<<<<< HEAD
 const { uploadImage ,upload} = require('../end-point/cropCalendarimages-ep');
-=======
+
 const { uploadImage } = require('../end-point/cropCalendarimages-ep');
 const upload = require('../Middlewares/multer.middleware');
->>>>>>> 3c06686a269f06e1fa939301de613d468b834f74
+
 
 
 // Initialize the router
