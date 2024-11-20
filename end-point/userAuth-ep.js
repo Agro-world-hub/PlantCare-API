@@ -10,7 +10,7 @@ const {
     updatePhoneNumberSchema,
     signupCheckerSchema,
     updateFirstLastNameSchema
-} = require("../validations/UserAuth-validation");
+} = require("../validations/userAuth-validation");
 //const { updatePhoneNumberSchema } = require('../validations/userAuth-validation');
 const userAuthDao = require("../dao/userAuth-dao");
 const userProfileDao = require("../dao/userAuth-dao");
@@ -64,60 +64,18 @@ exports.loginUser = async(req, res) => {
     }
 };
 
-// exports.SignupUser = asyncHandler(async(req, res) => {
-//     try {
-//         // Validate the request body using Joi schema
-//         await signupUserSchema.validateAsync(req.body);
-
-//         const { firstName, lastName, phoneNumber, NICnumber } = req.body;
-
-//         // Format phone number to ensure "+" is added at the start, if not present
-//         const formattedPhoneNumber = `+${String(phoneNumber).replace(/^\+/, "")}`;
-
-//         // Check if the phone number already exists in the database
-//         const existingUser = await userAuthDao.checkUserByPhoneNumber(
-//             formattedPhoneNumber
-//         );
-
-//         if (existingUser.length > 0) {
-//             return res.status(400).json({
-//                 message: "This mobile number exists in the database, please try another number!",
-//             });
-//         }
-
-//         // Insert the new user into the database
-//         const result = await userAuthDao.insertUser(
-//             firstName,
-//             lastName,
-//             formattedPhoneNumber,
-//             NICnumber
-//         );
-
-//         // Send success response if user is registered successfully
-//         res.status(200).json({ message: "User registered successfully!", result });
-//     } catch (err) {
-//         console.error("Error in SignUp:", err);
-//         if (err.isJoi) {
-//             // Validation error
-//             return res.status(400).json({ message: err.details[0].message });
-//         }
-//         // Other errors
-//         res.status(500).json({ message: "Internal Server Error!" });
-//     }
-// });
-
 exports.SignupUser = asyncHandler(async(req, res) => {
     try {
         // Validate the request body using Joi schema
-        await signupUserSchema.validateAsync(req.body);
-
-        const { firstName, lastName, phoneNumber, NICnumber } = req.body;
-
+        // await signupUserSchema.validateAsync(req.body);
+        const { firstName, lastName, phoneNumber, NICnumber } = await ValidationSchema.signupUserSchema.validateAsync(req.body);
         // Format phone number to ensure "+" is added at the start, if not present
         const formattedPhoneNumber = `+${String(phoneNumber).replace(/^\+/, "")}`;
 
         // Check if the phone number already exists in the database
-        const existingUser = await userAuthDao.checkUserByPhoneNumber(formattedPhoneNumber);
+        const existingUser = await userAuthDao.checkUserByPhoneNumber(
+            formattedPhoneNumber
+        );
 
         if (existingUser.length > 0) {
             return res.status(400).json({
@@ -126,21 +84,15 @@ exports.SignupUser = asyncHandler(async(req, res) => {
         }
 
         // Insert the new user into the database
-        const result = await userAuthDao.insertUser(firstName, lastName, formattedPhoneNumber, NICnumber);
+        const result = await userAuthDao.insertUser(
+            firstName,
+            lastName,
+            formattedPhoneNumber,
+            NICnumber
+        );
 
-        // Generate a JWT token
-        const payload = {
-            id: result.insertId, // Assuming `insertId` is the ID of the newly created user
-            phoneNumber: formattedPhoneNumber,
-        };
-        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '24h' }); // Set your secret key in .env file
-
-        // Send success response with token
-        res.status(200).json({
-            message: "User registered successfully!",
-            result,
-            token, // Send the token to the client
-        });
+        // Send success response if user is registered successfully
+        res.status(200).json({ message: "User registered successfully!", result });
     } catch (err) {
         console.error("Error in SignUp:", err);
         if (err.isJoi) {
@@ -151,6 +103,7 @@ exports.SignupUser = asyncHandler(async(req, res) => {
         res.status(500).json({ message: "Internal Server Error!" });
     }
 });
+
 
 
 
@@ -298,108 +251,3 @@ exports.updateFirstLastName = asyncHandler(async(req, res) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
-
-
-
-// Function to register bank details and generate QR code
-
-// Function to wrap query execution into a promise
-const query = (sql, params) => {
-    return new Promise((resolve, reject) => {
-        db.query(sql, params, (err, result) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(result);
-        });
-    });
-};
-
-const dbService = require('../dao/userAuth-dao');
-// Import the updateQRCode function
-// In the controller:
-exports.registerBankDetails = (req, res) => {
-    const {
-        firstName,
-        lastName,
-        nic,
-        mobileNumber,
-        selectedDistrict,
-        accountNumber,
-        accountHolderName,
-        bankName,
-        branchName,
-    } = req.body;
-
-    const userId = req.user.id;
-    console.log(userId);
-
-    // Start a database transaction
-    db.beginTransaction((err) => {
-        if (err) {
-            return res.status(500).json({ message: 'Failed to start transaction', error: err.message });
-        }
-
-        // Insert bank details into 'userbankdetails' table
-        dbService.insertBankDetails(userId, selectedDistrict, accountNumber, accountHolderName, bankName, branchName, (insertErr, insertResult) => {
-            if (insertErr) {
-                return db.rollback(() => {
-                    console.error('Error inserting bank details:', insertErr);
-                    return res.status(500).json({ message: 'Failed to insert bank details', error: insertErr.message });
-                });
-            }
-
-            // Prepare QR code data as a JSON object
-            const qrData = {
-                userInfo: {
-                    id: userId,
-                    name: `${firstName || 'Not provided'} ${lastName || 'Not provided'}`,
-                    nic: nic || 'Not provided',
-                    phone: mobileNumber || 'Not provided',
-                },
-                bankInfo: {
-                    accountHolder: accountHolderName || 'Not provided',
-                    accountNumber: accountNumber || 'Not provided',
-                    bank: bankName || 'Not provided',
-                    branch: branchName || 'Not provided',
-                }
-            };
-
-            // Directly use the JSON object for generating the QR code
-            dbService.generateQRCode(JSON.stringify(qrData), (qrCodeErr, qrCodeImage) => {
-                if (qrCodeErr) {
-                    return db.rollback(() => {
-                        console.error('Error generating QR code:', qrCodeErr);
-                        return res.status(500).json({ message: 'Failed to generate QR code', error: qrCodeErr.message });
-                    });
-                }
-
-                // Update user's QR code in the 'users' table
-                dbService.updateQRCode(userId, qrCodeImage, (updateErr, updateResult) => {
-                    if (updateErr) {
-                        return db.rollback(() => {
-                            console.error('Error updating QR code:', updateErr);
-                            return res.status(500).json({ message: 'Failed to update QR code', error: updateErr.message });
-                        });
-                    }
-
-                    // Commit the transaction if everything is successful
-                    db.commit((commitErr) => {
-                        if (commitErr) {
-                            return db.rollback(() => {
-                                console.error('Error committing transaction:', commitErr);
-                                return res.status(500).json({ message: 'Transaction commit failed', error: commitErr.message });
-                            });
-                        }
-
-                        // Success response with JSON object
-                        res.status(200).json({
-                            message: 'Bank details registered and QR code generated successfully',
-                            qrData: qrData // Returning the JSON object as part of the response
-                        });
-                    });
-                });
-            });
-        });
-    });
-};

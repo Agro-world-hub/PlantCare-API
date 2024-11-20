@@ -9,6 +9,7 @@ const port = process.env.PORT || 3000;
 const newsRoutes = require("./routes/news");
 const cropRoutes = require("./routes/cropRoutes");
 const MarketPriceRoutes = require("./routes/marketPriceRoutes");
+const complainRoutes = require("./routes/complainRoutes");
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -59,10 +60,10 @@ const cropcalendarimagesRoutes = require("./routes/cropCalendarimages-routes");
 app.use(process.env.AUTHOR, cropcalendarimagesRoutes);
 
 
-
 app.use("/api/news", newsRoutes);
 app.use("/api/crop", cropRoutes);
 app.use("/api/market-price", MarketPriceRoutes);
+app.use("/api/complain", complainRoutes);
 
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);

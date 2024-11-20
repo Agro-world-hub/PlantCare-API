@@ -22,7 +22,8 @@ const {
   enrollOngoingCultivationCrop,
   enrollSlaveCrop,
   cropCalendarDao,
-  getSlaveCropCalendarDaysByUserAndCrop
+  getSlaveCropCalendarDaysByUserAndCrop,
+  getEnrollOngoingCultivationCrop,
 } = require("../dao/userCrop-dao");
 // const cropCalendarDao = require('../dao/cropCalendar-dao');
 // const enrollValidator = require('../validator/enrollValidator');
@@ -239,7 +240,6 @@ exports.enroll = asyncHandler(async (req, res) => {
     const cropCountResult = await checkCropCount(cultivationId);
     const cropCount = cropCountResult[0].count;
 
-    // Check if crop count exceeds 3, and return a message to the frontend
     if (cropCount >= 3) {
       return res
         .status(400)
@@ -256,7 +256,17 @@ exports.enroll = asyncHandler(async (req, res) => {
 
     // Enroll the crop
     await enrollOngoingCultivationCrop(cultivationId, cropId, extent, startDate);
-    const responseenrollSlaveCrop= await enrollSlaveCrop(userId, cropId, startDate);
+    const enroledoncultivationcrop = await getEnrollOngoingCultivationCrop(cultivationId);
+    let onCulscropID;
+    if (enroledoncultivationcrop.length > 0) {
+      onCulscropID = enroledoncultivationcrop[0].id; 
+    } else {
+      console.log("No records found for the given cultivationId.");
+    }
+  
+    console.log("Created ID:", onCulscropID);
+
+    const responseenrollSlaveCrop= await enrollSlaveCrop(userId, cropId, startDate, onCulscropID);
     
     console.log("Successfully enrolled in crop ID:", cropId,"with extent:", extent, "and start date:", startDate);
     console.log("hi responseenrollSlaveCrop.....:", responseenrollSlaveCrop);
@@ -268,9 +278,92 @@ exports.enroll = asyncHandler(async (req, res) => {
   }
 });
 
-//slave crop calender
+exports.getOngoingCultivationCropByid  = asyncHandler(async (req, res) => {
+  try {
+    const id = req.params.id; 
+    const results = await cropDao.getEnrollOngoingCultivationCropByid(id); 
+    console.log("Results:", results);
 
-//const { getSlaveCropCalendarDaysSchema } = require('../validations/cropCalendar-validation');
+    if (results.length === 0) {
+      return res.status(404).json({
+        status: "error",
+        message: "Crop variety not found",
+      });
+    }
+
+    res.status(200).json(results);
+  } catch (err) {
+    console.error("Error fetching crop variety details:", err);
+    res.status(500).json({ message: "Internal Server Error !" });
+  }
+});
+
+// exports.UpdateOngoingCultivationScrops = asyncHandler(async (req, res) => {
+//   try {
+//     const { extent, startedAt ,onCulscropID} = req.body;
+//     if (!extent || !startedAt) {
+//       return res.status(400).json({ message: "Extent and Start Date are required." });
+//     }
+//     console.log("ID:", onCulscropID, "Extent:", extent, "Started At:", startedAt);
+//     const results = await cropDao.updateOngoingCultivationCrop(onCulscropID, extent, startedAt);
+
+//     if (results.affectedRows === 0) {
+//       return res.status(404).json({ message: "Ongoing cultivation crop not found or not updated." });
+//     }
+
+//     res.status(200).json({ message: "Ongoing cultivation crop updated successfully.", results });
+//     console.log("Ongoing cultivation crop updated successfully.");
+//   } catch (err) {
+//     console.error("Error updating ongoing cultivation crop:", err);
+//     res.status(500).json({ message: "Server error. Unable to update ongoing cultivation crop." });
+//   }
+// });
+
+exports.UpdateOngoingCultivationScrops = asyncHandler(async (req, res) => {
+  try {
+    const { extent, startedAt, onCulscropID } = req.body;
+    if (!extent || !startedAt) {
+      return res.status(400).json({ message: "Extent and Start Date are required." });
+    }
+    console.log("ID:", onCulscropID, "Extent:", extent, "Started At:", startedAt);
+
+    // Update the main ongoing cultivation crop
+    const results = await cropDao.updateOngoingCultivationCrop(onCulscropID, extent, startedAt);
+
+    if (results.affectedRows === 0) {
+      return res.status(404).json({ message: "Ongoing cultivation crop not found or not updated." });
+    }
+
+    // Fetch the days from the slavecropcalendardays table
+    const slaveCropDays = await cropDao.getSlaveCropCalendarDays(onCulscropID);
+    
+    if (slaveCropDays.length === 0) {
+      return res.status(404).json({ message: "No related records found in slavecropcalendardays." });
+    }
+
+    // Update each record in slavecropcalendardays
+    for (const cropDay of slaveCropDays) {
+      const { id, days } = cropDay;
+      const newStartingDate = new Date(startedAt);
+      newStartingDate.setDate(newStartingDate.getDate() + days); // Add the number of days to the start date
+
+      const formattedDate = newStartingDate.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+
+      // Update the slavecropcalendardays table with the new startingDate
+      const updateResult = await cropDao.updateSlaveCropCalendarDay(id, formattedDate);
+      if (updateResult.affectedRows === 0) {
+        console.error("Failed to update slavecropcalendardays for ID:", id);
+      }
+    }
+
+    res.status(200).json({ message: "Ongoing cultivation crop and slavecropcalendardays updated successfully.", results });
+    console.log("Ongoing cultivation crop and slavecropcalendardays updated successfully.");
+  } catch (err) {
+    console.error("Error updating ongoing cultivation crop:", err);
+    res.status(500).json({ message: "Server error. Unable to update ongoing cultivation crop." });
+  }
+});
+
 
 
 exports.getSlaveCropCalendarDaysByUserAndCrop = asyncHandler(async (req, res) => {
@@ -314,79 +407,124 @@ exports.getSlaveCropCalendarDaysByUserAndCrop = asyncHandler(async (req, res) =>
 //slave calender-update status
 exports.updateCropCalendarStatus = asyncHandler(async (req, res) => {
   try {
-      // Validate the request body
-      await updateCropCalendarStatusSchema.validateAsync(req.body);
+    // Validate the request body
+    await updateCropCalendarStatusSchema.validateAsync(req.body);
 
-      const { id, status } = req.body;
-      const currentTime = new Date();
+    const { id, status } = req.body;
+    const currentTime = new Date();
 
-      // Fetch the current task
-      const taskResults = await cropDao.getTaskById(id);
-      if (taskResults.length === 0) {
-          return res.status(404).json({ message: "No record found with the provided id." });
+    // Fetch the current task
+    const taskResults = await cropDao.getTaskById(id);
+    if (taskResults.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No record found with the provided id." });
+    }
+
+    const currentTask = taskResults[0];
+    const {
+      taskIndex,
+      status: currentStatus,
+      createdAt,
+      cropCalendarId,
+      days,
+      startingDate,
+      userId,
+    } = currentTask;
+
+    // Check if the task is being marked as 'pending' after 'completed' and restrict if more than 1 hour has passed
+    if (currentStatus === "completed" && status === "pending") {
+      const timeDiffInHours = Math.abs(currentTime - new Date(createdAt)) / 36e5;
+      console.log("Time difference in hours:", timeDiffInHours);
+      if (timeDiffInHours > 1) {
+        return res.status(403).json({
+          message:
+            "You cannot change the status back to pending after 1 hour of marking it as completed.",
+        });
+      }
+    }
+
+    // If status is 'completed' and taskIndex > 1, check previous tasks
+    if (status === "completed" && taskIndex > 1) {
+      const previousTasksResults = await cropDao.getPreviousTasks(
+        taskIndex,
+        cropCalendarId,
+        userId,
+        status
+      );
+      console.log("Previous tasks:", previousTasksResults);
+
+      // Check if all previous tasks are completed
+      let allPreviousTasksCompleted = true;
+      let lastCompletedTask = null;
+      for (const previousTask of previousTasksResults) {
+        if (previousTask.status !== "completed") {
+          allPreviousTasksCompleted = false;
+          break;
+        }
+        lastCompletedTask = previousTask;
       }
 
-      const currentTask = taskResults[0];
-      const { taskIndex, status: currentStatus, createdAt, cropCalendarId, userId } = currentTask;
-
-      // Check if the task is being marked as 'pending' after 'completed' and restrict if more than 1 hour has passed
-      if (currentStatus === 'completed' && status === 'pending') {
-          const timeDiffInHours = Math.abs(currentTime - new Date(createdAt)) / 36e5;
-          if (timeDiffInHours > 1) {
-              return res.status(403).json({
-                  message: "You cannot change the status back to pending after 1 hour of marking it as completed."
-              });
-          }
-      }
-
-      // If status is 'completed' and taskIndex > 1, check previous tasks
-      if (status === 'completed' && taskIndex > 1) {
-          const previousTasksResults = await cropDao.getPreviousTasks(taskIndex, cropCalendarId, userId);
-
-          // Check if all previous tasks are completed
-          let allPreviousTasksCompleted = true;
-          let lastCompletedTask = null;
-          for (const previousTask of previousTasksResults) {
-              if (previousTask.status !== 'completed') {
-                  allPreviousTasksCompleted = false;
-                  break;
-              }
-              lastCompletedTask = previousTask;
-          }
-
-          if (!allPreviousTasksCompleted) {
-              return res.status(400).json({ message: "You have to complete previous tasks before moving to the next." });
-          }
-
-          // Check the 6-hour waiting period for the last completed task
-          if (lastCompletedTask) {
-              const previousCreatedAt = new Date(lastCompletedTask.createdAt);
-              const timeDiffInHours = Math.abs(currentTime - previousCreatedAt) / 36e5;
-              if (timeDiffInHours < 6) {
-                  return res.status(400).json({
-                      message: "You need to wait 6 hours after completing the previous task before marking this task as completed."
-                  });
-              }
-          }
-      }
-
-      // Proceed with updating the status
-      const updateResults = await cropDao.updateTaskStatus(id, status);
-      if (updateResults.affectedRows === 0) {
-          return res.status(404).json({ message: "No record found with the provided id." });
-      }
-
-      res.status(200).json({ message: "Status updated successfully." });
-
-  } catch (err) {
-      console.error("Error updating status:", err);
-      if (err.isJoi) {
-          return res.status(400).json({
-              status: 'error',
-              message: err.details[0].message
+      if (!allPreviousTasksCompleted) {
+        return res
+          .status(400)
+          .json({
+            message:
+              "You have to complete previous tasks before moving to the next.",
           });
       }
-      res.status(500).json({ message: "Internal Server Error!" });
+
+    //   const nextTaskResults = await cropDao.getNextTask(taskIndex + 1, cropCalendarId, userId, status);
+    // if (nextTaskResults.length === 0) {
+    //   return res
+    //     .status(404)
+    //     .json({ message: "No next task found in the calendar." });
+    // }
+
+    // const nextTask = nextTaskResults[0];
+    // console.log("Next Task:", nextTask);
+
+      if (lastCompletedTask && currentTask && lastCompletedTask.status === "completed") {
+        const previousCreatedAt = new Date(lastCompletedTask.createdAt);
+        const taskDays = currentTask.days ;
+        console.log("TaskDyas:", taskDays);
+        const nextTaskStartDate = new Date(
+          previousCreatedAt.getTime() + taskDays * 24 * 60 * 60 * 1000
+        );
+        const currentDate = new Date();
+        const remainingTime = nextTaskStartDate - currentDate;
+        const remainingDays = Math.ceil(remainingTime / (24 * 60 * 60 * 1000));
+        console.log("Remaining days:", remainingDays);
+
+        // If the remaining days are greater than 0, restrict updating
+        if (remainingDays > 0) {
+          return res
+            .status(400)
+            .json({
+              message:
+                `You need to wait ${remainingDays} days before marking this task as completed.`,
+            });
+        }
+      }
+    }
+
+    // Proceed with updating the status
+    const updateResults = await cropDao.updateTaskStatus(id, status);
+    if (updateResults.affectedRows === 0) {
+      return res
+        .status(404)
+        .json({ message: "No record found with the provided id." });
+    }
+
+    res.status(200).json({ message: "Status updated successfully." });
+  } catch (err) {
+    console.error("Error updating status:", err);
+    if (err.isJoi) {
+      return res.status(400).json({
+        status: "error",
+        message: err.details[0].message,
+      });
+    }
+    res.status(500).json({ message: "Internal Server Error!" });
   }
 });
-

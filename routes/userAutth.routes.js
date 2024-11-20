@@ -31,5 +31,8 @@ router.post('/registerBankDetails', auth, userAuthEp.registerBankDetails);
 
 
 
+router.put("/user-update-names", auth, userAuthEp.updateFirstLastName);
+
+router.post('/registerBankDetails', auth, userAuthEp.registerBankDetails);
 
 module.exports = router;
