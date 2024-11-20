@@ -322,7 +322,7 @@ exports.registerBankDetails = (req, res) => {
   } = req.body;
 
   const userId = req.user.id;
-  console.log(userId);
+  console.log(req.body);
 
   // Start a database transaction
   db.beginTransaction((err) => {
@@ -354,6 +354,8 @@ exports.registerBankDetails = (req, res) => {
                   branch: branchName || 'Not provided',
               }
           };
+
+          console.log(qrData)
 
           // Directly use the JSON object for generating the QR code
           dbService.generateQRCode(JSON.stringify(qrData), (qrCodeErr, qrCodeImage) => {
