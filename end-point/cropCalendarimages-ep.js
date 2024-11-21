@@ -1,6 +1,8 @@
 const multer = require('multer');
 const { insertTaskImage } = require('../dao/cropCalendarimages-dao');
 const logger = require('winston');
+const asyncHandler = require("express-async-handler");
+
 
 // Setup multer to handle file uploads in memory
 const storage = multer.memoryStorage();
@@ -19,7 +21,7 @@ const upload = multer({
 /**
  * Handles the upload and insertion of task images
  */
-const uploadImage = async(req, res) => {
+const uploadImage =asyncHandler(async(req, res) => {
     try {
         console.log("route hitttttttttttt");
         // Log the FormData content
@@ -54,7 +56,7 @@ const uploadImage = async(req, res) => {
         logger.error('Error uploading image:', error);
         res.status(500).json({ message: error.message });
     }
-};
+}); 
 
 // Export endpoint handler
 module.exports = {

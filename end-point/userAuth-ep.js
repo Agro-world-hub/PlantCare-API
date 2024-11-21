@@ -19,9 +19,9 @@ const signupDao = require('../dao/userAuth-dao');
 exports.loginUser = async(req, res) => {
     try {
         console.log("hi..the sec key is", process.env.JWT_SECRET);
-        await loginUserSchema.validateAsync(req.body);
+        const { phonenumber } = await ValidationSchema.loginUserSchema.validateAsync(req.body);
 
-        const phonenumber = req.body.phonenumber;
+  
         console.log("hi phonenumber", phonenumber);
 
         const users = await userAuthDao.loginUser(phonenumber);
@@ -142,7 +142,7 @@ exports.updatePhoneNumber = asyncHandler(async(req, res) => {
     const { newPhoneNumber } = req.body; // New phone number from request body
 
     // Validate the request body
-    await updatePhoneNumberSchema.validateAsync(req.body);
+    // await updatePhoneNumberSchema.validateAsync(req.body);
 
     // Call the DAO to update the phone number
     const results = await userAuthDao.updateUserPhoneNumber(
@@ -169,7 +169,7 @@ exports.updatePhoneNumber = asyncHandler(async(req, res) => {
 exports.signupChecker = asyncHandler(async(req, res) => {
     try {
         // Validate the request body
-        await signupCheckerSchema.validateAsync(req.body);
+        // await signupCheckerSchema.validateAsync(req.body);
 
         const { phoneNumber, NICnumber } = req.body;
 
