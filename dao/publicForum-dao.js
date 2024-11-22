@@ -1,7 +1,5 @@
 const db = require("../startup/database");
 
-// DAO method to fetch all posts
-
 exports.getPaginatedPosts = (limit, offset) => {
   return new Promise((resolve, reject) => {
     const sql = `
@@ -27,7 +25,6 @@ exports.getPaginatedPosts = (limit, offset) => {
       if (err) {
         reject(err);
       } else {
-        // Convert postimage from Buffer to Base64 string if it exists
         const posts = results.map((post) => ({
           ...post,
           postimage: post.postimage ? post.postimage.toString("base64") : null,
@@ -88,7 +85,7 @@ exports.createReply = (chatId, replyId, replyMessage) => {
       if (err) {
         reject(err);
       } else {
-        resolve(result.insertId); // Return the inserted reply's ID
+        resolve(result.insertId); 
       }
     });
   });
@@ -102,7 +99,7 @@ exports.createPost = (userId, heading, message, postimage) => {
       if (err) {
         reject(err);
       } else {
-        resolve(result.insertId); // Return the inserted post's ID
+        resolve(result.insertId); 
       }
     });
   });

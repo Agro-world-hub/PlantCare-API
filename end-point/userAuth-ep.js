@@ -4,6 +4,7 @@ const asyncHandler = require("express-async-handler");
 const userAuthDao = require("../dao/userAuth-dao");
 const userProfileDao = require("../dao/userAuth-dao");
 const signupDao = require('../dao/userAuth-dao');
+const ValidationSchema = require('../validations/userAuth-validation')
 
 exports.loginUser = async(req, res) => {
     try {
@@ -48,47 +49,6 @@ exports.loginUser = async(req, res) => {
     }
 };
 
-// exports.SignupUser = asyncHandler(async(req, res) => {
-//     try {
-//         // Validate the request body using Joi schema
-//         await signupUserSchema.validateAsync(req.body);
-
-//         const { firstName, lastName, phoneNumber, NICnumber } = req.body;
-
-//         // Format phone number to ensure "+" is added at the start, if not present
-//         const formattedPhoneNumber = `+${String(phoneNumber).replace(/^\+/, "")}`;
-
-//         // Check if the phone number already exists in the database
-//         const existingUser = await userAuthDao.checkUserByPhoneNumber(
-//             formattedPhoneNumber
-//         );
-
-//         if (existingUser.length > 0) {
-//             return res.status(400).json({
-//                 message: "This mobile number exists in the database, please try another number!",
-//             });
-//         }
-
-//         // Insert the new user into the database
-//         const result = await userAuthDao.insertUser(
-//             firstName,
-//             lastName,
-//             formattedPhoneNumber,
-//             NICnumber
-//         );
-
-//         // Send success response if user is registered successfully
-//         res.status(200).json({ message: "User registered successfully!", result });
-//     } catch (err) {
-//         console.error("Error in SignUp:", err);
-//         if (err.isJoi) {
-//             // Validation error
-//             return res.status(400).json({ message: err.details[0].message });
-//         }
-//         // Other errors
-//         res.status(500).json({ message: "Internal Server Error!" });
-//     }
-// });
 
 exports.SignupUser = asyncHandler(async(req, res) => {
     try {
@@ -346,3 +306,5 @@ exports.registerBankDetails = (req, res) => {
         });
     });
 };
+
+

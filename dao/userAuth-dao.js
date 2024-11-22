@@ -18,21 +18,19 @@ exports.loginUser = (phonenumber) => {
     });
 };
 
-// DAO method to check if phone number exists in the database
 exports.checkUserByPhoneNumber = (phoneNumber) => {
     return new Promise((resolve, reject) => {
         const query = "SELECT * FROM users WHERE phoneNumber = ?";
         db.query(query, [phoneNumber], (err, results) => {
             if (err) {
-                reject(err); // Reject the promise if there is a database error
+                reject(err); 
             } else {
-                resolve(results); // Resolve with the query results
+                resolve(results); 
             }
         });
     });
 };
 
-// DAO method to insert a new user into the database
 exports.insertUser = (firstName, lastName, phoneNumber, NICnumber) => {
     return new Promise((resolve, reject) => {
         const query =
@@ -41,9 +39,9 @@ exports.insertUser = (firstName, lastName, phoneNumber, NICnumber) => {
             query, [firstName, lastName, phoneNumber, NICnumber],
             (err, results) => {
                 if (err) {
-                    reject(err); // Reject if there's an error during insertion
+                    reject(err); 
                 } else {
-                    resolve(results); // Resolve with the result if successful
+                    resolve(results); 
                 }
             }
         );
