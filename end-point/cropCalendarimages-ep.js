@@ -1,16 +1,16 @@
+// Import necessary dependencies
+const { insertTaskImage, getRequiredImages } = require('../dao/cropCalendarImages-dao'); // Import the DAO function
+// Import the DAO function for required images
+const logger = require('winston'); // Logger for logging actions
 const multer = require('multer');
-const { insertTaskImage } = require('../dao/cropCalendarimages-dao');
-const logger = require('winston');
-const asyncHandler = require("express-async-handler");
 
-
-// Setup multer to handle file uploads in memory
+// Configure multer to store the image in memory
 const storage = multer.memoryStorage();
 const upload = multer({
     storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB limit
+    limits: { fileSize: 10 * 1024 * 1024 }, // Increase limit to 10 MB
     fileFilter: (req, file, cb) => {
-        const allowedMimeTypes = ['image/jpeg', 'image/png'];
+        const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/jpg'];
         if (!allowedMimeTypes.includes(file.mimetype)) {
             return cb(new Error('Invalid file type. Only JPEG and PNG are allowed.'));
         }
@@ -18,48 +18,82 @@ const upload = multer({
     },
 });
 
-/**
- * Handles the upload and insertion of task images
- */
-const uploadImage =asyncHandler(async(req, res) => {
+// Endpoint to handle image upload
+const uploadImage = async(req, res) => {
     try {
-        console.log("route hitttttttttttt");
-        // Log the FormData content
-        console.log("Received FormData:", req.body); // Log the other fields sent in the FormData
-        console.log("Received file details:", req.file); // Log the file details (name, mimeType, size)
+        // Log the received FormData content and file details
+        console.log('Received FormData:', req.body);
+        console.log('Received file details:', req.file);
 
         if (!req.file) {
-            return res.status(400).json({ message: 'No image file uploaded.' });
+            return res.status(400).json({ message: 'No file uploaded.' });
         }
 
         const { slaveId } = req.body;
-
-        if (!slaveId || typeof slaveId !== 'string') {
-            return res.status(400).json({ message: 'Invalid slaveId provided.' });
+        if (!slaveId) {
+            return res.status(400).json({ message: 'No slaveId provided.' });
         }
 
-        const image = req.file.buffer; // Buffer of the uploaded file
+        // Get the image buffer
+        const image = req.file.buffer;
 
-        // Call the DAO method to insert the image
+        // Assuming insertTaskImage handles the database insert
         const result = await insertTaskImage(slaveId, image);
 
-        logger.info(`Image uploaded successfully for slaveId: ${slaveId}`);
+        console.log('Image uploaded successfully:', result); // Add log for success
         res.status(200).json({
             message: 'Image uploaded successfully.',
             imageDetails: {
                 mimeType: req.file.mimetype,
                 size: req.file.size,
             },
-            result: result,
+            result: result, // Send result of insertTaskImage function
         });
     } catch (error) {
-        logger.error('Error uploading image:', error);
-        res.status(500).json({ message: error.message });
+        // Handle MulterError specifically for file size limit
+        if (error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({
+                message: 'File size exceeds the maximum allowed size of 10 MB.',
+            });
+        }
+
+        console.error('Error during image upload:', error); // Log detailed error
+        res.status(500).json({ message: 'Internal Server Error', error: error.message });
+    }
+};
+
+// Endpoint to get the required images for a cropId
+const getRequiredImagesEndpoint = async(req, res) => {
+    try {
+        const { cropId } = req.params;
+
+        console.log(cropId);
+
+        if (!cropId) {
+            return res.status(400).json({ message: 'No cropId provided.' });
+        }
+
+        // Fetch the number of required images for the given cropId
+        const requiredImages = await getRequiredImages(cropId);
+
+        if (requiredImages === null) {
+            return res.status(404).json({ message: 'No data found for the provided cropId.' });
+        }
+
+        res.status(200).json({
+            message: 'Required images fetched successfully.',
+            requiredImages: requiredImages,
+        });
+    } catch (error) {
+        console.error('Error fetching required images:', error); // Log detailed error
+        res.status(500).json({ message: 'Internal Server Error', error: error.message });
     }
 }); 
 
-// Export endpoint handler
+
+// Export endpoint handler and multer middleware
 module.exports = {
     uploadImage,
     upload,
+    getRequiredImagesEndpoint,
 };
