@@ -163,29 +163,22 @@ exports.deleteAsset = asyncHandler(async (req, res) => {
 });
 
 
-//addFixedAssets
-
 
 exports.handleAddFixedAsset = async (req, res) => {
   const userId = req.user.id;
   const { category, asset, brand, batchNum, volume, unit, numberOfUnits, unitPrice, totalPrice, purchaseDate, expireDate, status } = req.body;
 
   try {
-      // Validate request body against the schema
       await addFixedAssetSchema.validateAsync(req.body);
 
-      // Convert volume to a float (to allow decimal values)
       const volumeFloat = parseFloat(volume);
 
-      // Format dates for MySQL
       const formattedPurchaseDate = new Date(purchaseDate).toISOString().slice(0, 19).replace('T', ' ');
       const formattedExpireDate = new Date(expireDate).toISOString().slice(0, 19).replace('T', ' ');
 
-      // Check if the asset already exists
       const existingAssets = await fixedAssetDao.checkAssetExists(userId, category, asset);
 
       if (existingAssets.length > 0) {
-          // Update existing asset
           const existingAsset = existingAssets[0];
           const updatedNumOfUnits = existingAsset.numOfUnit + numberOfUnits;
           const updatedTotalPrice = existingAsset.total + totalPrice;
@@ -194,7 +187,6 @@ exports.handleAddFixedAsset = async (req, res) => {
 
           await fixedAssetDao.updateAsset(updatedValues, existingAsset.id);
 
-          // Add record to currentassetrecord
           await fixedAssetDao.insertAssetRecord([existingAsset.id, numberOfUnits, totalPrice]);
 
           return res.status(200).json({
@@ -202,12 +194,10 @@ exports.handleAddFixedAsset = async (req, res) => {
               message: 'Asset updated successfully',
           });
       } else {
-          // Insert new asset
           const insertValues = [userId, category, asset, brand, batchNum, unit, volumeFloat, numberOfUnits, unitPrice, totalPrice, formattedPurchaseDate, formattedExpireDate, status];
 
           const newAssetId = await fixedAssetDao.insertAsset(insertValues);
 
-          // Add record to currentassetrecord
           await fixedAssetDao.insertAssetRecord([newAssetId, numberOfUnits, totalPrice]);
 
           return res.status(200).json({
@@ -218,13 +208,11 @@ exports.handleAddFixedAsset = async (req, res) => {
   } catch (err) {
       console.error('Error in handleAddFixedAsset:', err);
       if (err.isJoi) {
-          // Validation error
           return res.status(400).json({
               status: 'error',
               message: err.details[0].message,
           });
       }
-      // Other errors
       res.status(500).json({ status: 'error', message: 'An error occurred while processing the request.' });
   }
 };
