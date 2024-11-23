@@ -57,6 +57,7 @@ exports.signupUserSchema = Joi.object({
             "string.min": "NIC Number must be at least 9 characters.",
             "string.max": "NIC Number must be no more than 12 characters."
         }),
+    district: Joi.string().required().label('District'),
 });
 
 // Update Phone Number Schema

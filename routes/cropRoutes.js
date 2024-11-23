@@ -41,6 +41,12 @@ router.get(
   userCrop.getSlaveCropCalendarDaysByUserAndCrop
 );
 
+router.get(
+  "/slave-crop-calendar-progress/:cropCalendarId",
+  auth,
+  userCrop.getSlaveCropCalendarPrgress
+);
+
 // router.post("/update-slave-crop-status",auth,updateSlaveCropStatusById)
 // router.post("/update-slave",auth,updateCropCalendarStatus)
 router.post("/update-slave", auth, userCrop.updateCropCalendarStatus);

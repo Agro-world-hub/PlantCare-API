@@ -252,10 +252,7 @@ const createXlsxHistoryTable = () => {
     CREATE TABLE IF NOT EXISTS xlsxhistory (
       id INT AUTO_INCREMENT PRIMARY KEY,
       xlName VARCHAR(50) NOT NULL,
-      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      startTime TIME DEFAULT NULL,
-      endTime TIME DEFAULT NULL,
-      date DATE DEFAULT NULL
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `;
     return new Promise((resolve, reject) => {
@@ -278,24 +275,21 @@ const createMarketPriceTable = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS marketprice (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      cropId INT(11) DEFAULT NULL,
+      varietyId INT(11) DEFAULT NULL,
       xlindex INT(11) DEFAULT NULL,
-      grade VARCHAR(1) COLLATE utf8mb4_general_ci DEFAULT NULL,
+      grade VARCHAR(1) NOT NULL,
       price DECIMAL(10,2) DEFAULT NULL,
-      date DATE DEFAULT NULL,
-      startTime TIME DEFAULT NULL,
-      endTime TIME DEFAULT NULL,
-      status VARCHAR(20) NOT NULL,
+      averagePrice DECIMAL(10,2) DEFAULT NULL,
       createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       createdBy INT(11) DEFAULT NULL,
-      FOREIGN KEY (cropId) REFERENCES cropcalender(id)
-        ON DELETE SET NULL
+      FOREIGN KEY (varietyId) REFERENCES cropvariety(id)
+        ON DELETE CASCADE
         ON UPDATE CASCADE,
       FOREIGN KEY (createdBy) REFERENCES adminUsers(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE,
       FOREIGN KEY (xlindex) REFERENCES xlsxhistory(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -317,7 +311,8 @@ const createMarketPriceServeTable = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       marketPriceId INT(11) DEFAULT NULL,
       xlindex INT(11) DEFAULT NULL,
-      newPrice DECIMAL(10,2) DEFAULT NULL,
+      price DECIMAL(10,2) DEFAULT NULL,
+      updatedPrice DECIMAL(10,2) DEFAULT NULL,
       collectionCenterId INT(11) DEFAULT NULL,
       FOREIGN KEY (marketPriceId) REFERENCES marketprice(id)
         ON DELETE CASCADE
@@ -695,9 +690,11 @@ const createSlaveCropCalenderDaysTable = () => {
       CREATE TABLE IF NOT EXISTS slavecropcalendardays (
       id INT AUTO_INCREMENT PRIMARY KEY,
       userId INT(11) NULL,
+      onCulscropID  INT(11) NULL,
       cropCalendarId INT(11) NULL,
       taskIndex INT(255) NULL,
       startingDate DATE DEFAULT NULL,
+      days INT(255) NULL,
       taskTypeEnglish TEXT COLLATE latin1_swedish_ci NULL,
       taskTypeSinhala TEXT COLLATE utf8_unicode_ci NULL,
       taskTypeTamil TEXT COLLATE utf8_unicode_ci NULL,
@@ -711,15 +708,17 @@ const createSlaveCropCalenderDaysTable = () => {
       taskDescriptionSinhala TEXT COLLATE utf8_unicode_ci NULL,
       taskDescriptionTamil TEXT COLLATE utf8_unicode_ci NULL,
       status VARCHAR(20),
-      image VARCHAR(20),
       imageLink TEXT,
-      video VARCHAR(20),
       videoLink TEXT,
+      reqImages INT(11) NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id)
           ON DELETE CASCADE
           ON UPDATE CASCADE,
       FOREIGN KEY (cropCalendarId) REFERENCES cropCalender(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+      FOREIGN KEY (onCulscropID) REFERENCES ongoingcultivationscrops(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
   );
@@ -734,6 +733,33 @@ const createSlaveCropCalenderDaysTable = () => {
         });
     });
 };
+
+
+const createTaskImages = () => {
+    const sql = `
+      CREATE TABLE IF NOT EXISTS taskimages (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            slaveId INT(11) NOT NULL,
+            image LONGBLOB,
+            createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (slaveId) REFERENCES slavecropcalendardays(id)
+                ON DELETE CASCADE
+                ON UPDATE CASCADE
+  );
+    `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error taskimages table: ' + err);
+            } else {
+                resolve('taskimages table created successfully.');
+            }
+        });
+    });
+};
+
+
+
 
 const createpublicforumposts = () => {
     const sql = `
@@ -819,6 +845,7 @@ const createCollectionOfficer = () => {
       province VARCHAR(25) NOT NULL,
       country VARCHAR(25) NOT NULL,
       languages VARCHAR(255) NOT NULL,
+      status VARCHAR(25) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (centerId) REFERENCES collectioncenter(id)
 
@@ -1092,6 +1119,31 @@ const createMarketPlacePackages = () => {
     });
 };
 
+const createCoupon = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS coupon(
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      code VARCHAR(25),
+      type VARCHAR(25) NOT NULL,
+      percentage DECIMAL(5, 2) NOT NULL,
+      status VARCHAR(25) NOT NULL,
+      checkLimit Boolean NOT NULL,
+      startDate DATETIME NOT NULL,
+      endDate DATETIME NOT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating coupen table: ' + err);
+            } else {
+                resolve('coupen table created successfully.');
+            }
+      });
+});
+};
+
 
 const createMarketPlaceItems = () => {
     const sql = `
@@ -1102,6 +1154,10 @@ const createMarketPlaceItems = () => {
       normalPrice DECIMAL(8, 2) NOT NULL,
       discountedPrice DECIMAL(8, 2) NOT NULL,
       promo BOOLEAN  NOT NULL,
+      unitType VARCHAR(5) NOT NULL,
+      startValue DECIMAL(8, 2) NOT NULL,
+      changeby DECIMAL(8, 2) NOT NULL,
+      tags TEXT NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (cropId) REFERENCES cropcalender(id)
         ON DELETE SET NULL
@@ -1256,6 +1312,7 @@ module.exports = {
 
 
     createSlaveCropCalenderDaysTable,
+    createTaskImages,
 
     //collection officer
     createCollectionOfficer,
@@ -1270,6 +1327,7 @@ module.exports = {
     //Seed for market Place Application
     createMarketPlaceUsersTable,
     createMarketPlacePackages,
+    createCoupon,
     createMarketPlaceItems,
     createPackageDetails,
     createPromoItems,

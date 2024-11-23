@@ -52,7 +52,7 @@ exports.loginUser = async(req, res) => {
 
 exports.SignupUser = asyncHandler(async(req, res) => {
     try {
-        const { firstName, lastName, phoneNumber, NICnumber } = await ValidationSchema.signupUserSchema.validateAsync(req.body);
+        const { firstName, lastName, phoneNumber, NICnumber, district } = await ValidationSchema.signupUserSchema.validateAsync(req.body);
 
         const formattedPhoneNumber = `+${String(phoneNumber).replace(/^\+/, "")}`;
 
@@ -64,7 +64,7 @@ exports.SignupUser = asyncHandler(async(req, res) => {
             });
         }
 
-        const result = await userAuthDao.insertUser(firstName, lastName, formattedPhoneNumber, NICnumber);
+        const result = await userAuthDao.insertUser(firstName, lastName, formattedPhoneNumber, NICnumber, district);
 
         const payload = {
             id: result.insertId, 

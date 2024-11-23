@@ -31,12 +31,12 @@ exports.checkUserByPhoneNumber = (phoneNumber) => {
     });
 };
 
-exports.insertUser = (firstName, lastName, phoneNumber, NICnumber) => {
+exports.insertUser = (firstName, lastName, phoneNumber, NICnumber, district) => {
     return new Promise((resolve, reject) => {
         const query =
-            "INSERT INTO users(`firstName`, `lastName`, `phoneNumber`, `NICnumber`) VALUES(?, ?, ?, ?)";
+            "INSERT INTO users(`firstName`, `lastName`, `phoneNumber`, `NICnumber`, `district`) VALUES(?, ?, ?, ?,?)";
         db.query(
-            query, [firstName, lastName, phoneNumber, NICnumber],
+            query, [firstName, lastName, phoneNumber, NICnumber, district],
             (err, results) => {
                 if (err) {
                     reject(err); 
@@ -52,7 +52,7 @@ exports.insertUser = (firstName, lastName, phoneNumber, NICnumber) => {
 exports.getUserProfileById = (userId) => {
     return new Promise((resolve, reject) => {
         const sql =
-            "SELECT firstName, lastName, phoneNumber, NICnumber FROM users WHERE id = ?";
+            "SELECT firstName, lastName, phoneNumber, NICnumber, district FROM users WHERE id = ?";
 
         db.query(sql, [userId], (err, results) => {
             if (err) {

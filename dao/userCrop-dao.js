@@ -94,7 +94,8 @@ exports.getOngoingCultivationsByUserId = (userId, callback) => {
     SELECT * 
     FROM ongoingcultivations c 
     JOIN ongoingcultivationscrops oc ON c.id = oc.ongoingCultivationId
-    JOIN cropvariety cr ON oc.cropCalendar = cr.id 
+    JOIN cropcalender cc ON oc.cropCalendar = cc.id
+    JOIN cropvariety cr ON cc.cropVarietyId = cr.id 
     WHERE c.userId = ?
   `;
   db.query(sql, [userId], (err, results) => {
@@ -274,6 +275,23 @@ exports.getSlaveCropCalendarDaysByUserAndCrop = (userId, cropCalendarId) => {
       });
   });
 };
+
+exports.getSlaveCropCalendarPrgress = (userId,cropCalendarId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+        SELECT status
+        FROM slavecropcalendardays 
+        WHERE userId = ? AND cropCalendarId = ?
+    `;
+    db.query(sql, [userId, cropCalendarId], (err, results) => {
+        if (err) {
+            reject(err);
+        } else {
+            resolve(results);
+        }
+    });
+});
+}
 
 //slave calender-status update
 exports.getTaskById = (id) => {
