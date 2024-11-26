@@ -32,7 +32,6 @@
 
 const Joi = require('joi');
 
-// Login Schema
 exports.loginUserSchema = Joi.object({
     phonenumber: Joi.string()
         .pattern(/^\+?\d{10,15}$/)
@@ -43,7 +42,6 @@ exports.loginUserSchema = Joi.object({
         }),
 });
 
-// Sign Up Schema
 exports.signupUserSchema = Joi.object({
     firstName: Joi.string().min(2).max(50).required().label('First Name'),
     lastName: Joi.string().min(2).max(50).required().label('Last Name'),
@@ -60,7 +58,6 @@ exports.signupUserSchema = Joi.object({
     district: Joi.string().required().label('District'),
 });
 
-// Update Phone Number Schema
 exports.updatePhoneNumberSchema = Joi.object({
     newPhoneNumber: Joi.string()
         .pattern(/^\+?\d{10,15}$/)
@@ -71,7 +68,6 @@ exports.updatePhoneNumberSchema = Joi.object({
         }),
 });
 
-// Sign Up Checker Schema
 exports.signupCheckerSchema = Joi.object({
     phoneNumber: Joi.string()
         .pattern(/^\+?\d{10,15}$/)
@@ -89,7 +85,6 @@ exports.signupCheckerSchema = Joi.object({
       "object.missing": "Please provide at least one of phoneNumber or NICnumber."
   });
 
-// Update First and Last Name Schema
 exports.updateFirstLastNameSchema = Joi.object({
     firstName: Joi.string().min(2).max(50).required().label('First Name'),
     lastName: Joi.string().min(2).max(50).required().label('Last Name')
