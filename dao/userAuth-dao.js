@@ -23,9 +23,9 @@ exports.checkUserByPhoneNumber = (phoneNumber) => {
         const query = "SELECT * FROM users WHERE phoneNumber = ?";
         db.query(query, [phoneNumber], (err, results) => {
             if (err) {
-                reject(err); 
+                reject(err);
             } else {
-                resolve(results); 
+                resolve(results);
             }
         });
     });
@@ -39,9 +39,9 @@ exports.insertUser = (firstName, lastName, phoneNumber, NICnumber, district) => 
             query, [firstName, lastName, phoneNumber, NICnumber, district],
             (err, results) => {
                 if (err) {
-                    reject(err); 
+                    reject(err);
                 } else {
-                    resolve(results); 
+                    resolve(results);
                 }
             }
         );

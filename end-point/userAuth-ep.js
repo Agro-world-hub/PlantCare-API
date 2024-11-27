@@ -3,16 +3,15 @@ const db = require("../startup/database");
 const asyncHandler = require("express-async-handler");
 const userAuthDao = require("../dao/userAuth-dao");
 const userProfileDao = require("../dao/userAuth-dao");
-const signupDao = require("../dao/userAuth-dao");
-const ValidationSchema = require("../validations/userAuth-validation");
+const signupDao = require('../dao/userAuth-dao');
+const ValidationSchema = require('../validations/userAuth-validation')
 
-exports.loginUser = async (req, res) => {
-  try {
-    console.log("hi..the sec key is", process.env.JWT_SECRET);
-    const { phonenumber } =
-      await ValidationSchema.loginUserSchema.validateAsync(req.body);
+exports.loginUser = async(req, res) => {
+    try {
+        console.log("hi..the sec key is", process.env.JWT_SECRET);
+        const { phonenumber } = await ValidationSchema.loginUserSchema.validateAsync(req.body);
 
-    console.log("hi phonenumber", phonenumber);
+        console.log("hi phonenumber", phonenumber);
 
     const users = await userAuthDao.loginUser(phonenumber);
 
@@ -52,6 +51,7 @@ exports.loginUser = async (req, res) => {
   }
 };
 
+
 exports.SignupUser = asyncHandler(async (req, res) => {
   try {
     const { firstName, lastName, phoneNumber, NICnumber, district } =
@@ -59,9 +59,10 @@ exports.SignupUser = asyncHandler(async (req, res) => {
 
     const formattedPhoneNumber = `+${String(phoneNumber).replace(/^\+/, "")}`;
 
-    const existingUser = await userAuthDao.checkUserByPhoneNumber(
-      formattedPhoneNumber
-    );
+        // Check if the phone number already exists in the database
+        const existingUser = await userAuthDao.checkUserByPhoneNumber(
+            formattedPhoneNumber
+        );
 
     if (existingUser.length > 0) {
       return res.status(400).json({
@@ -105,7 +106,8 @@ exports.getProfileDetails = asyncHandler(async (req, res) => {
     const userId = req.user.id;
     console.log("hi..Fetching profile for userId:", userId);
 
-    const user = await userProfileDao.getUserProfileById(userId);
+        // Retrieve user profile from the database using the DAO function
+        const user = await userProfileDao.getUserProfileById(userId);
 
     if (!user) {
       return res.status(404).json({
@@ -130,8 +132,8 @@ exports.getProfileDetails = asyncHandler(async (req, res) => {
 exports.updatePhoneNumber = asyncHandler(async (req, res) => {
   const userId = req.user.id;
 
-  const { newPhoneNumber } =
-    await ValidationSchema.updatePhoneNumberSchema.validateAsync(req.body);
+    // Validate the request body
+    await updatePhoneNumberSchema.validateAsync(req.body);
 
   const results = await userAuthDao.updateUserPhoneNumber(
     userId,

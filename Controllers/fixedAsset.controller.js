@@ -1,8 +1,8 @@
 const { response } = require('express');
 const db = require('../startup/database');
 const {
-addFixedAssetSchema
-} = require("../validations/fixedAssest-validation"); 
+    addFixedAssetSchema
+} = require("../validations/fixedAssest-validation");
 
 // Helper function to format date
 const formatDate = (dateString) => {
@@ -13,22 +13,51 @@ const formatDate = (dateString) => {
 
 // Add a fixed asset
 exports.addFixedAsset = (req, res) => {
-      const { error } = addFixedAssetSchema.validate(req.body);
-if (error) {
-    const errorMessages = error.details.map(detail => detail.message).join(', ');
-    console.log("Validation Error Messages:", errorMessages);  // Log error messages
-    return res.status(400).json({ message: errorMessages });
-}
+    const { error } = addFixedAssetSchema.validate(req.body);
+    if (error) {
+        const errorMessages = error.details.map(detail => detail.message).join(', ');
+        console.log("Validation Error Messages:", errorMessages); // Log error messages
+        return res.status(400).json({ message: errorMessages });
+    }
 
     const userId = req.user.id;
     const {
-        category, ownership, type, floorArea, generalCondition, district,
-        extentha, extentac, extentp, landFenced, perennialCrop,
-        asset, assetType, mentionOther, brand, numberOfUnits, unitPrice,
-        totalPrice, warranty, issuedDate, purchaseDate, expireDate,
-        warrantystatus, startDate, durationYears, durationMonths, leastAmountAnnually,
-        permitFeeAnnually, paymentAnnually, estimateValue, landownership, assetname,toolbrand
+        category,
+        ownership,
+        type,
+        floorArea,
+        generalCondition,
+        district,
+        extentha,
+        extentac,
+        extentp,
+        landFenced,
+        perennialCrop,
+        asset,
+        assetType,
+        mentionOther,
+        brand,
+        numberOfUnits,
+        unitPrice,
+        totalPrice,
+        warranty,
+        issuedDate,
+        purchaseDate,
+        expireDate,
+        warrantystatus,
+        startDate,
+        durationYears,
+        durationMonths,
+        leastAmountAnnually,
+        permitFeeAnnually,
+        paymentAnnually,
+        estimateValue,
+        landownership,
+        assetname,
+        toolbrand
     } = req.body;
+
+    console.log(req.body);
 
     const formattedIssuedDate = formatDate(issuedDate);
     const formattedPurchaseDate = formatDate(purchaseDate);
@@ -74,7 +103,7 @@ if (error) {
                         case 'Own Building (with title ownership)':
                             ownershipSql = `INSERT INTO ownershipownerfixedasset (buildingAssetId, issuedDate, estimateValue)
                                             VALUES (?, ?, ?)`;
-                            ownershipParams = [ buildingAssetId , formattedIssuedDate, estimateValue];
+                            ownershipParams = [buildingAssetId, formattedIssuedDate, estimateValue];
                             break;
 
                         case 'Leased Building':
@@ -121,7 +150,7 @@ if (error) {
                     });
                 });
 
-            // Handle category 'Land'
+                // Handle category 'Land'
             } else if (category === 'Land') {
                 const landSql = `INSERT INTO landfixedasset (fixedAssetId, extentha, extentac, extentp, ownership, district, landFenced, perennialCrop)
                                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
@@ -156,7 +185,7 @@ if (error) {
                     } else if (landownership === 'Lease') {
                         const ownershipLeaseSql = `INSERT INTO ownershipleastfixedasset (landAssetId, startDate, durationYears,durationMonths, leastAmountAnnually)
                                                    VALUES (?, ?, ?, ?,?)`;
-                        db.query(ownershipLeaseSql, [landAssetId, formattedStartDate, durationYears,durationMonths, leastAmountAnnually], (leaseErr) => {
+                        db.query(ownershipLeaseSql, [landAssetId, formattedStartDate, durationYears, durationMonths, leastAmountAnnually], (leaseErr) => {
                             if (leaseErr) {
                                 return db.rollback(() => {
                                     return res.status(500).json({ message: 'Error inserting into ownershipleastfixedasset table', error: leaseErr });
@@ -214,7 +243,7 @@ if (error) {
                     }
                 });
 
-            }else if (category === 'Machine and Vehicles') {
+            } else if (category === 'Machine and Vehicles') {
                 const machToolsSql = `INSERT INTO machtoolsfixedasset (fixedAssetId, asset, assetType, mentionOther, brand, numberOfUnits, unitPrice, totalPrice, warranty)
                                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
@@ -354,13 +383,13 @@ if (error) {
                         });
                     }
                 });
-            }else {
+            } else {
                 return db.rollback(() => {
                     return res.status(400).json({ message: 'Invalid category provided.' });
                 });
             }
-        
-    
+
+
         });
     });
 };
@@ -380,25 +409,25 @@ exports.getFixedAssetsByCategory = (req, res) => {
         let queryParams = [userId]; // Initialize with userId
 
         // Determine which SQL to run based on category
-         if (category === 'Land') {
-        sqlQuery = `SELECT fa.id, fa.category, lfa.district FROM fixedasset fa
+        if (category === 'Land') {
+            sqlQuery = `SELECT fa.id, fa.category, lfa.district FROM fixedasset fa
                     JOIN landfixedasset lfa ON fa.id = lfa.fixedAssetId
                     WHERE fa.userId = ? AND fa.category = 'Land'`;
-    } else if (category === 'Building and Infrastructures') {
-        sqlQuery = `SELECT fa.id, fa.category, bfa.type FROM fixedasset fa
+        } else if (category === 'Building and Infrastructures') {
+            sqlQuery = `SELECT fa.id, fa.category, bfa.type FROM fixedasset fa
                     JOIN buildingfixedasset bfa ON fa.id = bfa.fixedAssetId
                     WHERE fa.userId = ? AND fa.category = 'Building and Infrastructures'`;
-    } else if (category === 'Machine and Vehicles') {
-        sqlQuery = `SELECT fa.id, fa.category, mtfa.asset, mtfa.assetType FROM fixedasset fa
+        } else if (category === 'Machine and Vehicles') {
+            sqlQuery = `SELECT fa.id, fa.category, mtfa.asset, mtfa.assetType FROM fixedasset fa
                     JOIN machtoolsfixedasset mtfa ON fa.id = mtfa.fixedAssetId
                     WHERE fa.userId = ? AND fa.category = 'Machine and Vehicles'`;
-    } else if (category === 'Tools') {
-        sqlQuery = `SELECT fa.id, fa.category, mtfa.asset, mtfa.assetType FROM fixedasset fa
+        } else if (category === 'Tools') {
+            sqlQuery = `SELECT fa.id, fa.category, mtfa.asset, mtfa.assetType FROM fixedasset fa
                     JOIN machtoolsfixedasset mtfa ON fa.id = mtfa.fixedAssetId
                     WHERE fa.userId = ? AND fa.category = 'Tools'`;
-    } else {
-        return res.status(400).json({ message: 'Invalid category provided.' });
-    }
+        } else {
+            return res.status(400).json({ message: 'Invalid category provided.' });
+        }
 
         // Execute the query based on the category
         db.query(sqlQuery, queryParams, (queryErr, results) => {
@@ -454,7 +483,7 @@ exports.getFixedAssetDetailsById = (req, res) => {
                 FROM fixedasset fa
                 JOIN buildingfixedasset bfa ON fa.id = bfa.fixedAssetId
                 WHERE fa.userId = ? AND fa.id = ?`;
-        
+
         } else if (category === 'Machine and Vehicles' || category === 'Tools') {
             sqlQuery = `
                 SELECT fa.id AS faId, fa.category, mtfa.asset, mtfa.assetType, mtfa.mentionOther, mtfa.brand, mtfa.numberOfUnits, mtfa.unitPrice, mtfa.totalPrice, mtfa.warranty, mtfa.id 
@@ -485,9 +514,9 @@ exports.getFixedAssetDetailsById = (req, res) => {
             }
 
             const asset = assetResults[0];
-            const assetOwnershipId = asset.id; 
+            const assetOwnershipId = asset.id;
             const ownershipType = asset.ownership;
-            
+
             // Adjust ownershipQuery based on ownershipType after retrieving asset details
             if (category === 'Building and Infrastructures') {
                 if (ownershipType === 'Own Building (with title ownership)') {
@@ -595,7 +624,7 @@ exports.updateFixedAsset = (req, res) => {
                     lfa.landFenced = COALESCE(NULLIF(?, ''), lfa.landFenced),
                     lfa.perennialCrop = COALESCE(NULLIF(?, ''), lfa.perennialCrop)
                 WHERE fa.userId = ? AND fa.id = ?`;
-        
+
             updateParams = [
                 assetData.district,
                 assetData.extentha,
@@ -607,28 +636,28 @@ exports.updateFixedAsset = (req, res) => {
                 userId,
                 assetData.faId
             ];
-        
+
             db.query(updateAssetQuery, updateParams, (queryErr) => {
                 if (queryErr) {
                     return db.rollback(() => res.status(500).json({ message: 'Error updating asset', error: queryErr }));
                 }
-        
+
                 // Proceed with ownership updates based on the ownership type
                 const ownershipDetails = assetData.ownershipDetails || {};
                 const { ownership, oldOwnership } = assetData;
-        
+
                 if (ownership !== oldOwnership) {
                     let deleteQueries = [];
                     let insertQueries = [];
                     let insertParams = [];
-        
+
                     if (ownership === 'Own') {
                         deleteQueries = [
                             `DELETE FROM ownershipleastfixedasset WHERE landAssetId = ?`,
                             `DELETE FROM ownershippermitfixedasset WHERE landAssetId = ?`,
                             `DELETE FROM ownershipsharedfixedasset WHERE landAssetId = ?`
                         ];
-        
+
                         insertQueries.push(`
                             INSERT INTO ownershipownerfixedasset (landAssetId, issuedDate, estimateValue)
                             VALUES (?, COALESCE(NULLIF(?, ''), NULL), COALESCE(NULLIF(?, ''), NULL))
@@ -638,14 +667,14 @@ exports.updateFixedAsset = (req, res) => {
                             ownershipDetails.issuedDate || null,
                             ownershipDetails.estimateValue || null
                         ]);
-        
+
                     } else if (ownership === 'Lease') {
                         deleteQueries = [
                             `DELETE FROM ownershipownerfixedasset WHERE landAssetId = ?`,
                             `DELETE FROM ownershippermitfixedasset WHERE landAssetId = ?`,
                             `DELETE FROM ownershipsharedfixedasset WHERE landAssetId = ?`
                         ];
-        
+
                         insertQueries.push(`
                             INSERT INTO ownershipleastfixedasset (landAssetId, startDate, durationYears, durationMonths, leastAmountAnnually)
                             VALUES (?, COALESCE(NULLIF(?, ''), NULL), COALESCE(NULLIF(?, ''), NULL), COALESCE(NULLIF(?, ''), NULL), COALESCE(NULLIF(?, ''), NULL))
@@ -657,14 +686,14 @@ exports.updateFixedAsset = (req, res) => {
                             ownershipDetails.durationMonths || null,
                             ownershipDetails.leastAmountAnnually || null
                         ]);
-        
+
                     } else if (ownership === 'Permited') {
                         deleteQueries = [
                             `DELETE FROM ownershipownerfixedasset WHERE landAssetId = ?`,
                             `DELETE FROM ownershipleastfixedasset WHERE landAssetId = ?`,
                             `DELETE FROM ownershipsharedfixedasset WHERE landAssetId = ?`
                         ];
-        
+
                         insertQueries.push(`
                             INSERT INTO ownershippermitfixedasset (landAssetId, issuedDate, permitFeeAnnually)
                             VALUES (?, COALESCE(NULLIF(?, ''), NULL), COALESCE(NULLIF(?, ''), NULL))
@@ -674,14 +703,14 @@ exports.updateFixedAsset = (req, res) => {
                             ownershipDetails.issuedDate || null,
                             ownershipDetails.permitFeeAnnually || null
                         ]);
-        
+
                     } else if (ownership === 'Shared') {
                         deleteQueries = [
                             `DELETE FROM ownershipownerfixedasset WHERE landAssetId = ?`,
                             `DELETE FROM ownershipleastfixedasset WHERE landAssetId = ?`,
                             `DELETE FROM ownershippermitfixedasset WHERE landAssetId = ?`
                         ];
-        
+
                         insertQueries.push(`
                             INSERT INTO ownershipsharedfixedasset (landAssetId, paymentAnnually)
                             VALUES (?, COALESCE(NULLIF(?, ''), NULL))
@@ -691,14 +720,14 @@ exports.updateFixedAsset = (req, res) => {
                             ownershipDetails.paymentAnnually || null
                         ]);
                     }
-        
+
                     // Execute delete and insert queries
-                    executeDeleteAndInsertQueries(res, deleteQueries, [assetData.id,], insertQueries, insertParams, updateAssetQuery, updateParams);
+                    executeDeleteAndInsertQueries(res, deleteQueries, [assetData.id, ], insertQueries, insertParams, updateAssetQuery, updateParams);
                 } else {
                     // Ownership type did not change, update relevant fields directly
                     let ownershipUpdateQueries = [];
                     let ownershipUpdateParams = [];
-        
+
                     if (ownership === 'Own') {
                         ownershipUpdateQueries.push(`
                             UPDATE ownershipownerfixedasset 
@@ -710,7 +739,7 @@ exports.updateFixedAsset = (req, res) => {
                             ownershipDetails.estimateValue || null,
                             assetId
                         ]);
-        
+
                     } else if (ownership === 'Lease') {
                         ownershipUpdateQueries.push(`
                             UPDATE ownershipleastfixedasset 
@@ -726,7 +755,7 @@ exports.updateFixedAsset = (req, res) => {
                             ownershipDetails.leastAmountAnnually || null,
                             assetId
                         ]);
-        
+
                     } else if (ownership === 'Permited') {
                         ownershipUpdateQueries.push(`
                             UPDATE ownershippermitfixedasset 
@@ -738,7 +767,7 @@ exports.updateFixedAsset = (req, res) => {
                             ownershipDetails.permitFeeAnnually || null,
                             assetId
                         ]);
-        
+
                     } else if (ownership === 'Shared') {
                         ownershipUpdateQueries.push(`
                             UPDATE ownershipsharedfixedasset
@@ -749,15 +778,12 @@ exports.updateFixedAsset = (req, res) => {
                             assetId
                         ]);
                     }
-        
+
                     // Execute ownership updates
                     executeUpdateQueries(res, assetId, ownershipUpdateQueries, ownershipUpdateParams, updateAssetQuery, updateParams);
                 }
             });
-        }
-        
-
-        else if (category === 'Building and Infrastructures') {
+        } else if (category === 'Building and Infrastructures') {
             updateAssetQuery = `
                 UPDATE buildingfixedasset bfa
                 JOIN fixedasset fa ON fa.id = bfa.fixedAssetId
@@ -767,7 +793,7 @@ exports.updateFixedAsset = (req, res) => {
                     bfa.generalCondition = COALESCE(NULLIF(?, ''), bfa.generalCondition),
                     bfa.district = COALESCE(NULLIF(?, ''), bfa.district)
                 WHERE fa.userId = ? AND fa.id = ?`;
-        
+
             updateParams = [
                 assetData.type,
                 assetData.floorArea,
@@ -777,31 +803,31 @@ exports.updateFixedAsset = (req, res) => {
                 userId,
                 assetData.faId
             ];
-        
+
             // Execute the buildingfixedasset update query
             db.query(updateAssetQuery, updateParams, (queryErr, result) => {
                 if (queryErr) {
                     console.error("Error executing updateAssetQuery:", queryErr);
                     return db.rollback(() => res.status(500).json({ message: 'Error updating asset', error: queryErr }));
                 }
-        
-        
+
+
                 // Proceed with ownership updates
                 const ownershipDetails = assetData.ownershipDetails || {};
                 const { ownership, oldOwnership } = assetData;
-        
+
                 if (ownership !== oldOwnership) {
                     let deleteQueries = [];
                     let insertQueries = [];
                     let insertParams = [];
-        
+
                     if (ownership === 'Own Building (with title ownership)') {
                         deleteQueries = [
                             `DELETE FROM ownershipleastfixedasset WHERE buildingAssetId = ?`,
                             `DELETE FROM ownershippermitfixedasset WHERE buildingAssetId = ?`,
                             `DELETE FROM ownershipsharedfixedasset WHERE buildingAssetId = ?`
                         ];
-        
+
                         insertQueries.push(`
                             INSERT INTO ownershipownerfixedasset (buildingAssetId, issuedDate, estimateValue)
                             VALUES (?, COALESCE(NULLIF(?, ''), NULL), COALESCE(NULLIF(?, ''), NULL))
@@ -811,14 +837,14 @@ exports.updateFixedAsset = (req, res) => {
                             ownershipDetails.issuedDate || null,
                             ownershipDetails.estimateValue || null
                         ]);
-        
+
                     } else if (ownership === 'Leased Building') {
                         deleteQueries = [
                             `DELETE FROM ownershipownerfixedasset WHERE buildingAssetId = ?`,
                             `DELETE FROM ownershippermitfixedasset WHERE buildingAssetId = ?`,
                             `DELETE FROM ownershipsharedfixedasset WHERE buildingAssetId = ?`
                         ];
-        
+
                         insertQueries.push(`
                             INSERT INTO ownershipleastfixedasset (buildingAssetId, startDate, durationYears, durationMonths, leastAmountAnnually)
                             VALUES (?, COALESCE(NULLIF(?, ''), NULL), COALESCE(NULLIF(?, ''), NULL), COALESCE(NULLIF(?, ''), NULL), COALESCE(NULLIF(?, ''), NULL))
@@ -830,13 +856,13 @@ exports.updateFixedAsset = (req, res) => {
                             ownershipDetails.durationMonths || null,
                             ownershipDetails.leastAmountAnnually || null
                         ]);
-                    }else if (ownership === 'Permit Building') {
+                    } else if (ownership === 'Permit Building') {
                         deleteQueries = [
                             `DELETE FROM ownershipownerfixedasset WHERE buildingAssetId = ?`,
                             `DELETE FROM ownershipleastfixedasset WHERE buildingAssetId = ?`,
                             `DELETE FROM ownershipsharedfixedasset WHERE buildingAssetId = ?`
                         ];
-        
+
                         insertQueries.push(`
                             INSERT INTO ownershippermitfixedasset (buildingAssetId, issuedDate, permitFeeAnnually)
                             VALUES (?, COALESCE(NULLIF(?, ''), NULL), COALESCE(NULLIF(?, ''), NULL))
@@ -846,13 +872,13 @@ exports.updateFixedAsset = (req, res) => {
                             ownershipDetails.issuedDate || null,
                             ownershipDetails.permitFeeAnnually || null,
                         ]);
-                    }else if (ownership === 'Shared / No Ownership') {
+                    } else if (ownership === 'Shared / No Ownership') {
                         deleteQueries = [
                             `DELETE FROM ownershipownerfixedasset WHERE buildingAssetId = ?`,
                             `DELETE FROM ownershipleastfixedasset WHERE buildingAssetId = ?`,
                             `DELETE FROM ownershippermitfixedasset WHERE buildingAssetId = ?`
                         ];
-        
+
                         insertQueries.push(`
                             INSERT INTO ownershipsharedfixedasset (buildingAssetId, paymentAnnually)
                             VALUES (?, COALESCE(NULLIF(?, ''), NULL))
@@ -861,14 +887,14 @@ exports.updateFixedAsset = (req, res) => {
                             assetData.id,
                             ownershipDetails.paymentAnnually || null,
                         ]);
-                    }      
-        
+                    }
+
                     executeDeleteAndInsertQueries(res, deleteQueries, [assetData.id], insertQueries, insertParams, updateAssetQuery, updateParams);
                 } else {
                     let ownershipUpdateQueries = [];
                     let ownershipUpdateParams = [];
                     console.log(assetData.id)
-        
+
                     if (ownership === 'Own Building (with title ownership)') {
                         ownershipUpdateQueries.push(`
                             UPDATE ownershipownerfixedasset 
@@ -896,7 +922,7 @@ exports.updateFixedAsset = (req, res) => {
                             ownershipDetails.leastAmountAnnually || null,
                             assetId
                         ]);
-                    }else if (ownership === 'Permit Building') {
+                    } else if (ownership === 'Permit Building') {
                         ownershipUpdateQueries.push(`
                             UPDATE  ownershippermitfixedasset 
                             SET issuedDate = COALESCE(NULLIF(?, ''), issuedDate),
@@ -907,23 +933,22 @@ exports.updateFixedAsset = (req, res) => {
                             ownershipDetails.permitFeeAnnually || null,
                             assetId
                         ]);
-                    }else if (ownership === 'Shared / No Ownership') {
+                    } else if (ownership === 'Shared / No Ownership') {
                         ownershipUpdateQueries.push(`
                             UPDATE ownershipsharedfixedasset
                             SET paymentAnnually = COALESCE(NULLIF(?, ''), paymentAnnually)
                             WHERE buildingAssetId = ?`);
-                            ownershipUpdateParams.push([
-                                ownershipDetails.paymentAnnually || null,
-                                assetId
-                            ]);
+                        ownershipUpdateParams.push([
+                            ownershipDetails.paymentAnnually || null,
+                            assetId
+                        ]);
                     }
                     executeUpdateQueries(res, assetId, ownershipUpdateQueries, ownershipUpdateParams, updateAssetQuery, updateParams);
                 }
             });
-        }
-        else if (category === 'Machine and Vehicles' || category === 'Tools') {
+        } else if (category === 'Machine and Vehicles' || category === 'Tools') {
             console.log('Category matched:', category);
-        
+
             const updateAssetQuery = `
                 UPDATE machtoolsfixedasset mtfa
                 JOIN fixedasset fa ON fa.id = mtfa.fixedAssetId
@@ -936,7 +961,7 @@ exports.updateFixedAsset = (req, res) => {
                     mtfa.warranty = COALESCE(NULLIF(?, ''), mtfa.warranty),
                     mtfa.mentionOther = COALESCE(NULLIF(?, ''), mtfa.mentionOther)
                 WHERE fa.userId = ? AND fa.id = ?`;
-        
+
             const updateParams = [
                 assetData.asset,
                 assetData.assetType,
@@ -949,48 +974,48 @@ exports.updateFixedAsset = (req, res) => {
                 userId,
                 assetData.faId
             ];
-        
+
             console.log('Update parameters:', updateParams);
-        
+
             const warrantyDetails = assetData.ownershipDetails || {};
-        
+
             const warrantyQuery = `
                 UPDATE machtoolsfixedassetwarranty 
                 SET purchaseDate = COALESCE(NULLIF(?, ''), purchaseDate),
                     expireDate = COALESCE(NULLIF(?, ''), expireDate),
                     warrantystatus = COALESCE(NULLIF(?, ''), warrantystatus)
                 WHERE machToolsId = ?`;
-        
+
             const warrantyParams = [
                 warrantyDetails.purchaseDate || null,
                 warrantyDetails.expireDate || null,
                 warrantyDetails.warrantystatus || null,
                 assetId
             ];
-        
+
             // Execute the update queries in sequence with enhanced error logging
             db.query(updateAssetQuery, updateParams, (queryErr) => {
                 if (queryErr) {
                     console.error('Error executing updateAssetQuery:', queryErr);
                     return db.rollback(() => res.status(500).json({ message: 'Error updating asset', error: queryErr }));
                 }
-        
+
                 console.log('Asset updated successfully'); // Should appear if update was successful
-        
+
                 db.query(warrantyQuery, warrantyParams, (warrantyErr) => {
                     if (warrantyErr) {
                         console.error('Error executing warrantyQuery:', warrantyErr);
                         return db.rollback(() => res.status(500).json({ message: 'Error updating warranty details', error: warrantyErr }));
                     }
-        
+
                     console.log('Warranty details updated successfully'); // Should appear if warranty update was successful
-        
+
                     db.commit((commitErr) => {
                         if (commitErr) {
                             console.error('Error committing transaction:', commitErr);
                             return db.rollback(() => res.status(500).json({ message: 'Commit error', error: commitErr }));
                         }
-        
+
                         console.log('Transaction committed successfully'); // Confirms successful transaction commit
                         return res.status(200).json({ message: 'Asset and ownership details updated successfully.' });
                     });
@@ -999,7 +1024,7 @@ exports.updateFixedAsset = (req, res) => {
         } else {
             return res.status(400).json({ message: 'Invalid category provided.' });
         }
-        
+
     });
 };
 
