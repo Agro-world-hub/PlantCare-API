@@ -222,6 +222,19 @@ exports.enroll = asyncHandler(async(req, res) => {
 
         console.log("User ID:", userId, "Crop ID:", cropId, "Extent:", extent, "Start Date:", startDate);
 
+
+        // Validate input data with Joi
+        const { error } = enrollSchema.validate({
+            extent,
+            startedAt: startDate,
+            ongoingCultivationId: null, // Assuming this is not being passed directly in req
+            createdAt: undefined, // Not user-provided, default handled in schema
+        });
+
+        if (error) {
+            return res.status(400).json({ message: error.details[0].message });
+        }
+
         // Check if the user already has an ongoing cultivation
         let cultivationId;
         const ongoingCultivationResult = await checkOngoingCultivation(userId);

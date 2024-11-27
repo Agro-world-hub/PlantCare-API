@@ -18,32 +18,30 @@ exports.loginUser = (phonenumber) => {
     });
 };
 
-// DAO method to check if phone number exists in the database
 exports.checkUserByPhoneNumber = (phoneNumber) => {
     return new Promise((resolve, reject) => {
         const query = "SELECT * FROM users WHERE phoneNumber = ?";
         db.query(query, [phoneNumber], (err, results) => {
             if (err) {
-                reject(err); // Reject the promise if there is a database error
+                reject(err);
             } else {
-                resolve(results); // Resolve with the query results
+                resolve(results);
             }
         });
     });
 };
 
-// DAO method to insert a new user into the database
-exports.insertUser = (firstName, lastName, phoneNumber, NICnumber) => {
+exports.insertUser = (firstName, lastName, phoneNumber, NICnumber, district) => {
     return new Promise((resolve, reject) => {
         const query =
-            "INSERT INTO users(`firstName`, `lastName`, `phoneNumber`, `NICnumber`) VALUES(?, ?, ?, ?)";
+            "INSERT INTO users(`firstName`, `lastName`, `phoneNumber`, `NICnumber`, `district`) VALUES(?, ?, ?, ?,?)";
         db.query(
-            query, [firstName, lastName, phoneNumber, NICnumber],
+            query, [firstName, lastName, phoneNumber, NICnumber, district],
             (err, results) => {
                 if (err) {
-                    reject(err); // Reject if there's an error during insertion
+                    reject(err);
                 } else {
-                    resolve(results); // Resolve with the result if successful
+                    resolve(results);
                 }
             }
         );
@@ -54,7 +52,7 @@ exports.insertUser = (firstName, lastName, phoneNumber, NICnumber) => {
 exports.getUserProfileById = (userId) => {
     return new Promise((resolve, reject) => {
         const sql =
-            "SELECT firstName, lastName, phoneNumber, NICnumber FROM users WHERE id = ?";
+            "SELECT firstName, lastName, phoneNumber, NICnumber, district FROM users WHERE id = ?";
 
         db.query(sql, [userId], (err, results) => {
             if (err) {
@@ -119,5 +117,52 @@ exports.updateFirstLastName = (userId, firstName, lastName) => {
                 resolve(results.affectedRows); // Return affected rows
             }
         });
+    });
+};
+
+
+
+// Function to insert bank details into `userbankdetails` table
+exports.insertBankDetails = (userId, address, accountNumber, accountHolderName, bankName, branchName, callback) => {
+    const query = `
+  INSERT INTO userbankdetails (userId, address, accNumber, accHolderName, bankName, branchName)
+  VALUES (?, ?, ?, ?, ?, ?)
+`;
+    db.query(query, [userId, address, accountNumber, accountHolderName, bankName, branchName], callback);
+};
+
+// Function to update the user's `farmerQr` column with the generated QR code
+exports.updateQRCode = (userId, qrCodeImage, callback) => {
+    const query = `
+  UPDATE users
+  SET farmerQr = ?
+  WHERE id = ?
+`;
+    db.query(query, [qrCodeImage, userId], callback);
+};
+
+
+// Function to generate and save QR code to the public/farmerQr folder
+exports.generateQRCode = (data, callback) => {
+    // Create the path for saving the QR code image
+    const qrFolderPath = path.join(__dirname, '..', 'public', 'farmerQr');
+    if (!fs.existsSync(qrFolderPath)) {
+        // Ensure the folder exists
+        fs.mkdirSync(qrFolderPath, { recursive: true });
+    }
+
+    // Create a filename for the QR code image (you can customize the filename as needed)
+    const qrFileName = `qrCode_${Date.now()}.png`;
+    const qrFilePath = path.join(qrFolderPath, qrFileName);
+
+    // Generate the QR code and save it as a file
+    QRCode.toFile(qrFilePath, JSON.stringify(data), { type: 'image/png' }, (err) => {
+        if (err) {
+            return callback(err);
+        }
+
+        // Return the relative file path to be stored in the database
+        const relativeFilePath = path.join('public', 'farmerQr', qrFileName);
+        callback(null, relativeFilePath);
     });
 };
