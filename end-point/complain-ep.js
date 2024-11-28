@@ -19,7 +19,7 @@ exports.createComplain = asyncHandler(async(req, res) => {
         }
 
         const { language, complain, category } = value;
-        const status = "pending";
+        const status = "Opened";
 
         console.log("Creating complain:", { farmerId, language, complain, category, status });
 
