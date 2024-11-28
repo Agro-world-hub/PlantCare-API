@@ -35,4 +35,10 @@ router.put("/user-update-names", auth, userAuthEp.updateFirstLastName);
 
 router.post('/registerBankDetails', auth, userAuthEp.registerBankDetails);
 
+router.post('/update-useraddress', auth, userAuthEp.updateAddress);
+
+// Define the endpoint to check address fields
+
+router.get('/check-address-fields', auth, userAuthEp.checkAddressFields);
+
 module.exports = router;

@@ -57,3 +57,22 @@ exports.updateFirstLastNameSchema = Joi.object({
     firstName: Joi.string().min(2).max(50).required().label('First Name'),
     lastName: Joi.string().min(2).max(50).required().label('Last Name')
 });
+
+
+exports.updateAddressSchema = Joi.object({
+    houseNo: Joi.string().min(1).required().messages({
+        'string.base': 'House number must be a string',
+        'string.empty': 'House number cannot be empty',
+        'any.required': 'House number is required',
+    }),
+    streetName: Joi.string().min(1).required().messages({
+        'string.base': 'Street name must be a string',
+        'string.empty': 'Street name cannot be empty',
+        'any.required': 'Street name is required',
+    }),
+    city: Joi.string().min(1).required().messages({
+        'string.base': 'City must be a string',
+        'string.empty': 'City cannot be empty',
+        'any.required': 'City is required',
+    }),
+});
