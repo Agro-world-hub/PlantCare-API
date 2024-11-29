@@ -17,7 +17,6 @@
 //     .label("IDs"),
 // });
 
-// validators/fixedAssets-validation.js
 const Joi = require("joi");
 
 // Validation schema for fetching fixed assets by category and user
