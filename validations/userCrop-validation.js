@@ -35,7 +35,19 @@ exports.enrollSchema = Joi.object({
         "date.base": `"Started At" should be a valid date`,
         "date.format": `"Started At" should follow the ISO 8601 format`,
     }),
-    extent: Joi.number().precision(2).positive().required().messages({
+    extentha: Joi.number().precision(2).positive().required().messages({
+        "number.base": `"Extent" should be a number`,
+        "number.precision": `"Extent" should have up to 2 decimal places`,
+        "number.positive": `"Extent" should be a positive number`,
+        "any.required": `"Extent" is required`,
+    }),
+    extentac: Joi.number().precision(2).positive().required().messages({
+        "number.base": `"Extent" should be a number`,
+        "number.precision": `"Extent" should have up to 2 decimal places`,
+        "number.positive": `"Extent" should be a positive number`,
+        "any.required": `"Extent" is required`,
+    }),
+    extentp: Joi.number().precision(2).positive().required().messages({
         "number.base": `"Extent" should be a number`,
         "number.precision": `"Extent" should have up to 2 decimal places`,
         "number.positive": `"Extent" should be a positive number`,

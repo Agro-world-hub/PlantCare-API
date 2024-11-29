@@ -146,9 +146,9 @@ exports.checkEnrollCrop = (cultivationId) => {
 };
 
 // Enroll the crop into the ongoing cultivation
-exports.enrollOngoingCultivationCrop = (cultivationId, cropId, extent, startDate) => {
-    const sql = "INSERT INTO ongoingcultivationscrops(ongoingCultivationId, cropCalendar,  extent , startedAt) VALUES (?, ?,?,?)";
-    return query(sql, [cultivationId, cropId, extent, startDate]);
+exports.enrollOngoingCultivationCrop = (cultivationId, cropId, extentha,extentac,extentp, startDate) => {
+    const sql = "INSERT INTO ongoingcultivationscrops(ongoingCultivationId, cropCalendar,  extentha, extentac, extentp , startedAt) VALUES (?, ?,?,?,?,?)";
+    return query(sql, [cultivationId, cropId, extentha,extentac,extentp, startDate]);
 };
 
 exports.getEnrollOngoingCultivationCrop = (cultivationId) => {
@@ -188,10 +188,10 @@ exports.getEnrollOngoingCultivationCropByid = (id) => {
     });
 };
 
-exports.updateOngoingCultivationCrop = (onCulscropID, extent, formattedStartDate) => {
+exports.updateOngoingCultivationCrop = (onCulscropID, extentha, extentac,extentp , formattedStartDate) => {
     return new Promise((resolve, reject) => {
-        const sql = "UPDATE ongoingcultivationscrops SET extent = ?, startedAt = ? WHERE id = ?";
-        db.query(sql, [extent, formattedStartDate, onCulscropID], (err, results) => {
+        const sql = "UPDATE ongoingcultivationscrops SET extentha = ?, extentac=?, extentp=?, startedAt = ? WHERE id = ?";
+        db.query(sql, [extentha, extentac, extentp, formattedStartDate, onCulscropID], (err, results) => {
             if (err) {
                 reject(err);
             } else {

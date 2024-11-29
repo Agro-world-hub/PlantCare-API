@@ -214,18 +214,23 @@ exports.OngoingCultivaionGetById = asyncHandler(async(req, res) => {
 ///
 
 exports.enroll = asyncHandler(async(req, res) => {
+    console.log("Enroll crop called");
     try {
-        const cropId = req.params.cropId;
-        const extent = req.params.extent;
-        const startDate = req.params.startDate;
+        const cropId = req.body.cropId;
+        const extentha = req.body.extentha;
+        const extentac = req.body.extentac;
+        const extentp = req.body.extentp;
+        const startDate = req.body.startDate;
         const userId = req.user.id;
 
-        console.log("User ID:", userId, "Crop ID:", cropId, "Extent:", extent, "Start Date:", startDate);
+        console.log("User ID:", userId, "Crop ID:", cropId, "Extentha:", extentha,  "Start Date:", startDate, "Extentac:", extentac, "Extentp:", extentp);
 
 
         // Validate input data with Joi
         const { error } = enrollSchema.validate({
-            extent,
+            extentha,
+            extentac,
+            extentp,
             startedAt: startDate,
             ongoingCultivationId: null, // Assuming this is not being passed directly in req
             createdAt: undefined, // Not user-provided, default handled in schema
@@ -268,7 +273,7 @@ exports.enroll = asyncHandler(async(req, res) => {
         }
 
         // Enroll the crop
-        await enrollOngoingCultivationCrop(cultivationId, cropId, extent, startDate);
+        await enrollOngoingCultivationCrop(cultivationId, cropId, extentha, extentac,extentp, startDate);
         const enroledoncultivationcrop = await getEnrollOngoingCultivationCrop(cultivationId);
         let onCulscropID;
         if (enroledoncultivationcrop.length > 0) {
@@ -281,7 +286,7 @@ exports.enroll = asyncHandler(async(req, res) => {
 
         const responseenrollSlaveCrop = await enrollSlaveCrop(userId, cropId, startDate, onCulscropID);
 
-        console.log("Successfully enrolled in crop ID:", cropId, "with extent:", extent, "and start date:", startDate);
+        console.log("Successfully enrolled in crop ID:", cropId, "with extent:", extentp, "and start date:", startDate);
         console.log("hi responseenrollSlaveCrop.....:", responseenrollSlaveCrop);
 
         return res.json({ message: "Enrollment successful" });
@@ -334,14 +339,13 @@ exports.getOngoingCultivationCropByid = asyncHandler(async(req, res) => {
 
 exports.UpdateOngoingCultivationScrops = asyncHandler(async(req, res) => {
     try {
-        const { extent, startedAt, onCulscropID } = req.body;
-        if (!extent || !startedAt) {
+        const { extentha,extentac, extentp, startedAt, onCulscropID } = req.body;
+        if (!extentha|| !extentac || !extentp || !startedAt) {
             return res.status(400).json({ message: "Extent and Start Date are required." });
         }
-        console.log("ID:", onCulscropID, "Extent:", extent, "Started At:", startedAt);
 
         // Update the main ongoing cultivation crop
-        const results = await cropDao.updateOngoingCultivationCrop(onCulscropID, extent, startedAt);
+        const results = await cropDao.updateOngoingCultivationCrop(onCulscropID, extentha, extentac,extentp, startedAt);
 
         if (results.affectedRows === 0) {
             return res.status(404).json({ message: "Ongoing cultivation crop not found or not updated." });
