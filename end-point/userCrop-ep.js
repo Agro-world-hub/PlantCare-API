@@ -274,7 +274,7 @@ exports.enroll = asyncHandler(async(req, res) => {
 
         // Enroll the crop
         await enrollOngoingCultivationCrop(cultivationId, cropId, extentha, extentac,extentp, startDate);
-        const enroledoncultivationcrop = await getEnrollOngoingCultivationCrop(cultivationId);
+        const enroledoncultivationcrop = await getEnrollOngoingCultivationCrop(cropId);
         let onCulscropID;
         if (enroledoncultivationcrop.length > 0) {
             onCulscropID = enroledoncultivationcrop[0].id;

@@ -151,14 +151,14 @@ exports.enrollOngoingCultivationCrop = (cultivationId, cropId, extentha,extentac
     return query(sql, [cultivationId, cropId, extentha,extentac,extentp, startDate]);
 };
 
-exports.getEnrollOngoingCultivationCrop = (cultivationId) => {
+exports.getEnrollOngoingCultivationCrop = (cropId) => {
     const sql = `
-    SELECT cropCalendar, id 
+    SELECT id 
     FROM ongoingcultivationscrops 
-    WHERE ongoingCultivationId = ?
+    WHERE cropCalendar = ?
   `;
     return new Promise((resolve, reject) => {
-        db.query(sql, [cultivationId], (err, results) => {
+        db.query(sql, [cropId], (err, results) => {
             if (err) {
                 console.error("Database error in ongoingcultivationscrops:", err);
                 reject(err);
