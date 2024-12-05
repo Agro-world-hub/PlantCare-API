@@ -198,16 +198,21 @@ exports.signupChecker = asyncHandler(async(req, res) => {
 
 exports.updateFirstLastName = asyncHandler(async(req, res) => {
     try {
-        const { firstName, lastName } =
+        const { firstName, lastName, buidingname, streetname, city  } =
         await ValidationSchema.updateFirstLastNameSchema.validateAsync(req.body);
+       
 
         const userId = req.user.id;
 
         const affectedRows = await userAuthDao.updateFirstLastName(
             userId,
             firstName,
-            lastName
+            lastName,
+            buidingname,
+            streetname,
+            city
         );
+        console.log("hi..the affected rows is", affectedRows);
 
         if (affectedRows === 0) {
             return res.status(404).json({

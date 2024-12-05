@@ -51,7 +51,7 @@ exports.insertUser = (firstName, lastName, phoneNumber, NICnumber, district) => 
 // DAO function to retrieve user profile by userId
 exports.getUserProfileById = (userId) => {
     return new Promise((resolve, reject) => {
-        const sql = "SELECT firstName, lastName, phoneNumber, NICnumber, district, farmerQr FROM users WHERE id = ?";
+        const sql = "SELECT * FROM users WHERE id = ?";
         db.query(sql, [userId], (err, results) => {
             if (err) {
                 return reject(err);
@@ -123,10 +123,10 @@ exports.checkSignupDetails = (phoneNumber, NICnumber) => {
 };
 
 
-exports.updateFirstLastName = (userId, firstName, lastName) => {
+exports.updateFirstLastName = (userId, firstName, lastName, buidingname, streetname, city) => {
     return new Promise((resolve, reject) => {
-        const sql = 'UPDATE users SET firstName = ?, lastName = ? WHERE id = ?';
-        db.query(sql, [firstName, lastName, userId], (err, results) => {
+        const sql = 'UPDATE users SET firstName = ?, lastName = ?, houseNo=?, streetName=?, city=? WHERE id = ?';
+        db.query(sql, [firstName, lastName, buidingname, streetname,city, userId], (err, results) => {
             if (err) {
                 reject(err);
             } else {
