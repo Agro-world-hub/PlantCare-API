@@ -387,7 +387,10 @@ exports.getSlaveCropCalendarDaysByUserAndCrop = asyncHandler(async(req, res) => 
     try {
         // Validate the incoming request
         await getSlaveCropCalendarDaysSchema.validateAsync(req.params);
-
+        const limit = req.query.limit ;
+        const page = req.query.page;
+        const offset = (page - 1) * limit;
+        console.log('offset:', offset)
         const userId = req.user.id;
         const cropCalendarId = req.params.cropCalendarId;
 
@@ -395,15 +398,12 @@ exports.getSlaveCropCalendarDaysByUserAndCrop = asyncHandler(async(req, res) => 
         console.log("Crop Calendar ID:", cropCalendarId);
 
         // Fetch data using the DAO
-        const results = await cropDao.getSlaveCropCalendarDaysByUserAndCrop(userId, cropCalendarId);
-
+        const results = await cropDao.getSlaveCropCalendarDaysByUserAndCrop(userId, cropCalendarId, offset, limit);
         if (results.length === 0) {
             return res.status(404).json({
                 message: "No records found for the given userId and cropCalendarId.",
             });
         }
-
-        console.log("Query result:", results);
 
         return res.status(200).json(results);
 
@@ -573,6 +573,7 @@ exports.updateCropCalendarStatus = asyncHandler(async(req, res) => {
                         res.status(200).json({ message: "Status updated successfully." });
                     }
                 });
+            cropDao.deleteGeoLocationByTaskId(id);
         } else {
             if (!res.headersSent) {
                 res.status(200).json({ message: "Status updated successfully." });
@@ -586,6 +587,43 @@ exports.updateCropCalendarStatus = asyncHandler(async(req, res) => {
                 message: err.details[0].message,
             });
         }
+        res.status(500).json({ message: "Internal Server Error!" });
+    }
+});
+
+exports.addGeoLocation = asyncHandler(async (req, res) => {
+    try {
+        const { latitude, longitude, taskId } = req.body;
+        console.log(latitude, longitude, taskId);
+
+        // Validate if taskId exists in slavecropcalendardays table
+        const taskExists = await cropDao.checkTaskExists(taskId);
+
+        if (!taskExists) {
+            return res.status(404).json({
+                status: "error",
+                message: `No task found for taskId ${taskId}. Please ensure the taskId is correct.`,
+            });
+        }
+
+        // If taskId exists, insert geo-location data
+        const results = await cropDao.addGeoLocation(taskId, longitude, latitude);
+        console.log("Geo-location added:", results);
+
+        if (results.affectedRows === 0) {
+            return res.status(400).json({
+                status: "error",
+                message: "Failed to insert geo location.",
+            });
+        }
+
+        res.status(200).json({
+            status: "success",
+            message: "Geo-location added successfully.",
+            data: results,
+        });
+    } catch (err) {
+        console.error("Error fetching geo location details:", err);
         res.status(500).json({ message: "Internal Server Error!" });
     }
 });

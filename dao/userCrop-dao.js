@@ -238,11 +238,11 @@ exports.enrollSlaveCrop = (userId, cropId, startDate, onCulscropID) => {
       INSERT INTO slavecropcalendardays (
         userId, cropCalendarId, taskIndex, startingDate, days, taskTypeEnglish, taskTypeSinhala, taskTypeTamil,
         taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, taskEnglish, taskSinhala, taskTamil,
-        taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, status, imageLink, videoLink, reqImages, onCulscropID
+        taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, status, imageLink, videoLink, reqImages, reqGeo, onCulscropID
       )
       SELECT ?, ccd.cropId, ccd.taskIndex, DATE_ADD(?, INTERVAL ccd.days DAY), ccd.days, ccd.taskTypeEnglish, ccd.taskTypeSinhala, ccd.taskTypeTamil,
              ccd.taskCategoryEnglish, ccd.taskCategorySinhala, ccd.taskCategoryTamil, ccd.taskEnglish, ccd.taskSinhala,
-             ccd.taskTamil, ccd.taskDescriptionEnglish, ccd.taskDescriptionSinhala, ccd.taskDescriptionTamil, 'pending', ccd.imageLink, ccd.videoLink, ccd.reqImages, ?
+             ccd.taskTamil, ccd.taskDescriptionEnglish, ccd.taskDescriptionSinhala, ccd.taskDescriptionTamil, 'pending', ccd.imageLink, ccd.videoLink, ccd.reqImages, ccd.reqGeo, ?
       FROM cropcalendardays ccd
       WHERE ccd.cropId = ?;
     `;
@@ -259,14 +259,15 @@ exports.enrollSlaveCrop = (userId, cropId, startDate, onCulscropID) => {
 
 
 //slave calender
-exports.getSlaveCropCalendarDaysByUserAndCrop = (userId, cropCalendarId) => {
+exports.getSlaveCropCalendarDaysByUserAndCrop = (userId, cropCalendarId, offset, limit) => {
     return new Promise((resolve, reject) => {
         const sql = `
           SELECT * 
           FROM slavecropcalendardays 
           WHERE userId = ? AND cropCalendarId = ?
+          LIMIT ? OFFSET ?;
       `;
-        db.query(sql, [userId, cropCalendarId], (err, results) => {
+        db.query(sql, [userId, cropCalendarId, parseInt(limit), parseInt(offset)], (err, results) => {
             if (err) {
                 reject(err);
             } else {
@@ -363,6 +364,51 @@ exports.deleteImagesBySlaveId = (slaveId) => {
                 return reject(err);
             }
             resolve(result);
+        });
+    });
+};
+
+exports.deleteGeoLocationByTaskId = (id) => {
+    const sql = "DELETE FROM cropgeo WHERE taskId = ?";
+    return new Promise((resolve, reject) => {
+        db.query(sql, [id], (err, results) => {
+            if (err) {
+                reject(new Error("Error deleting geolocation: " + err.message));
+            } else {
+                resolve(results);  // Returns the result of the delete operation
+            }
+        });
+    });
+};
+
+
+exports.addGeoLocation = (taskId,  longitude, latitude) => {
+    const sql = "INSERT INTO cropgeo(taskid, longitude, latitude) VALUES ( ?, ?, ?)";
+    return new Promise((resolve, reject) => {
+        db.query(sql, [taskId,  longitude, latitude], (err, results) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(results);
+            }
+        });
+    });
+}
+
+exports.checkTaskExists = (taskId) => {
+    return new Promise((resolve, reject) => {
+        const query = `
+            SELECT COUNT(*) AS count
+            FROM slavecropcalendardays
+            WHERE id = ?;
+        `;
+
+        db.execute(query, [taskId], (err, results) => {
+            if (err) {
+                reject(new Error("Error checking task existence: " + err.message));
+            } else {
+                resolve(results[0].count > 0);  // Returns true if taskId exists
+            }
         });
     });
 };

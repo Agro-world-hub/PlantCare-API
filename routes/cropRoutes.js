@@ -51,4 +51,6 @@ router.get(
 // router.post("/update-slave",auth,updateCropCalendarStatus)
 router.post("/update-slave", auth, userCrop.updateCropCalendarStatus);
 
+router.post("/geo-location", userCrop.addGeoLocation);
+
 module.exports = router;
