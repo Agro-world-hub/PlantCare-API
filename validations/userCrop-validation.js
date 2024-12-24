@@ -35,22 +35,22 @@ exports.enrollSchema = Joi.object({
         "date.base": `"Started At" should be a valid date`,
         "date.format": `"Started At" should follow the ISO 8601 format`,
     }),
-    extentha: Joi.number().precision(2).positive().required().messages({
+    extentha: Joi.number().precision(2).integer().required().messages({
         "number.base": `"Extent" should be a number`,
         "number.precision": `"Extent" should have up to 2 decimal places`,
-        "number.positive": `"Extent" should be a positive number`,
+        "number.integer": `"Ongoing Cultivation ID" should be an integer`,
         "any.required": `"Extent" is required`,
     }),
-    extentac: Joi.number().precision(2).positive().required().messages({
+    extentac: Joi.number().precision(2).integer().required().messages({
         "number.base": `"Extent" should be a number`,
         "number.precision": `"Extent" should have up to 2 decimal places`,
-        "number.positive": `"Extent" should be a positive number`,
+        "number.integer": `"Ongoing Cultivation ID" should be an integer`,
         "any.required": `"Extent" is required`,
     }),
-    extentp: Joi.number().precision(2).positive().required().messages({
+    extentp: Joi.number().precision(2).integer().required().messages({
         "number.base": `"Extent" should be a number`,
         "number.precision": `"Extent" should have up to 2 decimal places`,
-        "number.positive": `"Extent" should be a positive number`,
+        "number.integer": `"Ongoing Cultivation ID" should be an integer`,
         "any.required": `"Extent" is required`,
     }),
     createdAt: Joi.date().timestamp().default(() => new Date()).messages({

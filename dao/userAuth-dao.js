@@ -137,6 +137,17 @@ exports.updateFirstLastName = (userId, firstName, lastName, buidingname, streetn
 };
 
 
+exports.checkBankDetailsExist = (userId) => {
+    return new Promise((resolve, reject) => {
+        const query = "SELECT COUNT(*) AS count FROM userbankdetails WHERE userId = ?";
+        db.query(query, [userId], (err, result) => {
+            if (err) {
+                return reject(err);
+            }
+            resolve(result[0].count > 0); // Return true if count > 0
+        });
+    });
+};
 
 // Function to insert bank details into `userbankdetails` table
 exports.insertBankDetails = (userId, address, accountNumber, accountHolderName, bankName, branchName, callback) => {
@@ -318,28 +329,115 @@ exports.updateAddressAndQRCode = (userId, houseNo, streetName, city, callback) =
 };
 
 
-exports.checkAddressFields = async(userId) => {
-    return new Promise((resolve, reject) => {
-        const checkQuery = `
-        SELECT houseNo, streetName, city 
-        FROM users 
-        WHERE id = ?
-      `;
+// exports.checkAddressFields = async(userId) => {
+//     return new Promise((resolve, reject) => {
+//         const checkQuery = `
+//         SELECT houseNo, streetName, city 
+//         FROM users 
+//         WHERE id = ?
+//       `;
 
-        db.query(checkQuery, [userId], (err, result) => {
-            if (err) {
-                reject(err);
+//         db.query(checkQuery, [userId], (err, result) => {
+//             if (err) {
+//                 reject(err);
+//             }
+
+//             if (result.length === 0) {
+//                 resolve(null); // No user found with the given ID
+//             } else {
+//                 const { houseNo, streetName, city } = result[0];
+//                 resolve({ houseNo, streetName, city });
+//             }
+//         });
+//     });
+// };
+
+exports.createQrCode = (userId, callback) => {
+    const qrData = {
+        userInfo: {
+            id: userId,
+        },
+    };
+
+    console.log(qrData);
+
+    // Generate the QR code
+    exports.generateQRCode(qrData, (qrErr, qrCodeImagePath) => {
+        if (qrErr) {
+            return callback(qrErr); // Error generating QR code
+        }
+
+        // Update the farmerQr column with the new QR code image file path
+        exports.updateQRCode(userId, qrCodeImagePath, (updateQrErr) => {
+            if (updateQrErr) {
+                return callback(updateQrErr); // Error updating QR code
             }
 
-            if (result.length === 0) {
-                resolve(null); // No user found with the given ID
-            } else {
-                const { houseNo, streetName, city } = result[0];
-                resolve({ houseNo, streetName, city });
-            }
+            // Successfully updated QR code
+            callback(null, "QR code created and updated successfully");
         });
     });
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // const jwt = require("jsonwebtoken");
 // const db = require("../startup/database");

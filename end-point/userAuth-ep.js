@@ -250,13 +250,82 @@ const query = (sql, params) => {
     });
 };
 
-const dbService = require("../dao/userAuth-dao");
-exports.registerBankDetails = (req, res) => {
+// const dbService = require("../dao/userAuth-dao");
+// exports.registerBankDetails = (req, res) => {
+//     const {
+//         selectedDistrict,
+//         accountNumber,
+//         accountHolderName,
+//         bankName,
+//         branchName,
+//     } = req.body;
+
+//     const userId = req.user.id;
+//     console.log(userId);
+
+//     db.beginTransaction((err) => {
+//         if (err) {
+//             return res
+//                 .status(500)
+//                 .json({ message: "Failed to start transaction", error: err.message });
+//         }
+
+        
+
+//         // Insert the bank details into the database
+//         userAuthDao.insertBankDetails(
+//             userId,
+//             selectedDistrict,
+//             accountNumber,
+//             accountHolderName,
+//             bankName,
+//             branchName,
+//             (insertErr, insertResult) => {
+//                 if (insertErr) {
+//                     return db.rollback(() => {
+//                         console.error("Error inserting bank details:", insertErr);
+//                         return res
+//                             .status(500)
+//                             .json({
+//                                 message: "Failed to insert bank details",
+//                                 error: insertErr.message,
+//                             });
+//                     });
+//                 }
+
+//                 // Commit the transaction after successfully inserting the bank details
+//                 db.commit((commitErr) => {
+//                     if (commitErr) {
+//                         return db.rollback(() => {
+//                             console.error("Error committing transaction:", commitErr);
+//                             return res
+//                                 .status(500)
+//                                 .json({
+//                                     message: "Transaction commit failed",
+//                                     error: commitErr.message,
+//                                 });
+//                         });
+//                     }
+
+//                     // Send response that bank details were registered successfully
+//                     res.status(200).json({
+//                         message: "Bank details registered successfully",
+//                         bankData: {
+//                             userId,
+//                             accountHolderName,
+//                             accountNumber,
+//                             bankName,
+//                             branchName,
+//                             selectedDistrict,
+//                         },
+//                     });
+//                 });
+//             }
+//         );
+//     });
+// };
+exports.registerBankDetails = async (req, res) => {
     const {
-        firstName,
-        lastName,
-        nic,
-        mobileNumber,
         selectedDistrict,
         accountNumber,
         accountHolderName,
@@ -267,66 +336,77 @@ exports.registerBankDetails = (req, res) => {
     const userId = req.user.id;
     console.log(userId);
 
-    db.beginTransaction((err) => {
-        if (err) {
-            return res
-                .status(500)
-                .json({ message: "Failed to start transaction", error: err.message });
+    try {
+        // Check if bank details already exist for the user
+        const bankDetailsExist = await userAuthDao.checkBankDetailsExist(userId);
+
+        console.log("Bank details exist:", bankDetailsExist);
+
+        if (bankDetailsExist) {
+            return res.status(400).json({
+                message: "Bank details already exist for this user",
+            });
         }
 
-        // Insert the bank details into the database
-        dbService.insertBankDetails(
-            userId,
-            selectedDistrict,
-            accountNumber,
-            accountHolderName,
-            bankName,
-            branchName,
-            (insertErr, insertResult) => {
-                if (insertErr) {
-                    return db.rollback(() => {
-                        console.error("Error inserting bank details:", insertErr);
-                        return res
-                            .status(500)
-                            .json({
-                                message: "Failed to insert bank details",
-                                error: insertErr.message,
-                            });
-                    });
-                }
+        // Start the transaction
+        await db.promise().beginTransaction();
 
-                // Commit the transaction after successfully inserting the bank details
-                db.commit((commitErr) => {
-                    if (commitErr) {
-                        return db.rollback(() => {
-                            console.error("Error committing transaction:", commitErr);
-                            return res
-                                .status(500)
-                                .json({
-                                    message: "Transaction commit failed",
-                                    error: commitErr.message,
-                                });
-                        });
+        try {
+            // Insert the bank details into the database
+            await userAuthDao.insertBankDetails(
+                userId,
+                selectedDistrict,
+                accountNumber,
+                accountHolderName,
+                bankName,
+                branchName
+            );
+
+            // Create and update QR code
+            await new Promise((resolve, reject) => {
+                userAuthDao.createQrCode(userId, (qrErr, successMessage) => {
+                    if (qrErr) {
+                        console.error("Error creating QR code:", qrErr);
+                        reject(qrErr);
+                    } else {
+                        console.log(successMessage);
+                        resolve(successMessage);
                     }
-
-                    // Send response that bank details were registered successfully
-                    res.status(200).json({
-                        message: "Bank details registered successfully",
-                        bankData: {
-                            userId,
-                            accountHolderName,
-                            accountNumber,
-                            bankName,
-                            branchName,
-                            selectedDistrict,
-                        },
-                    });
                 });
-            }
-        );
-    });
-};
+            });
 
+            // Commit the transaction
+            await db.promise().commit();
+
+            // Send success response
+            return res.status(200).json({
+                message: "Bank details registered successfully",
+                bankData: {
+                    userId,
+                    accountHolderName,
+                    accountNumber,
+                    bankName,
+                    branchName,
+                    selectedDistrict,
+                },
+            });
+        } catch (transactionErr) {
+            // Rollback the transaction on error
+            await db.promise().rollback();
+            console.error("Error during transaction:", transactionErr);
+            return res.status(500).json({
+                message: "Failed to complete transaction",
+                error: transactionErr.message,
+            });
+        }
+    } catch (err) {
+        console.error("Error processing request:", err);
+        return res.status(500).json({
+            message: "An error occurred",
+            error: err.message,
+        });
+    }
+};
 
 
 
@@ -342,7 +422,7 @@ exports.updateAddress = async(req, res) => {
         const userId = req.user.id;
 
         // Update address and QR code
-        dbService.updateAddressAndQRCode(userId, houseNo, streetName, city, (err, successMessage) => {
+        userAuthDao.updateAddressAndQRCode(userId, houseNo, streetName, city, (err, successMessage) => {
             if (err) {
                 console.error("Error updating address and QR code:", err);
                 return res.status(500).json({
@@ -374,7 +454,7 @@ exports.checkAddressFields = async(req, res) => {
         const userId = req.user.id;
 
         // Use the DAO to check if the address fields are filled
-        const address = await dbService.checkAddressFields(userId);
+        const address = await userAuthDao.checkAddressFields(userId);
 
         if (!address) {
             return res.status(404).json({

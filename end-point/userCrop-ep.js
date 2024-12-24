@@ -166,7 +166,7 @@ exports.CropCalanderFeed = asyncHandler(async(req, res) => {
 
 exports.OngoingCultivaionGetById = asyncHandler(async(req, res) => {
     try {
-        // Validate query parameters (like limit, offset) using Joi
+        // // Validate query parameters (like limit, offset) using Joi
         const { error, value } = ongoingCultivationSchema.validate(req.query);
 
         if (error) {
@@ -178,9 +178,6 @@ exports.OngoingCultivaionGetById = asyncHandler(async(req, res) => {
 
         const userId = req.user.id; // Extract userId from token
 
-        // You can access pagination parameters like this if needed:
-        const limit = value.limit || 10; // Default limit is 10
-        const offset = value.offset || 0; // Default offset is 0
 
         // Fetch data from DAO
         cropDao.getOngoingCultivationsByUserId(userId, (err, results) => {
@@ -217,9 +214,9 @@ exports.enroll = asyncHandler(async(req, res) => {
     console.log("Enroll crop called");
     try {
         const cropId = req.body.cropId;
-        const extentha = req.body.extentha;
-        const extentac = req.body.extentac;
-        const extentp = req.body.extentp;
+        const extentha = req.body.extentha || '0'; // Default to 0 if not provided
+        const extentac = req.body.extentac || '0'; // Default to 0 if not provided
+        const extentp = req.body.extentp || '0';   // Default to 0 if not provided
         const startDate = req.body.startDate;
         const userId = req.user.id;
 
@@ -236,12 +233,16 @@ exports.enroll = asyncHandler(async(req, res) => {
             createdAt: undefined, // Not user-provided, default handled in schema
         });
 
+        console.log("Error:", error);
+
         if (error) {
             return res.status(400).json({ message: error.details[0].message });
         }
+        
 
         // Check if the user already has an ongoing cultivation
         let cultivationId;
+        console.log("Checking ongoing cultivation for user ID:", userId);
         const ongoingCultivationResult = await checkOngoingCultivation(userId);
 
         if (!ongoingCultivationResult[0]) {
@@ -437,6 +438,7 @@ exports.getSlaveCropCalendarPrgress = asyncHandler(async (req, res) => { try {
   if (results.length === 0) {
       return res.status(404).json({
           message: "No records found for the given userId and cropCalendarId.",
+          
       });
   }
 
