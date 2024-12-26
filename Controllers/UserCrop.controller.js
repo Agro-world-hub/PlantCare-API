@@ -6,7 +6,7 @@ const createCrop = (req, res) => {
   const userId = req.userId;
 
   const sql = `
-    INSERT INTO ongoingCultivations (userId) VALUES (?)
+    INSERT INTO ongoingcultivations (userId) VALUES (?)
   `;
   db.query(sql, [userId], (err, result) => {
     if (err) {
@@ -16,7 +16,7 @@ const createCrop = (req, res) => {
     const ongoingCultivationId = result.insertId;
 
     const sql2 = `
-      INSERT INTO ongoingCultivationsCrops (ongoingCultivationId, cropCalendar) VALUES (?, ?)
+      INSERT INTO ongoingcultivationscrops (ongoingCultivationId, cropCalendar) VALUES (?, ?)
     `;
     db.query(sql2, [ongoingCultivationId, cropCalendar], (err, result) => {
       if (err) {
@@ -33,9 +33,9 @@ const viewCrops = (req, res) => {
 
   const sql = `
     SELECT c.id, c.cropCalendar, cc.cropName
-    FROM ongoingCultivations oc
-    JOIN ongoingCultivationsCrops c ON oc.id = c.ongoingCultivationId
-    JOIN cropCalender cc ON c.cropCalendar = cc.id
+    FROM ongoingcultivations oc
+    JOIN ongoingcultivationscrops c ON oc.id = c.ongoingCultivationId
+    JOIN cropcalender cc ON c.cropCalendar = cc.id
     WHERE oc.userId = ?
   `;
   db.query(sql, [userId], (err, results) => {
@@ -53,8 +53,8 @@ const deleteCrop = (req, res) => {
 
   const sql = `
     DELETE c, oc
-    FROM ongoingCultivationsCrops c
-    JOIN ongoingCultivations oc ON c.ongoingCultivationId = oc.id
+    FROM ongoingcultivationscrops c
+    JOIN ongoingcultivations oc ON c.ongoingCultivationId = oc.id
     WHERE c.id = ? AND oc.userId = ?
   `;
   db.query(sql, [cropId, userId], (err, result) => {

@@ -4,7 +4,7 @@ const db = require('../startup/database')
 
 const getAllMarket= (asyncHandler(async(req,res)=>{
     try{
-        const sql = 'SELECT * FROM marketPrice'
+        const sql = 'SELECT * FROM marketprice'
         db.query(sql, (err,results)=>{
             if(err){
                 console.error('Error executing query:', err);

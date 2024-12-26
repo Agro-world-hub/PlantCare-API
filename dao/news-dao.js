@@ -1,7 +1,4 @@
-// This module handles database interaction for news content
-
-const db = require('../startup/database');  // Import your database configuration
-
+const db = require('../startup/database'); 
 exports.getAllNewsData = () => {
   return new Promise((resolve, reject) => {
     const sql = 'SELECT * FROM content';
