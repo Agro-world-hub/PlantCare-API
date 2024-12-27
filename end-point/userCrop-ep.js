@@ -384,27 +384,61 @@ exports.UpdateOngoingCultivationScrops = asyncHandler(async(req, res) => {
 
 
 
+// exports.getSlaveCropCalendarDaysByUserAndCrop = asyncHandler(async(req, res) => {
+//     try {
+//         // Validate the incoming request
+//         await getSlaveCropCalendarDaysSchema.validateAsync(req.params);
+//         const limit = req.query.limit ;
+//         const page = req.query.page;
+//         const offset = (page - 1) * limit;
+//         console.log('offset:', offset)
+//         const userId = req.user.id;
+//         const cropCalendarId = req.params.cropCalendarId;
+
+//         console.log("User ID:", userId);
+//         console.log("Crop Calendar ID:", cropCalendarId);
+
+//         // Fetch data using the DAO
+//         const results = await cropDao.getSlaveCropCalendarDaysByUserAndCrop(userId, cropCalendarId, offset, limit);
+//         if (results.length === 0) {
+//             return res.status(404).json({
+//                 message: "No records found for the given userId and cropCalendarId.",
+//             });
+//         }
+
+//         return res.status(200).json(results);
+
+//     } catch (err) {
+//         console.error("Error in getSlaveCropCalendarDaysByUserAndCrop:", err);
+
+//         if (err.isJoi) {
+//             return res.status(400).json({
+//                 status: 'error',
+//                 message: err.details[0].message,
+//             });
+//         }
+
+//         return res.status(500).json({ message: "Internal Server Error!" });
+//     }
+// });
+
 exports.getSlaveCropCalendarDaysByUserAndCrop = asyncHandler(async(req, res) => {
     try {
         // Validate the incoming request
         await getSlaveCropCalendarDaysSchema.validateAsync(req.params);
-        const limit = req.query.limit ;
-        const page = req.query.page;
-        const offset = (page - 1) * limit;
-        console.log('offset:', offset)
+
         const userId = req.user.id;
         const cropCalendarId = req.params.cropCalendarId;
 
-        console.log("User ID:", userId);
-        console.log("Crop Calendar ID:", cropCalendarId);
-
         // Fetch data using the DAO
-        const results = await cropDao.getSlaveCropCalendarDaysByUserAndCrop(userId, cropCalendarId, offset, limit);
+        const results = await cropDao.getSlaveCropCalendarDaysByUserAndCrop(userId, cropCalendarId);
+
         if (results.length === 0) {
             return res.status(404).json({
                 message: "No records found for the given userId and cropCalendarId.",
             });
         }
+
 
         return res.status(200).json(results);
 
@@ -421,6 +455,7 @@ exports.getSlaveCropCalendarDaysByUserAndCrop = asyncHandler(async(req, res) => 
         return res.status(500).json({ message: "Internal Server Error!" });
     }
 });
+
 
 exports.getSlaveCropCalendarPrgress = asyncHandler(async (req, res) => { try {
   // Validate the incoming request
@@ -461,6 +496,7 @@ exports.getSlaveCropCalendarPrgress = asyncHandler(async (req, res) => { try {
 
 //slave calender-update status
 exports.updateCropCalendarStatus = asyncHandler(async(req, res) => {
+    console.log("Update crop calendar status called");
     try {
         // Validate the request body
         await updateCropCalendarStatusSchema.validateAsync(req.body);

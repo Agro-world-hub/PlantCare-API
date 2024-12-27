@@ -212,7 +212,6 @@ exports.updateFirstLastName = asyncHandler(async(req, res) => {
             streetname,
             city
         );
-        console.log("hi..the affected rows is", affectedRows);
 
         if (affectedRows === 0) {
             return res.status(404).json({

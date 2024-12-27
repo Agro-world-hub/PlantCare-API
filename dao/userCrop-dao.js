@@ -259,15 +259,32 @@ exports.enrollSlaveCrop = (userId, cropId, startDate, onCulscropID) => {
 
 
 //slave calender
-exports.getSlaveCropCalendarDaysByUserAndCrop = (userId, cropCalendarId, offset, limit) => {
+// exports.getSlaveCropCalendarDaysByUserAndCrop = (userId, cropCalendarId, offset, limit) => {
+//     return new Promise((resolve, reject) => {
+//         const sql = `
+//           SELECT * 
+//           FROM slavecropcalendardays 
+//           WHERE userId = ? AND cropCalendarId = ?
+//           LIMIT ? OFFSET ?;
+//       `;
+//         db.query(sql, [userId, cropCalendarId, parseInt(limit), parseInt(offset)], (err, results) => {
+//             if (err) {
+//                 reject(err);
+//             } else {
+//                 resolve(results);
+//             }
+//         });
+//     });
+// };
+
+exports.getSlaveCropCalendarDaysByUserAndCrop = (userId, cropCalendarId) => {
     return new Promise((resolve, reject) => {
         const sql = `
           SELECT * 
           FROM slavecropcalendardays 
           WHERE userId = ? AND cropCalendarId = ?
-          LIMIT ? OFFSET ?;
       `;
-        db.query(sql, [userId, cropCalendarId, parseInt(limit), parseInt(offset)], (err, results) => {
+        db.query(sql, [userId, cropCalendarId], (err, results) => {
             if (err) {
                 reject(err);
             } else {
