@@ -61,6 +61,24 @@ exports.getCropByCategory = asyncHandler(async(req, res) => {
     }
 });
 
+exports.getCropByDistrict = asyncHandler(async(req, res) => {
+    try {
+
+        const { categorie, district } = req.params;
+
+        const crops = await cropDao.getCropByDistrict(categorie, district);
+        console.log("Crops:", crops);
+
+        res.status(200).json(crops);
+    } catch (err) {
+        console.error("Error fetching crops by category:", err);
+        res.status(500).json({
+            status: "error",
+            message: "An error occurred while fetching crops by category.",
+        });
+    }
+});
+
 // Endpoint to get crop by ID
 exports.getCropVariety = asyncHandler(async(req, res) => {
     try {

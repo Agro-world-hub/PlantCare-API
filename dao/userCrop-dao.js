@@ -16,6 +16,60 @@ exports.getCropByCategory = (categorie) => {
     });
 };
 
+exports.getCropByDistrict = (categorie, district) => {
+    return new Promise((resolve, reject) => {
+        // Clean the district name to avoid any unwanted spaces
+        const districtCleaned = district.trim();
+
+        // SQL query to fetch crop groups where the district is found in suitableAreas
+        const sql = `
+            SELECT DISTINCT cg.*
+            FROM cropgroup cg
+            INNER JOIN cropvariety cv ON cg.id = cv.cropGroupId
+            INNER JOIN cropcalender cc ON cv.id = cc.cropVarietyId
+            WHERE cg.category = ? AND cc.suitableAreas LIKE ?
+        `;
+
+        db.query(sql, [categorie, `%${districtCleaned}%`], (err, results) => {
+            console.log("results", results);
+            if (err) {
+                console.error("Error executing query:", err);
+                reject(err);
+            } else {
+                resolve(results);
+            }
+        });
+    });
+};
+
+
+exports.getCropByDistrict = (categorie, district) => {
+    return new Promise((resolve, reject) => {
+        // Clean the district name to avoid any unwanted spaces
+        const districtCleaned = district.trim();
+
+        // SQL query to get only crop groups by category and district
+        const sql = `
+            SELECT DISTINCT cg.*
+            FROM cropgroup cg
+            INNER JOIN cropvariety cv ON cg.id = cv.cropGroupId
+            INNER JOIN cropcalender cc ON cv.id = cc.cropVarietyId
+            WHERE cg.category = ? AND cc.suitableAreas LIKE ?
+        `;
+
+        // Execute the query with the provided category and district
+        db.query(sql, [categorie, `%${districtCleaned}%`], (err, results) => {
+            console.log("results", results);
+            if (err) {
+                console.error("Error executing query:", err);
+                reject(err);
+            } else {
+                resolve(results);
+            }
+        });
+    });
+};
+
 // Function to get crop details by crop ID
 exports.getCropVariety = (cropId) => {
     return new Promise((resolve, reject) => {
