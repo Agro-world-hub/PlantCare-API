@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors"); // Import the cors middleware
-const db = require("./startup/database");
+// const db = require("./startup/database");
+const { plantcare, collectionofficer, marketPlace, dash } = require("./startup/database"); 
+
 require("dotenv").config();
 
 const app = express();
@@ -33,13 +35,20 @@ app.options(
     })
 );
 
-db.connect((err) => {
-    if (err) {
-        console.error("Error connecting to the database in index.js:", err);
-        return;
-    }
-    console.log("Connected to the MySQL database in server.js.");
-});
+const DatabaseConnection = (db, name) => {
+    db.connect((err) => {
+        if (err) {
+            console.error(`Error connecting to the ${name} database:`, err);
+            return;
+        }
+        console.log(`Connected to the ${name} database.`);
+    });
+};
+
+DatabaseConnection(plantcare, "PlantCare");
+DatabaseConnection(collectionofficer, "CollectionOfficer");
+DatabaseConnection(marketPlace, "MarketPlace");
+DatabaseConnection(dash, "Dash");
 
 const myCropRoutes = require("./routes/UserCrop.routes");
 app.use(process.env.AUTHOR, myCropRoutes);
