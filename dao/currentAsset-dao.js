@@ -8,7 +8,7 @@ exports.getAllCurrentAssets = (userId) => {
             WHERE userId = ? 
             GROUP BY category
         `;
-    db.query(sql, [userId], (err, results) => {
+    db.plantcare.query(sql, [userId], (err, results) => {
       if (err) {
         return reject(err); 
       }
@@ -31,7 +31,7 @@ exports.getAssetsByCategory = (userId, category) => {
       values = [userId, category];
     }
 
-    db.query(query, values, (err, results) => {
+    db.plantcare.query(query, values, (err, results) => {
       if (err) {
         return reject(err); 
       }
@@ -44,7 +44,7 @@ exports.getCurrentAsset = (userId, category, assetId) => {
   return new Promise((resolve, reject) => {
     const query =
       "SELECT * FROM currentasset WHERE userId = ? AND category = ? AND id = ?";
-    db.execute(query, [userId, category, assetId], (err, results) => {
+    db.plantcare.execute(query, [userId, category, assetId], (err, results) => {
       if (err) {
         return reject(err); 
       }
@@ -57,7 +57,7 @@ exports.deleteAsset = (userId, category, assetId) => {
   return new Promise((resolve, reject) => {
     const query =
       "DELETE FROM currentasset WHERE userId = ? AND category = ? AND id = ?";
-    db.execute(query, [userId, category, assetId], (err) => {
+    db.plantcare.execute(query, [userId, category, assetId], (err) => {
       if (err) {
         return reject(err); 
       }
@@ -70,7 +70,7 @@ exports.updateAsset = (userId, category, assetId, newNumOfUnit, newTotal) => {
   return new Promise((resolve, reject) => {
     const query =
       "UPDATE currentasset SET numOfUnit = ?, total = ? WHERE userId = ? AND category = ? AND id = ?";
-    db.execute(
+    db.plantcare.execute(
       query,
       [newNumOfUnit, newTotal, userId, category, assetId],
       (err) => {
@@ -92,7 +92,7 @@ exports.insertRecord = (
   return new Promise((resolve, reject) => {
     const query =
       "INSERT INTO currentassetrecord (currentAssetId, numOfPlusUnit, numOfMinUnit, totalPrice) VALUES (?, ?, ?, ?)";
-    db.execute(
+    db.plantcare.execute(
       query,
       [currentAssetId, numOfPlusUnit, numOfMinUnit, totalPrice],
       (err) => {
@@ -110,7 +110,7 @@ exports.checkAssetExists = (userId, category, asset) => {
         const sql = `
             SELECT * FROM currentasset WHERE userId = ? AND category = ? AND asset = ?
         `;
-        db.query(sql, [userId, category, asset], (err, results) => {
+        db.plantcare.query(sql, [userId, category, asset], (err, results) => {
             if (err) {
                 return reject(err);
             }
@@ -126,7 +126,7 @@ exports.updateAsset = (updatedValues, assetId) => {
             SET numOfUnit = ?, total = ?, unitVolume = ?, unitPrice = ?, purchaseDate = ?, expireDate = ?, status = ?
             WHERE id = ?
         `;
-        db.query(sql, [...updatedValues, assetId], (err) => {
+        db.plantcare.query(sql, [...updatedValues, assetId], (err) => {
             if (err) {
                 return reject(err);
             }
@@ -143,7 +143,7 @@ exports.insertAsset = (insertValues) => {
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
-        db.query(sql, insertValues, (err, insertResults) => {
+        db.plantcare.query(sql, insertValues, (err, insertResults) => {
             if (err) {
                 return reject(err);
             }
@@ -158,7 +158,7 @@ exports.insertAssetRecord = (recordValues) => {
             INSERT INTO currentassetrecord (currentAssetId, numOfPlusUnit, numOfMinUnit, totalPrice)
             VALUES (?, ?, 0, ?)
         `;
-        db.query(sql, recordValues, (err) => {
+        db.plantcare.query(sql, recordValues, (err) => {
             if (err) {
                 return reject(err);
             }

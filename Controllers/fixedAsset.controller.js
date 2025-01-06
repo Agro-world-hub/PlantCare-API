@@ -65,12 +65,12 @@ exports.addFixedAsset = (req, res) => {
     const formattedStartDate = formatDate(startDate);
 
     // Start a transaction
-    db.beginTransaction((err) => {
+    db.plantcare.beginTransaction((err) => {
         if (err) return res.status(500).json({ message: 'Transaction error', error: err });
 
         // Insert into fixedasset table
         const fixedAssetSql = `INSERT INTO fixedasset (userId, category) VALUES (?, ?)`;
-        db.query(fixedAssetSql, [userId, category], (fixedAssetErr, fixedAssetResult) => {
+        db.plantcare.query(fixedAssetSql, [userId, category], (fixedAssetErr, fixedAssetResult) => {
             if (fixedAssetErr) {
                 return db.rollback(() => {
                     return res.status(500).json({ message: 'Error inserting into fixedasset table', error: fixedAssetErr });
@@ -85,7 +85,7 @@ exports.addFixedAsset = (req, res) => {
                 const buildingSql = `INSERT INTO buildingfixedasset (fixedAssetId, type, floorArea, ownership, generalCondition, district)
                                      VALUES (?, ?, ?, ?, ?, ?)`;
 
-                db.query(buildingSql, [fixedAssetId, type, floorArea, ownership, generalCondition, district], (buildingErr, buildingResult) => {
+                db.plantcare.query(buildingSql, [fixedAssetId, type, floorArea, ownership, generalCondition, district], (buildingErr, buildingResult) => {
                     if (buildingErr) {
                         return db.rollback(() => {
                             return res.status(500).json({ message: 'Error inserting into buildingfixedasset table', error: buildingErr });
@@ -131,7 +131,7 @@ exports.addFixedAsset = (req, res) => {
                     }
 
                     // Execute the ownership query
-                    db.query(ownershipSql, ownershipParams, (ownershipErr) => {
+                    db.plantcare.query(ownershipSql, ownershipParams, (ownershipErr) => {
                         if (ownershipErr) {
                             return db.rollback(() => {
                                 return res.status(500).json({ message: 'Error inserting into ownership table', error: ownershipErr });
@@ -139,7 +139,7 @@ exports.addFixedAsset = (req, res) => {
                         }
 
                         // Commit the transaction
-                        db.commit((commitErr) => {
+                        db.plantcare.commit((commitErr) => {
                             if (commitErr) {
                                 return db.rollback(() => {
                                     return res.status(500).json({ message: 'Commit error', error: commitErr });
@@ -154,7 +154,7 @@ exports.addFixedAsset = (req, res) => {
             } else if (category === 'Land') {
                 const landSql = `INSERT INTO landfixedasset (fixedAssetId, extentha, extentac, extentp, ownership, district, landFenced, perennialCrop)
                                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-                db.query(landSql, [fixedAssetId, extentha, extentac, extentp, landownership, district, landFenced, perennialCrop], (landErr, landResult) => {
+                db.plantcare.query(landSql, [fixedAssetId, extentha, extentac, extentp, landownership, district, landFenced, perennialCrop], (landErr, landResult) => {
                     if (landErr) {
                         return db.rollback(() => {
                             return res.status(500).json({ message: 'Error inserting into landfixedasset table', error: landErr });
@@ -167,13 +167,13 @@ exports.addFixedAsset = (req, res) => {
                     if (landownership === 'Own') {
                         const ownershipOwnerSql = `INSERT INTO ownershipownerfixedasset (landAssetId, issuedDate, estimateValue)
                                                    VALUES (?, ?, ?)`;
-                        db.query(ownershipOwnerSql, [landAssetId, formattedIssuedDate, estimateValue], (ownershipErr) => {
+                        db.plantcare.query(ownershipOwnerSql, [landAssetId, formattedIssuedDate, estimateValue], (ownershipErr) => {
                             if (ownershipErr) {
                                 return db.rollback(() => {
                                     return res.status(500).json({ message: 'Error inserting into ownershipownerfixedasset table', error: ownershipErr });
                                 });
                             }
-                            db.commit((commitErr) => {
+                            db.plantcare.commit((commitErr) => {
                                 if (commitErr) {
                                     return db.rollback(() => {
                                         return res.status(500).json({ message: 'Commit error', error: commitErr });
@@ -185,13 +185,13 @@ exports.addFixedAsset = (req, res) => {
                     } else if (landownership === 'Lease') {
                         const ownershipLeaseSql = `INSERT INTO ownershipleastfixedasset (landAssetId, startDate, durationYears,durationMonths, leastAmountAnnually)
                                                    VALUES (?, ?, ?, ?,?)`;
-                        db.query(ownershipLeaseSql, [landAssetId, formattedStartDate, durationYears, durationMonths, leastAmountAnnually], (leaseErr) => {
+                        db.plantcare.query(ownershipLeaseSql, [landAssetId, formattedStartDate, durationYears, durationMonths, leastAmountAnnually], (leaseErr) => {
                             if (leaseErr) {
                                 return db.rollback(() => {
                                     return res.status(500).json({ message: 'Error inserting into ownershipleastfixedasset table', error: leaseErr });
                                 });
                             }
-                            db.commit((commitErr) => {
+                            db.plantcare.commit((commitErr) => {
                                 if (commitErr) {
                                     return db.rollback(() => {
                                         return res.status(500).json({ message: 'Commit error', error: commitErr });
@@ -203,13 +203,13 @@ exports.addFixedAsset = (req, res) => {
                     } else if (landownership === 'Permited') {
                         const ownershipPermitSql = `INSERT INTO ownershippermitfixedasset (landAssetId, issuedDate, permitFeeAnnually)
                                                     VALUES (?, ?, ?)`;
-                        db.query(ownershipPermitSql, [landAssetId, formattedIssuedDate, permitFeeAnnually], (permitErr) => {
+                        db.plantcare.query(ownershipPermitSql, [landAssetId, formattedIssuedDate, permitFeeAnnually], (permitErr) => {
                             if (permitErr) {
                                 return db.rollback(() => {
                                     return res.status(500).json({ message: 'Error inserting into ownershippermitfixedasset table', error: permitErr });
                                 });
                             }
-                            db.commit((commitErr) => {
+                            db.plantcare.commit((commitErr) => {
                                 if (commitErr) {
                                     return db.rollback(() => {
                                         return res.status(500).json({ message: 'Commit error', error: commitErr });
@@ -221,13 +221,13 @@ exports.addFixedAsset = (req, res) => {
                     } else if (landownership === 'Shared') {
                         const ownershipSharedSql = `INSERT INTO ownershipsharedfixedasset (landAssetId, paymentAnnually)
                                                     VALUES (?, ?)`;
-                        db.query(ownershipSharedSql, [landAssetId, paymentAnnually], (sharedErr) => {
+                        db.plantcare.query(ownershipSharedSql, [landAssetId, paymentAnnually], (sharedErr) => {
                             if (sharedErr) {
                                 return db.rollback(() => {
                                     return res.status(500).json({ message: 'Error inserting into ownershipsharedfixedasset table', error: sharedErr });
                                 });
                             }
-                            db.commit((commitErr) => {
+                            db.plantcare.commit((commitErr) => {
                                 if (commitErr) {
                                     return db.rollback(() => {
                                         return res.status(500).json({ message: 'Commit error', error: commitErr });
@@ -237,7 +237,7 @@ exports.addFixedAsset = (req, res) => {
                             });
                         });
                     } else {
-                        return db.rollback(() => {
+                        return db.plantcare.rollback(() => {
                             return res.status(400).json({ message: 'Invalid ownership type provided for land asset.' });
                         });
                     }
@@ -248,7 +248,7 @@ exports.addFixedAsset = (req, res) => {
                                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
                 // Insert into machtoolsfixedasset table
-                db.query(machToolsSql, [fixedAssetId, asset, assetType, mentionOther, brand, numberOfUnits, unitPrice, totalPrice, warranty], (machToolsErr, machToolsResult) => {
+                db.plantcare.query(machToolsSql, [fixedAssetId, asset, assetType, mentionOther, brand, numberOfUnits, unitPrice, totalPrice, warranty], (machToolsErr, machToolsResult) => {
                     if (machToolsErr) {
                         return db.rollback(() => {
                             return res.status(500).json({ message: 'Error inserting into machtoolsfixedasset table', error: machToolsErr });
@@ -262,7 +262,7 @@ exports.addFixedAsset = (req, res) => {
                         // Insert into machtoolsfixedassetwarranty table
                         const machToolsWarrantySql = `INSERT INTO machtoolsfixedassetwarranty (machToolsId, purchaseDate, expireDate, warrantystatus)
                                                       VALUES (?, ?, ?, ?)`;
-                        db.query(machToolsWarrantySql, [machToolsId, formattedPurchaseDate, formattedExpireDate, warranty], (warrantyErr) => {
+                        db.plantcare.query(machToolsWarrantySql, [machToolsId, formattedPurchaseDate, formattedExpireDate, warranty], (warrantyErr) => {
                             if (warrantyErr) {
                                 return db.rollback(() => {
                                     return res.status(500).json({ message: 'Error inserting into machtoolsfixedassetwarranty table', error: warrantyErr });
@@ -270,9 +270,9 @@ exports.addFixedAsset = (req, res) => {
                             }
 
                             // Commit the transaction after successful insertions
-                            db.commit((commitErr) => {
+                            db.plantcare.commit((commitErr) => {
                                 if (commitErr) {
-                                    return db.rollback(() => {
+                                    return db.plantcare.rollback(() => {
                                         return res.status(500).json({ message: 'Commit error', error: commitErr });
                                     });
                                 }
@@ -283,17 +283,17 @@ exports.addFixedAsset = (req, res) => {
 
                         const machToolsWarrantySql = `INSERT INTO machtoolsfixedassetwarranty (machToolsId, purchaseDate, expireDate, warrantystatus)
                                                       VALUES (?, ?, ?, ?)`;
-                        db.query(machToolsWarrantySql, [machToolsId, formattedPurchaseDate, formattedExpireDate, warranty], (warrantyErr) => {
+                        db.plantcare.query(machToolsWarrantySql, [machToolsId, formattedPurchaseDate, formattedExpireDate, warranty], (warrantyErr) => {
                             if (warrantyErr) {
-                                return db.rollback(() => {
+                                return db.plantcare.rollback(() => {
                                     return res.status(500).json({ message: 'Error inserting into machtoolsfixedassetwarranty table', error: warrantyErr });
                                 });
                             }
 
                             // Commit the transaction after successful insertions
-                            db.commit((commitErr) => {
+                            db.plantcare.commit((commitErr) => {
                                 if (commitErr) {
-                                    return db.rollback(() => {
+                                    return db.plantcare.rollback(() => {
                                         return res.status(500).json({ message: 'Commit error', error: commitErr });
                                     });
                                 }
@@ -303,9 +303,9 @@ exports.addFixedAsset = (req, res) => {
 
                     } else {
                         // If no warranty, just commit the transaction
-                        db.commit((commitErr) => {
+                        db.plantcare.commit((commitErr) => {
                             if (commitErr) {
-                                return db.rollback(() => {
+                                return db.plantcare.rollback(() => {
                                     return res.status(500).json({ message: 'Commit error', error: commitErr });
                                 });
                             }
@@ -318,9 +318,9 @@ exports.addFixedAsset = (req, res) => {
                                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
                 // Insert into machtoolsfixedasset table
-                db.query(machToolsSql, [fixedAssetId, assetname, assetType, mentionOther, toolbrand, numberOfUnits, unitPrice, totalPrice, warranty], (machToolsErr, machToolsResult) => {
+                db.plantcare.query(machToolsSql, [fixedAssetId, assetname, assetType, mentionOther, toolbrand, numberOfUnits, unitPrice, totalPrice, warranty], (machToolsErr, machToolsResult) => {
                     if (machToolsErr) {
-                        return db.rollback(() => {
+                        return db.plantcare.rollback(() => {
                             return res.status(500).json({ message: 'Error inserting into machtoolsfixedasset table', error: machToolsErr });
                         });
                     }
@@ -332,17 +332,17 @@ exports.addFixedAsset = (req, res) => {
                         // Insert into machtoolsfixedassetwarranty table
                         const machToolsWarrantySql = `INSERT INTO machtoolsfixedassetwarranty (machToolsId, purchaseDate, expireDate, warrantystatus)
                                                       VALUES (?, ?, ?, ?)`;
-                        db.query(machToolsWarrantySql, [machToolsId, formattedPurchaseDate, formattedExpireDate, warranty], (warrantyErr) => {
+                        db.plantcare.query(machToolsWarrantySql, [machToolsId, formattedPurchaseDate, formattedExpireDate, warranty], (warrantyErr) => {
                             if (warrantyErr) {
-                                return db.rollback(() => {
+                                return db.plantcare.rollback(() => {
                                     return res.status(500).json({ message: 'Error inserting into machtoolsfixedassetwarranty table', error: warrantyErr });
                                 });
                             }
 
                             // Commit the transaction after successful insertions
-                            db.commit((commitErr) => {
+                            db.plantcare.commit((commitErr) => {
                                 if (commitErr) {
-                                    return db.rollback(() => {
+                                    return db.plantcare.rollback(() => {
                                         return res.status(500).json({ message: 'Commit error', error: commitErr });
                                     });
                                 }
@@ -353,17 +353,17 @@ exports.addFixedAsset = (req, res) => {
 
                         const machToolsWarrantySql = `INSERT INTO machtoolsfixedassetwarranty (machToolsId, purchaseDate, expireDate, warrantystatus)
                                                       VALUES (?, ?, ?, ?)`;
-                        db.query(machToolsWarrantySql, [machToolsId, formattedPurchaseDate, formattedExpireDate, warranty], (warrantyErr) => {
+                        db.plantcare.query(machToolsWarrantySql, [machToolsId, formattedPurchaseDate, formattedExpireDate, warranty], (warrantyErr) => {
                             if (warrantyErr) {
-                                return db.rollback(() => {
+                                return db.plantcare.rollback(() => {
                                     return res.status(500).json({ message: 'Error inserting into machtoolsfixedassetwarranty table', error: warrantyErr });
                                 });
                             }
 
                             // Commit the transaction after successful insertions
-                            db.commit((commitErr) => {
+                            db.plantcare.commit((commitErr) => {
                                 if (commitErr) {
-                                    return db.rollback(() => {
+                                    return db.plantcare.rollback(() => {
                                         return res.status(500).json({ message: 'Commit error', error: commitErr });
                                     });
                                 }
@@ -373,9 +373,9 @@ exports.addFixedAsset = (req, res) => {
 
                     } else {
                         // If no warranty, just commit the transaction
-                        db.commit((commitErr) => {
+                        db.plantcare.commit((commitErr) => {
                             if (commitErr) {
-                                return db.rollback(() => {
+                                return db.plantcare.rollback(() => {
                                     return res.status(500).json({ message: 'Commit error', error: commitErr });
                                 });
                             }
@@ -384,7 +384,7 @@ exports.addFixedAsset = (req, res) => {
                     }
                 });
             } else {
-                return db.rollback(() => {
+                return db.plantcare.rollback(() => {
                     return res.status(400).json({ message: 'Invalid category provided.' });
                 });
             }
@@ -400,7 +400,7 @@ exports.getFixedAssetsByCategory = (req, res) => {
     const { category } = req.params; // Get the category from request parameters
 
     // Start a transaction
-    db.beginTransaction((err) => {
+    db.plantcare.beginTransaction((err) => {
         if (err) {
             return res.status(500).json({ message: 'Transaction error', error: err });
         }
@@ -430,7 +430,7 @@ exports.getFixedAssetsByCategory = (req, res) => {
         }
 
         // Execute the query based on the category
-        db.query(sqlQuery, queryParams, (queryErr, results) => {
+        db.plantcare.query(sqlQuery, queryParams, (queryErr, results) => {
             if (queryErr) {
                 return db.rollback(() => {
                     return res.status(500).json({ message: 'Error retrieving fixed assets', error: queryErr });
@@ -438,7 +438,7 @@ exports.getFixedAssetsByCategory = (req, res) => {
             }
 
             // Commit the transaction and return the results
-            db.commit((commitErr) => {
+            db.plantcare.commit((commitErr) => {
                 if (commitErr) {
                     return db.rollback(() => {
                         return res.status(500).json({ message: 'Commit error', error: commitErr });
@@ -460,7 +460,7 @@ exports.getFixedAssetDetailsById = (req, res) => {
     const { assetId, category } = req.params; // Get the assetId and category from request parameters
 
     // Start a transaction
-    db.beginTransaction((err) => {
+    db.plantcare.beginTransaction((err) => {
         if (err) {
             return res.status(500).json({ message: 'Transaction error', error: err });
         }
@@ -502,9 +502,9 @@ exports.getFixedAssetDetailsById = (req, res) => {
         }
 
         // Execute the main asset query
-        db.query(sqlQuery, queryParams, (queryErr, assetResults) => {
+        db.plantcare.query(sqlQuery, queryParams, (queryErr, assetResults) => {
             if (queryErr) {
-                return db.rollback(() => {
+                return db.plantcare.rollback(() => {
                     return res.status(500).json({ message: 'Error retrieving asset details', error: queryErr });
                 });
             }
@@ -573,9 +573,9 @@ exports.getFixedAssetDetailsById = (req, res) => {
             }
 
             // Execute the ownership query based on the asset type
-            db.query(ownershipQuery, [assetOwnershipId], (ownershipErr, ownershipResults) => {
+            db.plantcare.query(ownershipQuery, [assetOwnershipId], (ownershipErr, ownershipResults) => {
                 if (ownershipErr) {
-                    return db.rollback(() => {
+                    return db.plantcare.rollback(() => {
                         return res.status(500).json({ message: 'Error retrieving ownership details', error: ownershipErr });
                     });
                 }
@@ -583,9 +583,9 @@ exports.getFixedAssetDetailsById = (req, res) => {
                 asset.ownershipDetails = ownershipResults[0] || null;
 
                 // Commit the transaction and return the asset details with ownership
-                db.commit((commitErr) => {
+                db.plantcare.commit((commitErr) => {
                     if (commitErr) {
-                        return db.rollback(() => {
+                        return db.plantcare.rollback(() => {
                             return res.status(500).json({ message: 'Commit error', error: commitErr });
                         });
                     }
@@ -604,7 +604,7 @@ exports.updateFixedAsset = (req, res) => {
     const assetData = req.body;
 
     // Start a transaction
-    db.beginTransaction((err) => {
+    db.plantcare.beginTransaction((err) => {
         if (err) {
             return res.status(500).json({ message: 'Transaction error', error: err });
         }
@@ -637,9 +637,9 @@ exports.updateFixedAsset = (req, res) => {
                 assetData.faId
             ];
 
-            db.query(updateAssetQuery, updateParams, (queryErr) => {
+            db.plantcare.query(updateAssetQuery, updateParams, (queryErr) => {
                 if (queryErr) {
-                    return db.rollback(() => res.status(500).json({ message: 'Error updating asset', error: queryErr }));
+                    return db.plantcare.rollback(() => res.status(500).json({ message: 'Error updating asset', error: queryErr }));
                 }
 
                 // Proceed with ownership updates based on the ownership type
@@ -805,10 +805,10 @@ exports.updateFixedAsset = (req, res) => {
             ];
 
             // Execute the buildingfixedasset update query
-            db.query(updateAssetQuery, updateParams, (queryErr, result) => {
+            db.plantcare.query(updateAssetQuery, updateParams, (queryErr, result) => {
                 if (queryErr) {
                     console.error("Error executing updateAssetQuery:", queryErr);
-                    return db.rollback(() => res.status(500).json({ message: 'Error updating asset', error: queryErr }));
+                    return db.plantcare.rollback(() => res.status(500).json({ message: 'Error updating asset', error: queryErr }));
                 }
 
 
@@ -994,26 +994,26 @@ exports.updateFixedAsset = (req, res) => {
             ];
 
             // Execute the update queries in sequence with enhanced error logging
-            db.query(updateAssetQuery, updateParams, (queryErr) => {
+            db.plantcare.query(updateAssetQuery, updateParams, (queryErr) => {
                 if (queryErr) {
                     console.error('Error executing updateAssetQuery:', queryErr);
-                    return db.rollback(() => res.status(500).json({ message: 'Error updating asset', error: queryErr }));
+                    return db.plantcare.rollback(() => res.status(500).json({ message: 'Error updating asset', error: queryErr }));
                 }
 
                 console.log('Asset updated successfully'); // Should appear if update was successful
 
-                db.query(warrantyQuery, warrantyParams, (warrantyErr) => {
+                db.plantcare.query(warrantyQuery, warrantyParams, (warrantyErr) => {
                     if (warrantyErr) {
                         console.error('Error executing warrantyQuery:', warrantyErr);
-                        return db.rollback(() => res.status(500).json({ message: 'Error updating warranty details', error: warrantyErr }));
+                        return db.plantcare.rollback(() => res.status(500).json({ message: 'Error updating warranty details', error: warrantyErr }));
                     }
 
                     console.log('Warranty details updated successfully'); // Should appear if warranty update was successful
 
-                    db.commit((commitErr) => {
+                    db.plantcare.commit((commitErr) => {
                         if (commitErr) {
                             console.error('Error committing transaction:', commitErr);
-                            return db.rollback(() => res.status(500).json({ message: 'Commit error', error: commitErr }));
+                            return db.plantcare.rollback(() => res.status(500).json({ message: 'Commit error', error: commitErr }));
                         }
 
                         console.log('Transaction committed successfully'); // Confirms successful transaction commit
@@ -1031,7 +1031,7 @@ exports.updateFixedAsset = (req, res) => {
 // Helper functions for executing delete/insert and update sequences
 function executeDeleteAndInsertQueries(res, deleteQueries, deleteParams, insertQueries, insertParams, updateAssetQuery, updateParams) {
     let deletePromises = deleteQueries.map(query => new Promise((resolve, reject) => {
-        db.query(query, deleteParams, (err) => {
+        db.plantcare.query(query, deleteParams, (err) => {
             if (err) reject(err);
             else resolve();
         });
@@ -1040,7 +1040,7 @@ function executeDeleteAndInsertQueries(res, deleteQueries, deleteParams, insertQ
     Promise.all(deletePromises)
         .then(() => {
             let insertPromises = insertQueries.map((query, i) => new Promise((resolve, reject) => {
-                db.query(query, insertParams[i], (err) => {
+                db.plantcare.query(query, insertParams[i], (err) => {
                     if (err) reject(err);
                     else resolve();
                 });
@@ -1049,16 +1049,16 @@ function executeDeleteAndInsertQueries(res, deleteQueries, deleteParams, insertQ
             return Promise.all(insertPromises);
         })
         .then(() => {
-            db.query(updateAssetQuery, updateParams, (queryErr) => {
-                if (queryErr) return db.rollback(() => res.status(500).json({ message: 'Error updating asset', error: queryErr }));
-                db.commit((commitErr) => {
-                    if (commitErr) return db.rollback(() => res.status(500).json({ message: 'Commit error', error: commitErr }));
+            db.plantcare.query(updateAssetQuery, updateParams, (queryErr) => {
+                if (queryErr) return db.plantcare.rollback(() => res.status(500).json({ message: 'Error updating asset', error: queryErr }));
+                db.plantcare.commit((commitErr) => {
+                    if (commitErr) return db.plantcare.rollback(() => res.status(500).json({ message: 'Commit error', error: commitErr }));
                     return res.status(200).json({ message: 'Asset and ownership details updated successfully.' });
                 });
             });
         })
         .catch((err) => {
-            db.rollback(() => res.status(500).json({ message: 'Error executing ownership change', error: err }));
+            db.plantcare.rollback(() => res.status(500).json({ message: 'Error executing ownership change', error: err }));
         });
 }
 
@@ -1069,7 +1069,7 @@ function executeUpdateQueries(res, assetId, updateQueries = [], updateParams = [
     }
 
     let updatePromises = updateQueries.map((query, i) => new Promise((resolve, reject) => {
-        db.query(query, updateParams[i], (err) => {
+        db.plantcare.query(query, updateParams[i], (err) => {
             if (err) reject(err);
             else resolve();
         });
@@ -1077,16 +1077,16 @@ function executeUpdateQueries(res, assetId, updateQueries = [], updateParams = [
 
     Promise.all(updatePromises)
         .then(() => {
-            db.query(updateAssetQuery, updateParamsAsset, (queryErr) => {
-                if (queryErr) return db.rollback(() => res.status(500).json({ message: 'Error updating asset', error: queryErr }));
-                db.commit((commitErr) => {
-                    if (commitErr) return db.rollback(() => res.status(500).json({ message: 'Commit error', error: commitErr }));
+            db.plantcare.query(updateAssetQuery, updateParamsAsset, (queryErr) => {
+                if (queryErr) return db.plantcare.rollback(() => res.status(500).json({ message: 'Error updating asset', error: queryErr }));
+                db.plantcare.commit((commitErr) => {
+                    if (commitErr) return db.plantcare.rollback(() => res.status(500).json({ message: 'Commit error', error: commitErr }));
                     return res.status(200).json({ message: 'Asset and ownership details updated successfully.' });
                 });
             });
         })
         .catch((err) => {
-            db.rollback(() => res.status(500).json({ message: 'Error executing ownership update', error: err }));
+            db.plantcare.rollback(() => res.status(500).json({ message: 'Error executing ownership update', error: err }));
         });
 }
 
@@ -1096,9 +1096,9 @@ function executeUpdateQueries(res, assetId, updateQueries = [], updateParams = [
 function executeOwnershipUpdates(res, ...queries) {
     function executeNext(i) {
         if (i >= queries.length) {
-            return db.commit((commitErr) => {
+            return db.plantcare.commit((commitErr) => {
                 if (commitErr) {
-                    return db.rollback(() => res.status(500).json({ message: 'Commit error', error: commitErr }));
+                    return db.plantcare.rollback(() => res.status(500).json({ message: 'Commit error', error: commitErr }));
                 }
                 return res.status(200).json({ message: 'Update successful.' });
             });
@@ -1111,9 +1111,9 @@ function executeOwnershipUpdates(res, ...queries) {
 
         const [query, params] = currentQuery;
 
-        db.query(query, params, (err) => {
+        db.plantcare.query(query, params, (err) => {
             if (err) {
-                return db.rollback(() => res.status(500).json({ message: 'Ownership update error', error: err }));
+                return db.plantcare.rollback(() => res.status(500).json({ message: 'Ownership update error', error: err }));
             }
             executeNext(i + 1);
         });
@@ -1215,7 +1215,7 @@ exports.deleteFixedAsset = (req, res) => {
     const { assetId, category } = req.params;
 
     // Retrieve the assetData to confirm the asset exists
-    db.query(`SELECT id FROM fixedasset WHERE id = ? AND userId = ?`, [assetId, userId], (err, results) => {
+    db.plantcare.query(`SELECT id FROM fixedasset WHERE id = ? AND userId = ?`, [assetId, userId], (err, results) => {
         if (err || results.length === 0) {
             return res.status(404).json({ message: 'Asset not found or error occurred', error: err });
         }
@@ -1223,7 +1223,7 @@ exports.deleteFixedAsset = (req, res) => {
         const assetData = results[0];
 
         // Start a transaction
-        db.beginTransaction((err) => {
+        db.plantcare.beginTransaction((err) => {
             if (err) {
                 return res.status(500).json({ message: 'Transaction error', error: err });
             }
@@ -1275,7 +1275,7 @@ exports.deleteFixedAsset = (req, res) => {
             // Step 1: Execute all ownership delete queries one by one
             const ownershipDeletionPromises = deleteOwnershipQueries.map(query => {
                 return new Promise((resolve, reject) => {
-                    db.query(query, [assetData.id], (ownershipErr) => {
+                    db.plantcare.query(query, [assetData.id], (ownershipErr) => {
                         if (ownershipErr) reject(ownershipErr);
                         else resolve();
                     });
@@ -1285,17 +1285,17 @@ exports.deleteFixedAsset = (req, res) => {
             Promise.all(ownershipDeletionPromises)
                 .then(() => {
                     // Step 2: Execute the asset delete query after all ownership data is deleted
-                    db.query(deleteAssetQuery, [userId, assetData.id], (queryErr) => {
+                    db.plantcare.query(deleteAssetQuery, [userId, assetData.id], (queryErr) => {
                         if (queryErr) {
-                            return db.rollback(() => {
+                            return db.plantcare.rollback(() => {
                                 return res.status(500).json({ message: 'Error deleting asset details', error: queryErr });
                             });
                         }
 
                         // Step 3: Commit the transaction if both deletes are successful
-                        db.commit((commitErr) => {
+                        db.plantcare.commit((commitErr) => {
                             if (commitErr) {
-                                return db.rollback(() => {
+                                return db.plantcare.rollback(() => {
                                     return res.status(500).json({ message: 'Commit error', error: commitErr });
                                 });
                             }
@@ -1304,7 +1304,7 @@ exports.deleteFixedAsset = (req, res) => {
                     });
                 })
                 .catch((ownershipDeletionErr) => {
-                    db.rollback(() => {
+                    db.plantcare.rollback(() => {
                         return res.status(500).json({ message: 'Error deleting ownership details', error: ownershipDeletionErr });
                     });
                 });

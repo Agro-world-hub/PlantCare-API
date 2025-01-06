@@ -9,7 +9,7 @@ exports.getRequiredImages = (cropId) => {
       LIMIT 1;
     `;
 
-        db.execute(query, [cropId], (err, results) => {
+        db.plantcare.execute(query, [cropId], (err, results) => {
             if (err) {
                 reject(new Error('Error fetching required images: ' + err.message));
             } else {
@@ -27,7 +27,7 @@ exports.insertTaskImage = (slaveId, image) => {
     return new Promise((resolve, reject) => {
         const query = 'INSERT INTO taskimages (slaveId, image) VALUES (?, ?)';
 
-        db.query(query, [slaveId, image], (err, result) => {
+        db.plantcare.query(query, [slaveId, image], (err, result) => {
             if (err) {
                 reject(new Error('Error inserting image into taskimages: ' + err.message));
             } else {

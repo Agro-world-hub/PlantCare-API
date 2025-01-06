@@ -8,7 +8,7 @@ const createCrop = (req, res) => {
   const sql = `
     INSERT INTO ongoingcultivations (userId) VALUES (?)
   `;
-  db.query(sql, [userId], (err, result) => {
+  db.plantcare.query(sql, [userId], (err, result) => {
     if (err) {
       return res.status(500).send('Error creating ongoing cultivation: ' + err);
     }
@@ -18,7 +18,7 @@ const createCrop = (req, res) => {
     const sql2 = `
       INSERT INTO ongoingcultivationscrops (ongoingCultivationId, cropCalendar) VALUES (?, ?)
     `;
-    db.query(sql2, [ongoingCultivationId, cropCalendar], (err, result) => {
+    db.plantcare.query(sql2, [ongoingCultivationId, cropCalendar], (err, result) => {
       if (err) {
         return res.status(500).send('Error creating ongoing cultivation crop: ' + err);
       }
@@ -38,7 +38,7 @@ const viewCrops = (req, res) => {
     JOIN cropcalender cc ON c.cropCalendar = cc.id
     WHERE oc.userId = ?
   `;
-  db.query(sql, [userId], (err, results) => {
+  db.plantcare.query(sql, [userId], (err, results) => {
     if (err) {
       return res.status(500).send('Error fetching crops: ' + err);
     }
@@ -57,7 +57,7 @@ const deleteCrop = (req, res) => {
     JOIN ongoingcultivations oc ON c.ongoingCultivationId = oc.id
     WHERE c.id = ? AND oc.userId = ?
   `;
-  db.query(sql, [cropId, userId], (err, result) => {
+  db.plantcare.query(sql, [cropId, userId], (err, result) => {
     if (err) {
       return res.status(500).send('Error deleting crop: ' + err);
     }
