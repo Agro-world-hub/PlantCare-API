@@ -130,7 +130,7 @@ const createCompany = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS company (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      regNumber VARCHAR(50) NOT NULL,
+      regNumber VARCHAR(50) DEFAULT NULL,
       companyNameEnglish VARCHAR(50) NOT NULL,
       companyNameSinhala VARCHAR(50) NOT NULL,
       companyNameTamil VARCHAR(50) NOT NULL,
