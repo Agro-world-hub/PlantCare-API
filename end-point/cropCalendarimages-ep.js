@@ -1,6 +1,7 @@
 const multer = require('multer');
 const imageupDao = require("../dao/cropCalendarimages-dao");
 const asyncHandler = require("express-async-handler");
+const uploadFileToS3  = require('../Middlewares/s3upload')
 
 const storage = multer.memoryStorage();
 exports.upload = multer({
@@ -29,7 +30,9 @@ exports.uploadImage = asyncHandler(async(req, res) => {
             return res.status(400).json({ message: 'No slaveId provided.' });
         }
 
-        const image = req.file.buffer;
+        const imageBuffer = req.file.buffer;
+        const fileName = req.file.originalname;
+        const image = await uploadFileToS3(imageBuffer, fileName, "taskimages/image");
 
         const result = await imageupDao.insertTaskImage(slaveId, image);
 

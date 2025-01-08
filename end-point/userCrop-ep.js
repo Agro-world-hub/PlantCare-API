@@ -615,7 +615,17 @@ exports.updateCropCalendarStatus = asyncHandler(async(req, res) => {
 
         // Delete images if the status is set to 'pending'
         if (status === "pending") {
-            cropDao.deleteImagesBySlaveId(id)
+            cropDao.gettaskImagesByID(id)
+            .then((images) => {
+                if (!images || images.length === 0) {
+                    console.log(`No images found for task ID: ${id}`);
+                } else {
+                    console.log(`Fetched images for task ID: ${id}`, images);
+                    
+                }
+    
+                return cropDao.deleteImagesBySlaveId(id);
+            })
                 .then((deleteImagesResult) => {
                     console.log(`Deleted ${deleteImagesResult.affectedRows} images for task ID: ${id}`);
                 })

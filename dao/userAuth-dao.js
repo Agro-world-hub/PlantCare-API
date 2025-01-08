@@ -4,7 +4,7 @@ const asyncHandler = require("express-async-handler");
 const QRCode = require('qrcode');
 const fs = require('fs');
 const path = require('path');
-
+const uploadFileToS3  = require('../Middlewares/s3upload')
 exports.loginUser = (phonenumber) => {
     return new Promise((resolve, reject) => {
         const sql = "SELECT * FROM users WHERE phoneNumber = ? LIMIT 1";
@@ -61,19 +61,19 @@ exports.getUserProfileById = (userId) => {
             const userProfile = results[0];
 
             // Decode the file path
-            if (userProfile.farmerQr) {
-                const filePath = Buffer.from(userProfile.farmerQr, 'base64').toString('utf-8');
+            // if (userProfile.farmerQr) {
+            //     const filePath = Buffer.from(userProfile.farmerQr, 'base64').toString('utf-8');
 
-                // Read the file and convert to Base64
-                try {
-                    const fullPath = path.join(__dirname, '..', filePath);
-                    const imageBuffer = fs.readFileSync(fullPath);
-                    userProfile.farmerQr = imageBuffer.toString('base64');
-                } catch (error) {
-                    console.error('Error reading QR code file:', error);
-                    userProfile.farmerQr = null;
-                }
-            }
+            //     // Read the file and convert to Base64
+            //     try {
+            //         const fullPath = path.join(__dirname, '..', filePath);
+            //         const imageBuffer = fs.readFileSync(fullPath);
+            //         userProfile.farmerQr = imageBuffer.toString('base64');
+            //     } catch (error) {
+            //         console.error('Error reading QR code file:', error);
+            //         userProfile.farmerQr = null;
+            //     }
+            // }
 
             resolve(userProfile);
         });
@@ -351,39 +351,68 @@ exports.updateAddressAndQRCode = (userId, houseNo, streetName, city, callback) =
 //     });
 // };
 
-exports.createQrCode = (userId, callback) => {
-    const qrData = {
-        userInfo: {
-            id: userId,
-        },
-    };
+// exports.createQrCode = (userId, callback) => {
+//     const qrData = {
+//         userInfo: {
+//             id: userId,
+//         },
+//     };
 
-    console.log(qrData);
+//     console.log(qrData);
 
-    // Generate the QR code
-    exports.generateQRCode(qrData, (qrErr, qrCodeImagePath) => {
-        if (qrErr) {
-            return callback(qrErr); // Error generating QR code
-        }
+//     // Generate the QR code
+//     exports.generateQRCode(qrData, (qrErr, qrCodeImagePath) => {
+//         if (qrErr) {
+//             return callback(qrErr); // Error generating QR code
+//         }
 
-        // Update the farmerQr column with the new QR code image file path
-        exports.updateQRCode(userId, qrCodeImagePath, (updateQrErr) => {
+//         // Update the farmerQr column with the new QR code image file path
+//         exports.updateQRCode(userId, qrCodeImagePath, (updateQrErr) => {
+//             if (updateQrErr) {
+//                 return callback(updateQrErr); // Error updating QR code
+//             }
+
+//             // Successfully updated QR code
+//             callback(null, "QR code created and updated successfully");
+//         });
+//     });
+// };
+
+
+exports.createQrCode = async (userId, callback) => {
+
+
+    try {
+        const qrData = {
+            userInfo: {
+                id: userId,
+            },
+        };
+
+        console.log(qrData);
+
+        const qrCodeBase64 = await QRCode.toDataURL(JSON.stringify(qrData));
+
+        const qrCodeBuffer = Buffer.from(
+            qrCodeBase64.replace(/^data:image\/png;base64,/, ""),
+            'base64'
+        );
+
+        console.log(qrCodeBuffer);
+        const fileName =  `qrCode_${userId}.png`;
+        const profileImageUrl = await uploadFileToS3(qrCodeBuffer, fileName, "users/farmerQr");
+        
+        exports.updateQRCode(userId, profileImageUrl , (updateQrErr) => {
             if (updateQrErr) {
-                return callback(updateQrErr); // Error updating QR code
+                return callback(updateQrErr); 
             }
 
-            // Successfully updated QR code
             callback(null, "QR code created and updated successfully");
         });
-    });
+    } catch (err) {
+        return callback(err); 
+    }
 };
-
-
-
-
-
-
-
 
 
 

@@ -427,6 +427,19 @@ exports.updateTaskStatus = (id, status) => {
     });
 };
 
+exports.gettaskImagesByID = (slaveId) => {
+    const query = "SELECT image FROM taskimages WHERE slaveId = ?";
+    return new Promise((resolve, reject) => {
+        db.plantcare.execute(query, [slaveId], (err, result) => {
+            if (err) {
+                console.error("Error executing query:", err);
+                return reject(err);
+            }
+            resolve(result[0]);
+        });
+    });
+}
+
 exports.deleteImagesBySlaveId = (slaveId) => {
     const query = "DELETE FROM taskimages WHERE slaveId = ?";
     return new Promise((resolve, reject) => {
