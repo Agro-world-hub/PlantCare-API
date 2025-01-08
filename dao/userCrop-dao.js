@@ -305,6 +305,7 @@ exports.enrollSlaveCrop = (userId, cropId, startDate, onCulscropID) => {
                 reject(err);
             } else {
                 resolve(result);
+                console.log("enrollSlaveCrop", result);
             }
         });
     });

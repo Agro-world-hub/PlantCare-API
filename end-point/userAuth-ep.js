@@ -240,7 +240,7 @@ exports.updateFirstLastName = asyncHandler(async(req, res) => {
 
 const query = (sql, params) => {
     return new Promise((resolve, reject) => {
-        db.query(sql, params, (err, result) => {
+        db.plantcare.query(sql, params, (err, result) => {
             if (err) {
                 return reject(err);
             }
@@ -348,7 +348,7 @@ exports.registerBankDetails = async (req, res) => {
         }
 
         // Start the transaction
-        await db.promise().beginTransaction();
+        await db.plantcare.promise().beginTransaction();
 
         try {
             // Insert the bank details into the database
@@ -375,7 +375,7 @@ exports.registerBankDetails = async (req, res) => {
             });
 
             // Commit the transaction
-            await db.promise().commit();
+            await db.plantcare.promise().commit();
 
             // Send success response
             return res.status(200).json({
@@ -391,7 +391,7 @@ exports.registerBankDetails = async (req, res) => {
             });
         } catch (transactionErr) {
             // Rollback the transaction on error
-            await db.promise().rollback();
+            await db.plantcare.promise().rollback();
             console.error("Error during transaction:", transactionErr);
             return res.status(500).json({
                 message: "Failed to complete transaction",
