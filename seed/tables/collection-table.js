@@ -71,7 +71,7 @@ const createMarketPriceTable = () => {
       FOREIGN KEY (varietyId) REFERENCES plant_care.cropvariety(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
-      FOREIGN KEY (createdBy) REFERENCES plant_care.adminUsers(id)
+      FOREIGN KEY (createdBy) REFERENCES plant_care.adminusers(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
       FOREIGN KEY (xlindex) REFERENCES xlsxhistory(id)

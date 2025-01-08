@@ -231,7 +231,7 @@ const createCropCalenderDaysTable = () => {
     reqImages INT(11) NULL,
     reqGeo BOOLEAN NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (cropId) REFERENCES cropCalender(id)
+    FOREIGN KEY (cropId) REFERENCES cropcalender(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
