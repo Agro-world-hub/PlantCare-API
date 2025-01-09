@@ -435,7 +435,7 @@ exports.gettaskImagesByID = (slaveId) => {
                 console.error("Error executing query:", err);
                 return reject(err);
             }
-            resolve(result[0]);
+            resolve(result);
         });
     });
 }

@@ -7,7 +7,7 @@ const {
   createPostSchema,
 } = require("../validations/publicForum-validation");
 const postsDao = require("../dao/publicForum-dao");
-
+const uploadFileToS3  = require('../Middlewares/s3upload')
 exports.getPosts = asyncHandler(async (req, res) => {
   try {
     // Validate query parameters
@@ -102,13 +102,16 @@ exports.createPost = asyncHandler(async (req, res) => {
 
     console.log("Heading:", heading);
     console.log("Message:", message);
-    console.log("File received:", req.file); // Log file received
+    console.log("File received:", req.file); 
 
     let postimage = null;
 
     // Check if an image was uploaded
     if (req.file) {
-      postimage = req.file.buffer; // Store image in buffer as binary data
+      const fileName = req.file.originalname;
+      const imageBuffer = req.file.buffer
+        const image = await uploadFileToS3(imageBuffer, fileName, "taskimages/image");
+      postimage = image; // Store image in buffer as binary data
     } else {
       console.log("No image uploaded");
     }

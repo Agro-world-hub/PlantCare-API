@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const db = require("../startup/database");
 const asyncHandler = require("express-async-handler");
+const delectfilesOnS3  = require('../Middlewares/s3delete')
 
 const cropDao = require("../dao/userCrop-dao");
 
@@ -621,8 +622,30 @@ exports.updateCropCalendarStatus = asyncHandler(async(req, res) => {
                     console.log(`No images found for task ID: ${id}`);
                 } else {
                     console.log(`Fetched images for task ID: ${id}`, images);
-                    
+            
+                    // Handle the case where `images` might be an array
+                    if (Array.isArray(images)) {
+                        images.forEach((img) => {
+                            if (img.image) {
+                                const imageUrl = img.image;
+                                console.log("Image URL:", imageUrl);
+                                delectfilesOnS3(imageUrl); // Delete each image URL from S3
+                            } else {
+                                console.log("Unexpected image structure:", img);
+                            }
+                        });
+                    } else if (images.image) {
+                        // Handle the case where `images` is a single object
+                        const imageUrl = images.image;
+                        console.log("Image URL:", imageUrl);
+                        delectfilesOnS3(imageUrl);
+                    } else {
+                        console.log("Image data structure is not as expected:", images);
+                    }
                 }
+        
+            
+            
     
                 return cropDao.deleteImagesBySlaveId(id);
             })
@@ -634,7 +657,6 @@ exports.updateCropCalendarStatus = asyncHandler(async(req, res) => {
                     return res.status(500).json({ message: "Error deleting images" });
                 })
                 .finally(() => {
-                    // Always send a response, but ensure it's only once
                     if (!res.headersSent) {
                         res.status(200).json({ message: "Status updated successfully." });
                     }
@@ -661,8 +683,6 @@ exports.addGeoLocation = asyncHandler(async (req, res) => {
     try {
         const { latitude, longitude, taskId } = req.body;
         console.log(latitude, longitude, taskId);
-
-        // Validate if taskId exists in slavecropcalendardays table
         const taskExists = await cropDao.checkTaskExists(taskId);
 
         if (!taskExists) {
