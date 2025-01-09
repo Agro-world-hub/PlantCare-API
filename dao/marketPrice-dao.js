@@ -47,7 +47,7 @@ const getAllMarketData = (userId) => {
     JOIN ongoingcultivationscrops ocs ON oc.id = ocs.ongoingCultivationId 
     JOIN cropcalender cc ON ocs.cropCalendar = cc.id
     JOIN cropvariety cv ON cc.cropVarietyId = cv.id
-    JOIN \`collection-officer\`.marketprice mp ON cv.id = mp.varietyId
+    JOIN collection_officer.marketprice mp ON cv.id = mp.varietyId
     WHERE oc.userId = ?;
     `;
 

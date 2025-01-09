@@ -73,6 +73,10 @@ app.use("/api/news", newsRoutes);
 app.use("/api/crop", cropRoutes);
 app.use("/api/market-price", MarketPriceRoutes);
 app.use("/api/complain", complainRoutes);
+app.use("/home", (req, res) => {
+    res.send("Welcome to the home page");
+}
+)
 
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
