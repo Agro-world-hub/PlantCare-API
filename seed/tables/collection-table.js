@@ -71,7 +71,7 @@ const createMarketPriceTable = () => {
       FOREIGN KEY (varietyId) REFERENCES plant_care.cropvariety(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
-      FOREIGN KEY (createdBy) REFERENCES plant_care.adminUsers(id)
+      FOREIGN KEY (createdBy) REFERENCES plant_care.adminusers(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
       FOREIGN KEY (xlindex) REFERENCES xlsxhistory(id)
@@ -130,7 +130,7 @@ const createCompany = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS company (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      regNumber VARCHAR(50) NOT NULL,
+      regNumber VARCHAR(50) DEFAULT NULL,
       companyNameEnglish VARCHAR(50) NOT NULL,
       companyNameSinhala VARCHAR(50) NOT NULL,
       companyNameTamil VARCHAR(50) NOT NULL,
