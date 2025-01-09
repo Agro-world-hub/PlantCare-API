@@ -58,7 +58,7 @@ exports.updateFirstLastNameSchema = Joi.object({
     lastName: Joi.string().min(2).max(50).required().label('Last Name'),
     streetname: Joi.string().min(2).max(50).required().label('Steet Name'),
     city: Joi.string().min(2).max(50).required().label('City Name'),
-    buidingname: Joi.string().min(2).max(50).required().label('House Name'),
+    buidingname: Joi.string().min(1).max(50).required().label('House Name'),
     
 });
 
