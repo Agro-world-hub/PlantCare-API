@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const db = require("../startup/database");
 const asyncHandler = require("express-async-handler");
+const delectfilesOnS3  = require('../Middlewares/s3delete')
 
 const cropDao = require("../dao/userCrop-dao");
 
@@ -61,6 +62,24 @@ exports.getCropByCategory = asyncHandler(async(req, res) => {
     }
 });
 
+exports.getCropByDistrict = asyncHandler(async(req, res) => {
+    try {
+
+        const { categorie, district } = req.params;
+
+        const crops = await cropDao.getCropByDistrict(categorie, district);
+        console.log("Crops:", crops);
+
+        res.status(200).json(crops);
+    } catch (err) {
+        console.error("Error fetching crops by category:", err);
+        res.status(500).json({
+            status: "error",
+            message: "An error occurred while fetching crops by category.",
+        });
+    }
+});
+
 // Endpoint to get crop by ID
 exports.getCropVariety = asyncHandler(async(req, res) => {
     try {
@@ -103,7 +122,6 @@ exports.getCropCalenderDetails = asyncHandler(async(req, res) => {
 
         // Use the DAO to get crop details by cropId, variety, and lang
         const results = await cropDao.getCropCalenderDetails(id, method, naofcul); // Pass lang to DAO function
-        console.log("Results:", results);
 
         if (results.length === 0) {
             return res.status(404).json({
@@ -133,9 +151,6 @@ exports.CropCalanderFeed = asyncHandler(async(req, res) => {
 
         const userId = req.user.id; // Extract userId from token (assuming authentication middleware)
         const cropId = req.params.cropid; // Get cropId from URL parameters
-
-        console.log("hi...User ID:", userId);
-        console.log("hi.. Crop ID:", cropId);
 
         // Fetch crop calendar feed using DAO
         const results = await cropDao.getCropCalendarFeed(userId, cropId);
@@ -195,7 +210,6 @@ exports.OngoingCultivaionGetById = asyncHandler(async(req, res) => {
                     message: "No ongoing cultivation found for this user",
                 });
             }
-            console.log("Ongoing cul Results:", results);
 
             // Successful response
             res.status(200).json(results);
@@ -220,8 +234,6 @@ exports.enroll = asyncHandler(async(req, res) => {
         const startDate = req.body.startDate;
         const userId = req.user.id;
 
-        console.log("User ID:", userId, "Crop ID:", cropId, "Extentha:", extentha,  "Start Date:", startDate, "Extentac:", extentac, "Extentp:", extentp);
-
 
         // Validate input data with Joi
         const { error } = enrollSchema.validate({
@@ -242,7 +254,6 @@ exports.enroll = asyncHandler(async(req, res) => {
 
         // Check if the user already has an ongoing cultivation
         let cultivationId;
-        console.log("Checking ongoing cultivation for user ID:", userId);
         const ongoingCultivationResult = await checkOngoingCultivation(userId);
 
         if (!ongoingCultivationResult[0]) {
@@ -283,7 +294,6 @@ exports.enroll = asyncHandler(async(req, res) => {
             console.log("No records found for the given cultivationId.");
         }
 
-        console.log("Created ID:", onCulscropID);
 
         const responseenrollSlaveCrop = await enrollSlaveCrop(userId, cropId, startDate, onCulscropID);
 
@@ -384,27 +394,61 @@ exports.UpdateOngoingCultivationScrops = asyncHandler(async(req, res) => {
 
 
 
+// exports.getSlaveCropCalendarDaysByUserAndCrop = asyncHandler(async(req, res) => {
+//     try {
+//         // Validate the incoming request
+//         await getSlaveCropCalendarDaysSchema.validateAsync(req.params);
+//         const limit = req.query.limit ;
+//         const page = req.query.page;
+//         const offset = (page - 1) * limit;
+//         console.log('offset:', offset)
+//         const userId = req.user.id;
+//         const cropCalendarId = req.params.cropCalendarId;
+
+//         console.log("User ID:", userId);
+//         console.log("Crop Calendar ID:", cropCalendarId);
+
+//         // Fetch data using the DAO
+//         const results = await cropDao.getSlaveCropCalendarDaysByUserAndCrop(userId, cropCalendarId, offset, limit);
+//         if (results.length === 0) {
+//             return res.status(404).json({
+//                 message: "No records found for the given userId and cropCalendarId.",
+//             });
+//         }
+
+//         return res.status(200).json(results);
+
+//     } catch (err) {
+//         console.error("Error in getSlaveCropCalendarDaysByUserAndCrop:", err);
+
+//         if (err.isJoi) {
+//             return res.status(400).json({
+//                 status: 'error',
+//                 message: err.details[0].message,
+//             });
+//         }
+
+//         return res.status(500).json({ message: "Internal Server Error!" });
+//     }
+// });
+
 exports.getSlaveCropCalendarDaysByUserAndCrop = asyncHandler(async(req, res) => {
     try {
         // Validate the incoming request
         await getSlaveCropCalendarDaysSchema.validateAsync(req.params);
-        const limit = req.query.limit ;
-        const page = req.query.page;
-        const offset = (page - 1) * limit;
-        console.log('offset:', offset)
+
         const userId = req.user.id;
         const cropCalendarId = req.params.cropCalendarId;
 
-        console.log("User ID:", userId);
-        console.log("Crop Calendar ID:", cropCalendarId);
-
         // Fetch data using the DAO
-        const results = await cropDao.getSlaveCropCalendarDaysByUserAndCrop(userId, cropCalendarId, offset, limit);
+        const results = await cropDao.getSlaveCropCalendarDaysByUserAndCrop(userId, cropCalendarId);
+
         if (results.length === 0) {
             return res.status(404).json({
                 message: "No records found for the given userId and cropCalendarId.",
             });
         }
+
 
         return res.status(200).json(results);
 
@@ -421,6 +465,7 @@ exports.getSlaveCropCalendarDaysByUserAndCrop = asyncHandler(async(req, res) => 
         return res.status(500).json({ message: "Internal Server Error!" });
     }
 });
+
 
 exports.getSlaveCropCalendarPrgress = asyncHandler(async (req, res) => { try {
   // Validate the incoming request
@@ -461,6 +506,7 @@ exports.getSlaveCropCalendarPrgress = asyncHandler(async (req, res) => { try {
 
 //slave calender-update status
 exports.updateCropCalendarStatus = asyncHandler(async(req, res) => {
+    console.log("Update crop calendar status called");
     try {
         // Validate the request body
         await updateCropCalendarStatusSchema.validateAsync(req.body);
@@ -487,7 +533,6 @@ exports.updateCropCalendarStatus = asyncHandler(async(req, res) => {
             userId,
         } = currentTask;
 
-        // Check if the task is being marked as 'pending' after 'completed' and restrict if more than 1 hour has passed
         if (currentStatus === "completed" && status === "pending") {
             const timeDiffInHours = Math.abs(currentTime - new Date(createdAt)) / 36e5;
             console.log("Time difference in hours:", timeDiffInHours);
@@ -498,7 +543,6 @@ exports.updateCropCalendarStatus = asyncHandler(async(req, res) => {
             }
         }
 
-        // If status is 'completed' and taskIndex > 1, check previous tasks
         if (status === "completed" && taskIndex > 1) {
             const previousTasksResults = await cropDao.getPreviousTasks(
                 taskIndex,
@@ -506,9 +550,7 @@ exports.updateCropCalendarStatus = asyncHandler(async(req, res) => {
                 userId,
                 status
             );
-            console.log("Previous tasks:", previousTasksResults);
 
-            // Check if all previous tasks are completed
             let allPreviousTasksCompleted = true;
             let lastCompletedTask = null;
             for (const previousTask of previousTasksResults) {
@@ -561,7 +603,36 @@ exports.updateCropCalendarStatus = asyncHandler(async(req, res) => {
 
         // Delete images if the status is set to 'pending'
         if (status === "pending") {
-            cropDao.deleteImagesBySlaveId(id)
+            cropDao.gettaskImagesByID(id)
+            .then((images) => {
+                if (!images || images.length === 0) {
+                } else {
+                    // Handle the case where `images` might be an array
+                    if (Array.isArray(images)) {
+                        images.forEach((img) => {
+                            if (img.image) {
+                                const imageUrl = img.image;
+                                console.log("Image URL:", imageUrl);
+                                delectfilesOnS3(imageUrl); // Delete each image URL from S3
+                            } else {
+                                console.log("Unexpected image structure:", img);
+                            }
+                        });
+                    } else if (images.image) {
+                        // Handle the case where `images` is a single object
+                        const imageUrl = images.image;
+                        console.log("Image URL:", imageUrl);
+                        delectfilesOnS3(imageUrl);
+                    } else {
+                        console.log("Image data structure is not as expected:", images);
+                    }
+                }
+        
+            
+            
+    
+                return cropDao.deleteImagesBySlaveId(id);
+            })
                 .then((deleteImagesResult) => {
                     console.log(`Deleted ${deleteImagesResult.affectedRows} images for task ID: ${id}`);
                 })
@@ -570,7 +641,6 @@ exports.updateCropCalendarStatus = asyncHandler(async(req, res) => {
                     return res.status(500).json({ message: "Error deleting images" });
                 })
                 .finally(() => {
-                    // Always send a response, but ensure it's only once
                     if (!res.headersSent) {
                         res.status(200).json({ message: "Status updated successfully." });
                     }
@@ -596,9 +666,6 @@ exports.updateCropCalendarStatus = asyncHandler(async(req, res) => {
 exports.addGeoLocation = asyncHandler(async (req, res) => {
     try {
         const { latitude, longitude, taskId } = req.body;
-        console.log(latitude, longitude, taskId);
-
-        // Validate if taskId exists in slavecropcalendardays table
         const taskExists = await cropDao.checkTaskExists(taskId);
 
         if (!taskExists) {
@@ -610,7 +677,6 @@ exports.addGeoLocation = asyncHandler(async (req, res) => {
 
         // If taskId exists, insert geo-location data
         const results = await cropDao.addGeoLocation(taskId, longitude, latitude);
-        console.log("Geo-location added:", results);
 
         if (results.affectedRows === 0) {
             return res.status(400).json({

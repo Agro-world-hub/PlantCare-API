@@ -5,7 +5,61 @@ const asyncHandler = require("express-async-handler");
 exports.getCropByCategory = (categorie) => {
     return new Promise((resolve, reject) => {
         const sql = "SELECT * FROM cropgroup WHERE category=?";
-        db.query(sql, [categorie], (err, results) => {
+        db.plantcare.query(sql, [categorie], (err, results) => {
+            if (err) {
+                console.error("Error executing query:", err);
+                reject(err);
+            } else {
+                resolve(results);
+            }
+        });
+    });
+};
+
+exports.getCropByDistrict = (categorie, district) => {
+    return new Promise((resolve, reject) => {
+        // Clean the district name to avoid any unwanted spaces
+        const districtCleaned = district.trim();
+
+        // SQL query to fetch crop groups where the district is found in suitableAreas
+        const sql = `
+            SELECT DISTINCT cg.*
+            FROM cropgroup cg
+            INNER JOIN cropvariety cv ON cg.id = cv.cropGroupId
+            INNER JOIN cropcalender cc ON cv.id = cc.cropVarietyId
+            WHERE cg.category = ? AND cc.suitableAreas LIKE ?
+        `;
+
+        db.plantcare.query(sql, [categorie, `%${districtCleaned}%`], (err, results) => {
+            console.log("results", results);
+            if (err) {
+                console.error("Error executing query:", err);
+                reject(err);
+            } else {
+                resolve(results);
+            }
+        });
+    });
+};
+
+
+exports.getCropByDistrict = (categorie, district) => {
+    return new Promise((resolve, reject) => {
+        // Clean the district name to avoid any unwanted spaces
+        const districtCleaned = district.trim();
+
+        // SQL query to get only crop groups by category and district
+        const sql = `
+            SELECT DISTINCT cg.*
+            FROM cropgroup cg
+            INNER JOIN cropvariety cv ON cg.id = cv.cropGroupId
+            INNER JOIN cropcalender cc ON cv.id = cc.cropVarietyId
+            WHERE cg.category = ? AND cc.suitableAreas LIKE ?
+        `;
+
+        // Execute the query with the provided category and district
+        db.plantcare.query(sql, [categorie, `%${districtCleaned}%`], (err, results) => {
+            console.log("results", results);
             if (err) {
                 console.error("Error executing query:", err);
                 reject(err);
@@ -20,7 +74,7 @@ exports.getCropByCategory = (categorie) => {
 exports.getCropVariety = (cropId) => {
     return new Promise((resolve, reject) => {
         const sql = "SELECT * FROM cropvariety WHERE cropGroupId = ?";
-        db.query(sql, [cropId], (err, results) => {
+        db.plantcare.query(sql, [cropId], (err, results) => {
             if (err) {
                 reject(err); // Return the error if the query fails
             } else {
@@ -36,7 +90,7 @@ exports.getCropCalenderDetails = (id, method, naofcul) => {
         const sql = `SELECT * FROM cropcalender WHERE cropVarietyId = ? AND method = ? AND natOfCul = ?`;
 
         // Execute the query
-        db.query(sql, [id, method, naofcul], (err, results) => {
+        db.plantcare.query(sql, [id, method, naofcul], (err, results) => {
             if (err) {
                 reject(err); // Return the error if the query fails
             } else {
@@ -58,7 +112,7 @@ exports.getCropCalendarFeed = (userId, cropId) => {
         AND oc.userId = ? 
         AND cd.cropId = ?`;
 
-        db.query(sql, [userId, cropId], (err, results) => {
+        db.plantcare.query(sql, [userId, cropId], (err, results) => {
             if (err) {
                 reject(err); // Reject the promise with error
             } else {
@@ -98,7 +152,7 @@ exports.getOngoingCultivationsByUserId = (userId, callback) => {
     JOIN cropvariety cr ON cc.cropVarietyId = cr.id 
     WHERE c.userId = ?
   `;
-    db.query(sql, [userId], (err, results) => {
+    db.plantcare.query(sql, [userId], (err, results) => {
         if (err) {
             console.error("Database error:", err);
             return callback(err, null);
@@ -112,7 +166,7 @@ exports.getOngoingCultivationsByUserId = (userId, callback) => {
 //for enroll only
 const query = (sql, params) => {
     return new Promise((resolve, reject) => {
-        db.query(sql, params, (err, result) => {
+        db.plantcare.query(sql, params, (err, result) => {
             if (err) {
                 return reject(err);
             }
@@ -158,7 +212,7 @@ exports.getEnrollOngoingCultivationCrop = (cropId) => {
     WHERE cropCalendar = ?
   `;
     return new Promise((resolve, reject) => {
-        db.query(sql, [cropId], (err, results) => {
+        db.plantcare.query(sql, [cropId], (err, results) => {
             if (err) {
                 console.error("Database error in ongoingcultivationscrops:", err);
                 reject(err);
@@ -177,7 +231,7 @@ exports.getEnrollOngoingCultivationCropByid = (id) => {
     WHERE id = ?
   `;
     return new Promise((resolve, reject) => {
-        db.query(sql, [id], (err, results) => {
+        db.plantcare.query(sql, [id], (err, results) => {
             if (err) {
                 console.error("Database error in ongoingcultivationscrops:", err);
                 reject(err);
@@ -191,7 +245,7 @@ exports.getEnrollOngoingCultivationCropByid = (id) => {
 exports.updateOngoingCultivationCrop = (onCulscropID, extentha, extentac,extentp , formattedStartDate) => {
     return new Promise((resolve, reject) => {
         const sql = "UPDATE ongoingcultivationscrops SET extentha = ?, extentac=?, extentp=?, startedAt = ? WHERE id = ?";
-        db.query(sql, [extentha, extentac, extentp, formattedStartDate, onCulscropID], (err, results) => {
+        db.plantcare.query(sql, [extentha, extentac, extentp, formattedStartDate, onCulscropID], (err, results) => {
             if (err) {
                 reject(err);
             } else {
@@ -205,7 +259,7 @@ exports.updateOngoingCultivationCrop = (onCulscropID, extentha, extentac,extentp
 exports.getSlaveCropCalendarDays = (onCulscropID) => {
     return new Promise((resolve, reject) => {
         const sql = "SELECT id, days FROM slavecropcalendardays WHERE onCulscropID = ?";
-        db.query(sql, [onCulscropID], (err, results) => {
+        db.plantcare.query(sql, [onCulscropID], (err, results) => {
             if (err) {
                 reject(err);
             } else {
@@ -219,7 +273,7 @@ exports.getSlaveCropCalendarDays = (onCulscropID) => {
 exports.updateSlaveCropCalendarDay = (id, formattedDate) => {
     return new Promise((resolve, reject) => {
         const sql = "UPDATE slavecropcalendardays SET startingDate = ? WHERE id = ?";
-        db.query(sql, [formattedDate, id], (err, results) => {
+        db.plantcare.query(sql, [formattedDate, id], (err, results) => {
             if (err) {
                 reject(err);
             } else {
@@ -246,11 +300,12 @@ exports.enrollSlaveCrop = (userId, cropId, startDate, onCulscropID) => {
       FROM cropcalendardays ccd
       WHERE ccd.cropId = ?;
     `;
-        db.query(sql, [userId, startDate, onCulscropID, cropId], (err, result) => {
+        db.plantcare.query(sql, [userId, startDate, onCulscropID, cropId], (err, result) => {
             if (err) {
                 reject(err);
             } else {
                 resolve(result);
+                console.log("enrollSlaveCrop", result);
             }
         });
     });
@@ -259,15 +314,32 @@ exports.enrollSlaveCrop = (userId, cropId, startDate, onCulscropID) => {
 
 
 //slave calender
-exports.getSlaveCropCalendarDaysByUserAndCrop = (userId, cropCalendarId, offset, limit) => {
+// exports.getSlaveCropCalendarDaysByUserAndCrop = (userId, cropCalendarId, offset, limit) => {
+//     return new Promise((resolve, reject) => {
+//         const sql = `
+//           SELECT * 
+//           FROM slavecropcalendardays 
+//           WHERE userId = ? AND cropCalendarId = ?
+//           LIMIT ? OFFSET ?;
+//       `;
+//         db.query(sql, [userId, cropCalendarId, parseInt(limit), parseInt(offset)], (err, results) => {
+//             if (err) {
+//                 reject(err);
+//             } else {
+//                 resolve(results);
+//             }
+//         });
+//     });
+// };
+
+exports.getSlaveCropCalendarDaysByUserAndCrop = (userId, cropCalendarId) => {
     return new Promise((resolve, reject) => {
         const sql = `
           SELECT * 
           FROM slavecropcalendardays 
           WHERE userId = ? AND cropCalendarId = ?
-          LIMIT ? OFFSET ?;
       `;
-        db.query(sql, [userId, cropCalendarId, parseInt(limit), parseInt(offset)], (err, results) => {
+        db.plantcare.query(sql, [userId, cropCalendarId], (err, results) => {
             if (err) {
                 reject(err);
             } else {
@@ -284,7 +356,7 @@ exports.getSlaveCropCalendarPrgress = (userId,cropCalendarId) => {
         FROM slavecropcalendardays 
         WHERE userId = ? AND cropCalendarId = ?
     `;
-    db.query(sql, [userId, cropCalendarId], (err, results) => {
+    db.plantcare.query(sql, [userId, cropCalendarId], (err, results) => {
         if (err) {
             reject(err);
         } else {
@@ -298,7 +370,7 @@ exports.getSlaveCropCalendarPrgress = (userId,cropCalendarId) => {
 exports.getTaskById = (id) => {
     return new Promise((resolve, reject) => {
         const sql = "SELECT taskIndex, status, createdAt, cropCalendarId, days, startingDate, userId FROM slavecropcalendardays WHERE id = ?";
-        db.query(sql, [id], (err, results) => {
+        db.plantcare.query(sql, [id], (err, results) => {
             if (err) {
                 reject(err);
             } else {
@@ -315,7 +387,7 @@ exports.getPreviousTasks = (taskIndex, cropCalendarId, userId) => {
           FROM slavecropcalendardays 
           WHERE taskIndex < ? AND cropCalendarId = ? AND userId = ? 
           ORDER BY taskIndex ASC`;
-        db.query(sql, [taskIndex, cropCalendarId, userId], (err, results) => {
+        db.plantcare.query(sql, [taskIndex, cropCalendarId, userId], (err, results) => {
             if (err) {
                 reject(err);
             } else {
@@ -345,7 +417,7 @@ exports.getPreviousTasks = (taskIndex, cropCalendarId, userId) => {
 exports.updateTaskStatus = (id, status) => {
     return new Promise((resolve, reject) => {
         const sql = "UPDATE slavecropcalendardays SET status = ?, createdAt = CURRENT_TIMESTAMP WHERE id = ?";
-        db.query(sql, [status, id], (err, results) => {
+        db.plantcare.query(sql, [status, id], (err, results) => {
             if (err) {
                 reject(err);
             } else {
@@ -355,10 +427,23 @@ exports.updateTaskStatus = (id, status) => {
     });
 };
 
+exports.gettaskImagesByID = (slaveId) => {
+    const query = "SELECT image FROM taskimages WHERE slaveId = ?";
+    return new Promise((resolve, reject) => {
+        db.plantcare.execute(query, [slaveId], (err, result) => {
+            if (err) {
+                console.error("Error executing query:", err);
+                return reject(err);
+            }
+            resolve(result);
+        });
+    });
+}
+
 exports.deleteImagesBySlaveId = (slaveId) => {
     const query = "DELETE FROM taskimages WHERE slaveId = ?";
     return new Promise((resolve, reject) => {
-        db.execute(query, [slaveId], (err, result) => {
+        db.plantcare.execute(query, [slaveId], (err, result) => {
             if (err) {
                 console.error("Error executing query:", err);
                 return reject(err);
@@ -371,7 +456,7 @@ exports.deleteImagesBySlaveId = (slaveId) => {
 exports.deleteGeoLocationByTaskId = (id) => {
     const sql = "DELETE FROM cropgeo WHERE taskId = ?";
     return new Promise((resolve, reject) => {
-        db.query(sql, [id], (err, results) => {
+        db.plantcare.query(sql, [id], (err, results) => {
             if (err) {
                 reject(new Error("Error deleting geolocation: " + err.message));
             } else {
@@ -385,7 +470,7 @@ exports.deleteGeoLocationByTaskId = (id) => {
 exports.addGeoLocation = (taskId,  longitude, latitude) => {
     const sql = "INSERT INTO cropgeo(taskid, longitude, latitude) VALUES ( ?, ?, ?)";
     return new Promise((resolve, reject) => {
-        db.query(sql, [taskId,  longitude, latitude], (err, results) => {
+        db.plantcare.query(sql, [taskId,  longitude, latitude], (err, results) => {
             if (err) {
                 reject(err);
             } else {
@@ -403,7 +488,7 @@ exports.checkTaskExists = (taskId) => {
             WHERE id = ?;
         `;
 
-        db.execute(query, [taskId], (err, results) => {
+        db.plantcare.execute(query, [taskId], (err, results) => {
             if (err) {
                 reject(new Error("Error checking task existence: " + err.message));
             } else {

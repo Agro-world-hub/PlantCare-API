@@ -13,6 +13,7 @@ const userCrop = require("../end-point/userCrop-ep");
 
 //working
 router.get("/get-all-crop/:categorie", userCrop.getCropByCategory);
+router.get("/get-all-crop-bydistrict/:categorie/:district", userCrop.getCropByDistrict), 
 
 //working
 router.get("/crop-feed/:cropid", auth, userCrop.CropCalanderFeed);

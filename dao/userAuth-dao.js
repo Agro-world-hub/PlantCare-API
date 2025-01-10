@@ -4,11 +4,11 @@ const asyncHandler = require("express-async-handler");
 const QRCode = require('qrcode');
 const fs = require('fs');
 const path = require('path');
-
+const uploadFileToS3  = require('../Middlewares/s3upload')
 exports.loginUser = (phonenumber) => {
     return new Promise((resolve, reject) => {
         const sql = "SELECT * FROM users WHERE phoneNumber = ? LIMIT 1";
-        db.query(sql, [phonenumber], (err, results) => {
+        db.plantcare.query(sql, [phonenumber], (err, results) => {
             if (err) {
                 reject(err);
             } else {
@@ -21,7 +21,7 @@ exports.loginUser = (phonenumber) => {
 exports.checkUserByPhoneNumber = (phoneNumber) => {
     return new Promise((resolve, reject) => {
         const query = "SELECT * FROM users WHERE phoneNumber = ?";
-        db.query(query, [phoneNumber], (err, results) => {
+        db.plantcare.query(query, [phoneNumber], (err, results) => {
             if (err) {
                 reject(err);
             } else {
@@ -35,7 +35,7 @@ exports.insertUser = (firstName, lastName, phoneNumber, NICnumber, district) => 
     return new Promise((resolve, reject) => {
         const query =
             "INSERT INTO users(`firstName`, `lastName`, `phoneNumber`, `NICnumber`, `district`) VALUES(?, ?, ?, ?,?)";
-        db.query(
+        db.plantcare.query(
             query, [firstName, lastName, phoneNumber, NICnumber, district],
             (err, results) => {
                 if (err) {
@@ -48,11 +48,10 @@ exports.insertUser = (firstName, lastName, phoneNumber, NICnumber, district) => 
     });
 };
 
-// DAO function to retrieve user profile by userId
 exports.getUserProfileById = (userId) => {
     return new Promise((resolve, reject) => {
         const sql = "SELECT * FROM users WHERE id = ?";
-        db.query(sql, [userId], (err, results) => {
+        db.plantcare.query(sql, [userId], (err, results) => {
             if (err) {
                 return reject(err);
             }
@@ -62,19 +61,19 @@ exports.getUserProfileById = (userId) => {
             const userProfile = results[0];
 
             // Decode the file path
-            if (userProfile.farmerQr) {
-                const filePath = Buffer.from(userProfile.farmerQr, 'base64').toString('utf-8');
+            // if (userProfile.farmerQr) {
+            //     const filePath = Buffer.from(userProfile.farmerQr, 'base64').toString('utf-8');
 
-                // Read the file and convert to Base64
-                try {
-                    const fullPath = path.join(__dirname, '..', filePath);
-                    const imageBuffer = fs.readFileSync(fullPath);
-                    userProfile.farmerQr = imageBuffer.toString('base64');
-                } catch (error) {
-                    console.error('Error reading QR code file:', error);
-                    userProfile.farmerQr = null;
-                }
-            }
+            //     // Read the file and convert to Base64
+            //     try {
+            //         const fullPath = path.join(__dirname, '..', filePath);
+            //         const imageBuffer = fs.readFileSync(fullPath);
+            //         userProfile.farmerQr = imageBuffer.toString('base64');
+            //     } catch (error) {
+            //         console.error('Error reading QR code file:', error);
+            //         userProfile.farmerQr = null;
+            //     }
+            // }
 
             resolve(userProfile);
         });
@@ -85,7 +84,7 @@ exports.getUserProfileById = (userId) => {
 exports.updateUserPhoneNumber = (userId, newPhoneNumber) => {
     return new Promise((resolve, reject) => {
         const sql = "UPDATE users SET phoneNumber = ? WHERE id = ?";
-        db.query(sql, [newPhoneNumber, userId], (err, results) => {
+        db.plantcare.query(sql, [newPhoneNumber, userId], (err, results) => {
             if (err) {
                 return reject(err); // Reject the promise if there's a database error
             }
@@ -112,7 +111,7 @@ exports.checkSignupDetails = (phoneNumber, NICnumber) => {
 
         const checkQuery = `SELECT * FROM users WHERE ${conditions.join(" OR ")}`;
 
-        db.query(checkQuery, params, (err, results) => {
+        db.plantcare.query(checkQuery, params, (err, results) => {
             if (err) {
                 reject(err);
             } else {
@@ -126,7 +125,7 @@ exports.checkSignupDetails = (phoneNumber, NICnumber) => {
 exports.updateFirstLastName = (userId, firstName, lastName, buidingname, streetname, city) => {
     return new Promise((resolve, reject) => {
         const sql = 'UPDATE users SET firstName = ?, lastName = ?, houseNo=?, streetName=?, city=? WHERE id = ?';
-        db.query(sql, [firstName, lastName, buidingname, streetname,city, userId], (err, results) => {
+        db.plantcare.query(sql, [firstName, lastName, buidingname, streetname,city, userId], (err, results) => {
             if (err) {
                 reject(err);
             } else {
@@ -140,7 +139,7 @@ exports.updateFirstLastName = (userId, firstName, lastName, buidingname, streetn
 exports.checkBankDetailsExist = (userId) => {
     return new Promise((resolve, reject) => {
         const query = "SELECT COUNT(*) AS count FROM userbankdetails WHERE userId = ?";
-        db.query(query, [userId], (err, result) => {
+        db.plantcare.query(query, [userId], (err, result) => {
             if (err) {
                 return reject(err);
             }
@@ -155,7 +154,7 @@ exports.insertBankDetails = (userId, address, accountNumber, accountHolderName, 
   INSERT INTO userbankdetails (userId, address, accNumber, accHolderName, bankName, branchName)
   VALUES (?, ?, ?, ?, ?, ?)
 `;
-    db.query(query, [userId, address, accountNumber, accountHolderName, bankName, branchName], callback);
+    db.plantcare.query(query, [userId, address, accountNumber, accountHolderName, bankName, branchName], callback);
 };
 
 // // Function to update the user's `farmerQr` column with the generated QR code
@@ -202,7 +201,7 @@ exports.updateQRCode = (userId, qrCodeImage, callback) => {
       SET farmerQr = ?
       WHERE id = ?
     `;
-    db.query(query, [qrCodeImage, userId], callback);
+    db.plantcare.query(query, [qrCodeImage, userId], callback);
 }
 
 
@@ -241,7 +240,7 @@ exports.updateAddressAndQRCode = (userId, houseNo, streetName, city, callback) =
       WHERE id = ?
     `;
 
-    db.query(updateQuery, [houseNo, streetName, city, userId], (err) => {
+    db.plantcare.query(updateQuery, [houseNo, streetName, city, userId], (err) => {
         if (err) {
             return callback(err); // Error if updating address fails
         }
@@ -254,7 +253,7 @@ exports.updateAddressAndQRCode = (userId, houseNo, streetName, city, callback) =
             WHERE id = ?
         `;
 
-        db.query(selectQuery, [userId], (fetchErr, results) => {
+        db.plantcare.query(selectQuery, [userId], (fetchErr, results) => {
             if (fetchErr) {
                 return callback(fetchErr); // Error if fetching user data fails
             }
@@ -272,7 +271,7 @@ exports.updateAddressAndQRCode = (userId, houseNo, streetName, city, callback) =
                 WHERE userId = ?
             `;
 
-            db.query(bankDetailsQuery, [userId], (bankErr, bankResults) => {
+            db.plantcare.query(bankDetailsQuery, [userId], (bankErr, bankResults) => {
                 if (bankErr) {
                     return callback(bankErr); // Error if fetching bank details fails
                 }
@@ -352,41 +351,99 @@ exports.updateAddressAndQRCode = (userId, houseNo, streetName, city, callback) =
 //     });
 // };
 
-exports.createQrCode = (userId, callback) => {
-    const qrData = {
-        userInfo: {
-            id: userId,
-        },
-    };
+// exports.createQrCode = (userId, callback) => {
+//     const qrData = {
+//         userInfo: {
+//             id: userId,
+//         },
+//     };
 
-    console.log(qrData);
+//     console.log(qrData);
 
-    // Generate the QR code
-    exports.generateQRCode(qrData, (qrErr, qrCodeImagePath) => {
-        if (qrErr) {
-            return callback(qrErr); // Error generating QR code
-        }
+//     // Generate the QR code
+//     exports.generateQRCode(qrData, (qrErr, qrCodeImagePath) => {
+//         if (qrErr) {
+//             return callback(qrErr); // Error generating QR code
+//         }
 
-        // Update the farmerQr column with the new QR code image file path
-        exports.updateQRCode(userId, qrCodeImagePath, (updateQrErr) => {
+//         // Update the farmerQr column with the new QR code image file path
+//         exports.updateQRCode(userId, qrCodeImagePath, (updateQrErr) => {
+//             if (updateQrErr) {
+//                 return callback(updateQrErr); // Error updating QR code
+//             }
+
+//             // Successfully updated QR code
+//             callback(null, "QR code created and updated successfully");
+//         });
+//     });
+// };
+
+
+exports.createQrCode = async (userId, callback) => {
+
+
+    try {
+        const qrData = {
+            userInfo: {
+                id: userId,
+            },
+        };
+
+        console.log(qrData);
+
+        const qrCodeBase64 = await QRCode.toDataURL(JSON.stringify(qrData));
+
+        const qrCodeBuffer = Buffer.from(
+            qrCodeBase64.replace(/^data:image\/png;base64,/, ""),
+            'base64'
+        );
+
+        console.log(qrCodeBuffer);
+        const fileName =  `qrCode_${userId}.png`;
+        const profileImageUrl = await uploadFileToS3(qrCodeBuffer, fileName, "users/farmerQr");
+        
+        exports.updateQRCode(userId, profileImageUrl , (updateQrErr) => {
             if (updateQrErr) {
-                return callback(updateQrErr); // Error updating QR code
+                return callback(updateQrErr); 
             }
 
-            // Successfully updated QR code
             callback(null, "QR code created and updated successfully");
         });
-    });
+    } catch (err) {
+        return callback(err); 
+    }
 };
 
+exports.getUserProfileImage = async (userId) => {
+    return new Promise((resolve, reject) => {
+      const sql = "SELECT profileImage FROM users WHERE id = ?";
+      db.plantcare.query(sql, [userId], (err, results) => {
+        if (err) {
+          reject(err);
+        } else if (results.length > 0) {
+          resolve(results[0].profileImage); // Return the profile image URL
+        } else {
+          resolve(null); // No profile image found
+        }
+      });
+    });
+  };
+  
 
-
-
-
-
-
-
-
+exports.updateUserProfileImage = async (userId, profileImageUrl) => {
+    return new Promise((resolve, reject) => {
+      const sql = "UPDATE users SET profileImage = ? WHERE id = ?";
+      db.plantcare.query(sql, [profileImageUrl, userId], (err, result) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(result); // Return the result, not insertId (since this is an update)
+          console.log(result);
+        }
+      });
+    });
+  };
+  
 
 
 

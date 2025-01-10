@@ -34,7 +34,6 @@ exports.getAllMarket = asyncHandler(async (req, res) => {
   try {
     // Validate the request using Joi schema
     const userId = req.user.id;
-    console.log('marcket', userId);
     const { error } = getAllMarketSchema.validate(req.query);
     if (error) {
       return res
@@ -80,7 +79,6 @@ exports.getAllMarket = asyncHandler(async (req, res) => {
     }));
 
     res.status(200).json(formattedResponse);
-    console.log("Formatted Response:", formattedResponse);
   } catch (err) {
     console.error("Error getAllMarket:", err);
     res.status(500).json({ message: "Internal Server Error!" });

@@ -5,6 +5,8 @@ const userAuthDao = require("../dao/userAuth-dao");
 const userProfileDao = require("../dao/userAuth-dao");
 const signupDao = require('../dao/userAuth-dao');
 const ValidationSchema = require('../validations/userAuth-validation')
+const uploadFileToS3 = require('../Middlewares/s3upload');
+const delectfilesOnS3  = require('../Middlewares/s3delete')
 
 exports.loginUser = async(req, res) => {
     try {
@@ -212,7 +214,6 @@ exports.updateFirstLastName = asyncHandler(async(req, res) => {
             streetname,
             city
         );
-        console.log("hi..the affected rows is", affectedRows);
 
         if (affectedRows === 0) {
             return res.status(404).json({
@@ -241,7 +242,7 @@ exports.updateFirstLastName = asyncHandler(async(req, res) => {
 
 const query = (sql, params) => {
     return new Promise((resolve, reject) => {
-        db.query(sql, params, (err, result) => {
+        db.plantcare.query(sql, params, (err, result) => {
             if (err) {
                 return reject(err);
             }
@@ -349,7 +350,7 @@ exports.registerBankDetails = async (req, res) => {
         }
 
         // Start the transaction
-        await db.promise().beginTransaction();
+        await db.plantcare.promise().beginTransaction();
 
         try {
             // Insert the bank details into the database
@@ -376,7 +377,7 @@ exports.registerBankDetails = async (req, res) => {
             });
 
             // Commit the transaction
-            await db.promise().commit();
+            await db.plantcare.promise().commit();
 
             // Send success response
             return res.status(200).json({
@@ -392,7 +393,7 @@ exports.registerBankDetails = async (req, res) => {
             });
         } catch (transactionErr) {
             // Rollback the transaction on error
-            await db.promise().rollback();
+            await db.plantcare.promise().rollback();
             console.error("Error during transaction:", transactionErr);
             return res.status(500).json({
                 message: "Failed to complete transaction",
@@ -483,3 +484,46 @@ exports.checkAddressFields = async(req, res) => {
         });
     }
 };
+
+
+exports.uploadProfileImage = async (req, res) => {
+    try {
+      const userId = req.user.id;
+
+      const existingProfileImage = await userAuthDao.getUserProfileImage(userId);
+      if (existingProfileImage) {
+        delectfilesOnS3(existingProfileImage);
+      }
+  
+      let profileImageUrl = null;
+  
+      if (req.file) {
+        const fileName = req.file.originalname;
+        const imageBuffer = req.file.buffer;
+  
+        const uploadedImage = await uploadFileToS3(imageBuffer, fileName, "users/profile-images");
+        profileImageUrl = uploadedImage; 
+      } else {
+        console.log("No image uploaded");
+      }
+      await userAuthDao.updateUserProfileImage(userId, profileImageUrl);
+  
+      res.status(200).json({
+        status: "success",
+        message: "Profile image uploaded successfully",
+        profileImageUrl,
+      });
+    } catch (err) {
+      console.error("Error uploading profile image:", err);
+  
+      if (err.isJoi) {
+        return res.status(400).json({
+          status: "error",
+          message: err.details[0].message,
+        });
+      }
+  
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  };
+  

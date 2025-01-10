@@ -99,15 +99,12 @@ exports.deleteAsset = asyncHandler(async (req, res) => {
     try {
         const userId = req.user.id; // Get the user ID from the authenticated request
         const { category, assetId } = req.params; // Extract parameters
-        console.log('Parameters:', category, assetId);
-        console.log('hi... Parameters:', req.params);
 
         // Validate the request parameters
         await deleteAssetParamsSchema.validateAsync(req.params);
 
         // Validate the request body
         const { numberOfUnits, totalPrice } = await deleteAssetSchema.validateAsync(req.body);
-        console.log('Body:', numberOfUnits, totalPrice);
 
         // Retrieve the current asset record for the user
         const assets = await currentAssetsDao.getCurrentAsset(userId, category, assetId);

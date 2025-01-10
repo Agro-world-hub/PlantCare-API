@@ -1,4 +1,4 @@
-const db = require('../startup/database');
+const {  plantcare } = require('../../startup/database');
 
 const insertRoles = async () => {
   const roles = ['Super Admin', 
@@ -9,17 +9,17 @@ const insertRoles = async () => {
     'Demand Supply Manager', 
     'System Admin', 
     'Transport and Logistic Executive', 
-    'Call Centre Officer'];
+    'Call Centre Officer',
+    'Colection Center Admin'];
 
-  // Construct the SQL query for inserting multiple roles
   const sql = `
     INSERT INTO adminroles (role) 
     VALUES ${roles.map(() => '(?)').join(', ')}
   `;
 
   try {
-    await new Promise((resolve, reject) => {
-      db.query(sql, roles, (err, result) => {
+    return new Promise((resolve, reject) => {
+      plantcare.query(sql, roles, (err, result) => {
         if (err) {
           reject('Error inserting roles: ' + err);
         } else {

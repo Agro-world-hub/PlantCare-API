@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors"); // Import the cors middleware
-const db = require("./startup/database");
+// const db = require("./startup/database");
+const { plantcare, collectionofficer, marketPlace, dash } = require("./startup/database"); 
+
 require("dotenv").config();
 
 const app = express();
@@ -33,13 +35,20 @@ app.options(
     })
 );
 
-db.connect((err) => {
-    if (err) {
-        console.error("Error connecting to the database in index.js:", err);
-        return;
-    }
-    console.log("Connected to the MySQL database in server.js.");
-});
+const DatabaseConnection = (db, name) => {
+    db.connect((err) => {
+        if (err) {
+            console.error(`Error connecting to the ${name} database:`, err);
+            return;
+        }
+        console.log(`Connected to the ${name} database.`);
+    });
+};
+
+DatabaseConnection(plantcare, "PlantCare");
+DatabaseConnection(collectionofficer, "CollectionOfficer");
+DatabaseConnection(marketPlace, "MarketPlace");
+DatabaseConnection(dash, "Dash");
 
 const myCropRoutes = require("./routes/UserCrop.routes");
 app.use(process.env.AUTHOR, myCropRoutes);
@@ -64,6 +73,10 @@ app.use("/api/news", newsRoutes);
 app.use("/api/crop", cropRoutes);
 app.use("/api/market-price", MarketPriceRoutes);
 app.use("/api/complain", complainRoutes);
+app.use("/home", (req, res) => {
+    res.send("Welcome to the home page");
+}
+)
 
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);

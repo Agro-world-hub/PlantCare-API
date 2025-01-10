@@ -21,7 +21,7 @@ exports.getPaginatedPosts = (limit, offset) => {
                 p.createdAt DESC
             LIMIT ? OFFSET ?;
         `;
-    db.query(sql, [limit, offset], (err, results) => {
+    db.plantcare.query(sql, [limit, offset], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -38,7 +38,7 @@ exports.getPaginatedPosts = (limit, offset) => {
 exports.getTotalPostsCount = () => {
   return new Promise((resolve, reject) => {
     const sql = `SELECT COUNT(*) AS total FROM publicforumposts;`;
-    db.query(sql, (err, result) => {
+    db.plantcare.query(sql, (err, result) => {
       if (err) {
         reject(err);
       } else {
@@ -67,7 +67,7 @@ exports.getRepliesByChatId = (chatId) => {
             ORDER BY 
                 r.createdAt DESC
         `;
-    db.query(sql, [chatId], (err, results) => {
+    db.plantcare.query(sql, [chatId], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -81,7 +81,7 @@ exports.createReply = (chatId, replyId, replyMessage) => {
   return new Promise((resolve, reject) => {
     const sql =
       "INSERT INTO publicforumreplies (chatId, replyId, replyMessage) VALUES (?, ?, ?)";
-    db.query(sql, [chatId, replyId, replyMessage], (err, result) => {
+    db.plantcare.query(sql, [chatId, replyId, replyMessage], (err, result) => {
       if (err) {
         reject(err);
       } else {
@@ -95,7 +95,7 @@ exports.createPost = (userId, heading, message, postimage) => {
   return new Promise((resolve, reject) => {
     const sql =
       "INSERT INTO publicforumposts (userId, heading, message, postimage) VALUES (?, ?, ?, ?)";
-    db.query(sql, [userId, heading, message, postimage], (err, result) => {
+    db.plantcare.query(sql, [userId, heading, message, postimage], (err, result) => {
       if (err) {
         reject(err);
       } else {

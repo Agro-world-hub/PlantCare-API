@@ -13,7 +13,7 @@ exports.getAllCurrentAssets = async(req, res) => {
         GROUP BY category
       `;
 
-        const [results] = await db.promise().query(sql, [userId]);
+        const [results] = await db.plantcare.promise().query(sql, [userId]);
 
         if (results.length === 0) {
             return res.status(404).json({
@@ -76,7 +76,7 @@ exports.handleAddFixedAsset = (req, res) => {
     const checkSql = `SELECT * FROM currentasset WHERE userId = ? AND category = ? AND asset = ? AND brand = ?`;
 
     // Executing query to check for existing asset
-    db.query(checkSql, [userId, category, asset, brand], (err, results) => {
+    db.plantcare.query(checkSql, [userId, category, asset, brand], (err, results) => {
         console.log('Executing asset check SQL...');
 
         if (err) {
@@ -112,7 +112,7 @@ exports.handleAddFixedAsset = (req, res) => {
             ];
 
             console.log('Executing update SQL with values:', updateValues);
-            db.query(updateSql, updateValues, (updateErr, updateResult) => {
+            db.plantcare.query(updateSql, updateValues, (updateErr, updateResult) => {
                 if (updateErr) {
                     console.error('Error updating asset:', updateErr);
                     return res.status(500).json({
@@ -140,7 +140,7 @@ exports.handleAddFixedAsset = (req, res) => {
                 `;
                 const recordValues = [existingAsset.id, numberOfUnits, totalPrice];
 
-                db.query(recordSql, recordValues, (recordErr) => {
+                db.plantcare.query(recordSql, recordValues, (recordErr) => {
                     if (recordErr) {
                         console.error('Error adding asset record:', recordErr);
                         return res.status(500).json({
@@ -171,7 +171,7 @@ exports.handleAddFixedAsset = (req, res) => {
             ];
 
             console.log('Executing insert SQL with values:', insertValues);
-            db.query(insertSql, insertValues, (insertErr, insertResult) => {
+            db.plantcare.query(insertSql, insertValues, (insertErr, insertResult) => {
                 if (insertErr) {
                     console.error('Error inserting new asset:', insertErr);
                     return res.status(500).json({
@@ -189,7 +189,7 @@ exports.handleAddFixedAsset = (req, res) => {
                 `;
                 const newRecordValues = [insertResult.insertId, numberOfUnits, totalPrice];
 
-                db.query(newRecordSql, newRecordValues, (newRecordErr) => {
+                db.plantcare.query(newRecordSql, newRecordValues, (newRecordErr) => {
                     if (newRecordErr) {
                         console.error('Error adding new asset record:', newRecordErr);
                         return res.status(500).json({
@@ -217,7 +217,7 @@ exports.deleteAsset = (req, res) => {
     const userId = req.user.id;
 
     // SQL query to find the asset
-    db.execute('SELECT * FROM currentasset WHERE userId = ? AND category = ? AND id = ?', [userId, category, assetId], (err, results) => {
+    db.plantcare.execute('SELECT * FROM currentasset WHERE userId = ? AND category = ? AND id = ?', [userId, category, assetId], (err, results) => {
         if (err) {
             console.error('Error retrieving asset:', err);
             return res.status(500).json({ message: 'Server error.' });
@@ -237,13 +237,13 @@ exports.deleteAsset = (req, res) => {
 
         // If newNumOfUnit and newTotal are zero, delete the asset
         if (newNumOfUnit === 0 && newTotal === 0) {
-            db.execute('DELETE FROM currentasset WHERE userId = ? AND category = ? AND id = ?', [userId, category, assetId], (deleteErr) => {
+            db.plantcare.execute('DELETE FROM currentasset WHERE userId = ? AND category = ? AND id = ?', [userId, category, assetId], (deleteErr) => {
                 if (deleteErr) {
                     console.error('Error deleting asset:', deleteErr);
                     return res.status(500).json({ message: 'Server error.' });
                 }
 
-                db.execute('INSERT INTO currentassetrecord (currentAssetId, numOfPlusUnit, numOfMinUnit, totalPrice) VALUES (?, 0, ?, ?)', [currentAsset.id, numberOfUnits, totalPrice], (recordErr) => {
+                db.plantcare.execute('INSERT INTO currentassetrecord (currentAssetId, numOfPlusUnit, numOfMinUnit, totalPrice) VALUES (?, 0, ?, ?)', [currentAsset.id, numberOfUnits, totalPrice], (recordErr) => {
                     if (recordErr) {
                         console.error('Error adding asset record:', recordErr);
                         return res.status(500).json({ message: 'Server error.' });
@@ -254,13 +254,13 @@ exports.deleteAsset = (req, res) => {
             });
         } else {
             // Update the asset with new values
-            db.execute('UPDATE currentasset SET numOfUnit = ?, total = ? WHERE userId = ? AND category = ? AND id = ?', [newNumOfUnit, newTotal, userId, category, assetId], (updateErr) => {
+            db.plantcare.execute('UPDATE currentasset SET numOfUnit = ?, total = ? WHERE userId = ? AND category = ? AND id = ?', [newNumOfUnit, newTotal, userId, category, assetId], (updateErr) => {
                 if (updateErr) {
                     console.error('Error updating asset:', updateErr);
                     return res.status(500).json({ message: 'Server error.' });
                 }
 
-                db.execute('INSERT INTO currentassetrecord (currentAssetId, numOfPlusUnit, numOfMinUnit, totalPrice) VALUES (?, 0, ?, ?)', [currentAsset.id, numberOfUnits, totalPrice], (recordErr) => {
+                db.plantcare.execute('INSERT INTO currentassetrecord (currentAssetId, numOfPlusUnit, numOfMinUnit, totalPrice) VALUES (?, 0, ?, ?)', [currentAsset.id, numberOfUnits, totalPrice], (recordErr) => {
                     if (recordErr) {
                         console.error('Error adding asset record:', recordErr);
                         return res.status(500).json({ message: 'Server error.' });
@@ -309,7 +309,7 @@ exports.getAssetsByCategory = (req, res) => {
     }
 
     // Query the database to get assets based on category and userId
-    db.query(query, values, (error, results) => {
+    db.plantcare.query(query, values, (error, results) => {
         if (error) {
             console.error('Error fetching assets by category:', error);
             return res.status(500).json({ message: 'Server error, please try again later.' });
