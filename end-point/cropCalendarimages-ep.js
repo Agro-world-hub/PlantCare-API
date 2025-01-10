@@ -18,8 +18,6 @@ exports.upload = multer({
 
 exports.uploadImage = asyncHandler(async(req, res) => {
     try {
-        console.log('Received FormData:', req.body);
-        console.log('Received file details:', req.file);
 
         if (!req.file) {
             return res.status(400).json({ message: 'No file uploaded.' });
@@ -36,7 +34,6 @@ exports.uploadImage = asyncHandler(async(req, res) => {
 
         const result = await imageupDao.insertTaskImage(slaveId, image);
 
-        console.log('Image uploaded successfully:', result); 
         res.status(200).json({
             message: 'Image uploaded successfully.',
             imageDetails: {

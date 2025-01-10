@@ -414,7 +414,36 @@ exports.createQrCode = async (userId, callback) => {
     }
 };
 
+exports.getUserProfileImage = async (userId) => {
+    return new Promise((resolve, reject) => {
+      const sql = "SELECT profileImage FROM users WHERE id = ?";
+      db.plantcare.query(sql, [userId], (err, results) => {
+        if (err) {
+          reject(err);
+        } else if (results.length > 0) {
+          resolve(results[0].profileImage); // Return the profile image URL
+        } else {
+          resolve(null); // No profile image found
+        }
+      });
+    });
+  };
+  
 
+exports.updateUserProfileImage = async (userId, profileImageUrl) => {
+    return new Promise((resolve, reject) => {
+      const sql = "UPDATE users SET profileImage = ? WHERE id = ?";
+      db.plantcare.query(sql, [profileImageUrl, userId], (err, result) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(result); // Return the result, not insertId (since this is an update)
+          console.log(result);
+        }
+      });
+    });
+  };
+  
 
 
 

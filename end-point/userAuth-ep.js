@@ -5,6 +5,8 @@ const userAuthDao = require("../dao/userAuth-dao");
 const userProfileDao = require("../dao/userAuth-dao");
 const signupDao = require('../dao/userAuth-dao');
 const ValidationSchema = require('../validations/userAuth-validation')
+const uploadFileToS3 = require('../Middlewares/s3upload');
+const delectfilesOnS3  = require('../Middlewares/s3delete')
 
 exports.loginUser = async(req, res) => {
     try {
@@ -482,3 +484,46 @@ exports.checkAddressFields = async(req, res) => {
         });
     }
 };
+
+
+exports.uploadProfileImage = async (req, res) => {
+    try {
+      const userId = req.user.id;
+
+      const existingProfileImage = await userAuthDao.getUserProfileImage(userId);
+      if (existingProfileImage) {
+        delectfilesOnS3(existingProfileImage);
+      }
+  
+      let profileImageUrl = null;
+  
+      if (req.file) {
+        const fileName = req.file.originalname;
+        const imageBuffer = req.file.buffer;
+  
+        const uploadedImage = await uploadFileToS3(imageBuffer, fileName, "users/profile-images");
+        profileImageUrl = uploadedImage; 
+      } else {
+        console.log("No image uploaded");
+      }
+      await userAuthDao.updateUserProfileImage(userId, profileImageUrl);
+  
+      res.status(200).json({
+        status: "success",
+        message: "Profile image uploaded successfully",
+        profileImageUrl,
+      });
+    } catch (err) {
+      console.error("Error uploading profile image:", err);
+  
+      if (err.isJoi) {
+        return res.status(400).json({
+          status: "error",
+          message: err.details[0].message,
+        });
+      }
+  
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  };
+  
