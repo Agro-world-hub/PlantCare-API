@@ -1,6 +1,5 @@
 const express = require("express");
-const cors = require("cors"); // Import the cors middleware
-// const db = require("./startup/database");
+const cors = require("cors"); 
 const { plantcare, collectionofficer, marketPlace, dash } = require("./startup/database"); 
 
 require("dotenv").config();

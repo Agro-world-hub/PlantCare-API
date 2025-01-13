@@ -10,11 +10,7 @@ const delectfilesOnS3  = require('../Middlewares/s3delete')
 
 exports.loginUser = async(req, res) => {
     try {
-        console.log("hi..the sec key is", process.env.JWT_SECRET);
         const { phonenumber } = await ValidationSchema.loginUserSchema.validateAsync(req.body);
-
-        console.log("hi phonenumber", phonenumber);
-
         const users = await userAuthDao.loginUser(phonenumber);
 
         if (!users || users.length === 0) {
