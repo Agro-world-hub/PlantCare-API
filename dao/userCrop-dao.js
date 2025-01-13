@@ -18,10 +18,8 @@ exports.getCropByCategory = (categorie) => {
 
 exports.getCropByDistrict = (categorie, district) => {
     return new Promise((resolve, reject) => {
-        // Clean the district name to avoid any unwanted spaces
         const districtCleaned = district.trim();
 
-        // SQL query to fetch crop groups where the district is found in suitableAreas
         const sql = `
             SELECT DISTINCT cg.*
             FROM cropgroup cg
@@ -45,10 +43,8 @@ exports.getCropByDistrict = (categorie, district) => {
 
 exports.getCropByDistrict = (categorie, district) => {
     return new Promise((resolve, reject) => {
-        // Clean the district name to avoid any unwanted spaces
         const districtCleaned = district.trim();
 
-        // SQL query to get only crop groups by category and district
         const sql = `
             SELECT DISTINCT cg.*
             FROM cropgroup cg
@@ -57,7 +53,6 @@ exports.getCropByDistrict = (categorie, district) => {
             WHERE cg.category = ? AND cc.suitableAreas LIKE ?
         `;
 
-        // Execute the query with the provided category and district
         db.plantcare.query(sql, [categorie, `%${districtCleaned}%`], (err, results) => {
             console.log("results", results);
             if (err) {
@@ -70,15 +65,14 @@ exports.getCropByDistrict = (categorie, district) => {
     });
 };
 
-// Function to get crop details by crop ID
 exports.getCropVariety = (cropId) => {
     return new Promise((resolve, reject) => {
         const sql = "SELECT * FROM cropvariety WHERE cropGroupId = ?";
         db.plantcare.query(sql, [cropId], (err, results) => {
             if (err) {
-                reject(err); // Return the error if the query fails
+                reject(err);
             } else {
-                resolve(results); // Return the results if successful
+                resolve(results); 
             }
         });
     });
@@ -89,19 +83,17 @@ exports.getCropCalenderDetails = (id, method, naofcul) => {
 
         const sql = `SELECT * FROM cropcalender WHERE cropVarietyId = ? AND method = ? AND natOfCul = ?`;
 
-        // Execute the query
         db.plantcare.query(sql, [id, method, naofcul], (err, results) => {
             if (err) {
-                reject(err); // Return the error if the query fails
+                reject(err); 
             } else {
-                resolve(results); // Return the results if successful
+                resolve(results); 
             }
         });
     });
 };
 
 
-// Function to fetch the crop calendar feed based on userId and cropId
 exports.getCropCalendarFeed = (userId, cropId) => {
     return new Promise((resolve, reject) => {
         const sql = `
@@ -114,34 +106,14 @@ exports.getCropCalendarFeed = (userId, cropId) => {
 
         db.plantcare.query(sql, [userId, cropId], (err, results) => {
             if (err) {
-                reject(err); // Reject the promise with error
+                reject(err); 
             } else {
-                resolve(results); // Resolve with the query results
+                resolve(results); 
             }
         });
     });
 };
 
-// exports.getOngoingCultivationsByUserId = (userId, callback) => {
-//   const sql = `
-//     SELECT 
-//   oc.id AS ongoingcultivationscropsId,
-//   c.*,               
-//   oc.*,             
-//   cr.*               
-// FROM ongoingcultivations c
-// LEFT JOIN ongoingcultivationscrops oc ON c.id = oc.ongoingCultivationId
-// LEFT JOIN cropvariety cr ON oc.cropCalendar = cr.id
-// WHERE c.userId = ?;
-//   `;
-//   db.query(sql, [userId], (err, results) => {
-//     if (err) {
-//       console.error("Database error:", err);
-//       return callback(err, null);
-//     }
-//     callback(null, results);
-//   });
-// };
 
 exports.getOngoingCultivationsByUserId = (userId, callback) => {
     const sql = `
@@ -162,8 +134,6 @@ exports.getOngoingCultivationsByUserId = (userId, callback) => {
 };
 
 
-// Generic query function for database operations
-//for enroll only
 const query = (sql, params) => {
     return new Promise((resolve, reject) => {
         db.plantcare.query(sql, params, (err, result) => {
@@ -175,31 +145,26 @@ const query = (sql, params) => {
     });
 };
 
-// Check if the user has an ongoing cultivation
 exports.checkOngoingCultivation = (userId) => {
     const sql = "SELECT id FROM ongoingcultivations WHERE userId = ?";
     return query(sql, [userId]);
 };
 
-// Create a new ongoing cultivation for the user
 exports.createOngoingCultivation = (userId) => {
     const sql = "INSERT INTO ongoingcultivations(userId) VALUES (?)";
     return query(sql, [userId]);
 };
 
-// Check the crop count for the given cultivation
 exports.checkCropCount = (cultivationId) => {
     const sql = "SELECT COUNT(id) as count FROM ongoingcultivationscrops WHERE ongoingCultivationId = ?";
     return query(sql, [cultivationId]);
 };
 
-// Check if the crop is already enrolled for the cultivation
 exports.checkEnrollCrop = (cultivationId) => {
     const sql = "SELECT cropCalendar, id FROM ongoingcultivationscrops WHERE ongoingCultivationId = ?";
     return query(sql, [cultivationId]);
 };
 
-// Enroll the crop into the ongoing cultivation
 exports.enrollOngoingCultivationCrop = (cultivationId, cropId, extentha,extentac,extentp, startDate) => {
     const sql = "INSERT INTO ongoingcultivationscrops(ongoingCultivationId, cropCalendar,  extentha, extentac, extentp , startedAt) VALUES (?, ?,?,?,?,?)";
     return query(sql, [cultivationId, cropId, extentha,extentac,extentp, startDate]);
@@ -255,7 +220,6 @@ exports.updateOngoingCultivationCrop = (onCulscropID, extentha, extentac,extentp
     });
 };
 
-// Fetch days related to onCulscropID from slavecropcalendardays table
 exports.getSlaveCropCalendarDays = (onCulscropID) => {
     return new Promise((resolve, reject) => {
         const sql = "SELECT id, days FROM slavecropcalendardays WHERE onCulscropID = ?";
@@ -269,7 +233,6 @@ exports.getSlaveCropCalendarDays = (onCulscropID) => {
     });
 };
 
-// Update the starting date in the slavecropcalendardays table
 exports.updateSlaveCropCalendarDay = (id, formattedDate) => {
     return new Promise((resolve, reject) => {
         const sql = "UPDATE slavecropcalendardays SET startingDate = ? WHERE id = ?";
@@ -312,26 +275,6 @@ exports.enrollSlaveCrop = (userId, cropId, startDate, onCulscropID) => {
 };
 
 
-
-//slave calender
-// exports.getSlaveCropCalendarDaysByUserAndCrop = (userId, cropCalendarId, offset, limit) => {
-//     return new Promise((resolve, reject) => {
-//         const sql = `
-//           SELECT * 
-//           FROM slavecropcalendardays 
-//           WHERE userId = ? AND cropCalendarId = ?
-//           LIMIT ? OFFSET ?;
-//       `;
-//         db.query(sql, [userId, cropCalendarId, parseInt(limit), parseInt(offset)], (err, results) => {
-//             if (err) {
-//                 reject(err);
-//             } else {
-//                 resolve(results);
-//             }
-//         });
-//     });
-// };
-
 exports.getSlaveCropCalendarDaysByUserAndCrop = (userId, cropCalendarId) => {
     return new Promise((resolve, reject) => {
         const sql = `
@@ -366,7 +309,6 @@ exports.getSlaveCropCalendarPrgress = (userId,cropCalendarId) => {
 });
 }
 
-//slave calender-status update
 exports.getTaskById = (id) => {
     return new Promise((resolve, reject) => {
         const sql = "SELECT taskIndex, status, createdAt, cropCalendarId, days, startingDate, userId FROM slavecropcalendardays WHERE id = ?";
@@ -396,23 +338,6 @@ exports.getPreviousTasks = (taskIndex, cropCalendarId, userId) => {
         });
     });
 };
-
-// exports.getNextTask = (taskIndex, cropCalendarId, userId) => {
-//   return new Promise((resolve, reject) => {
-//       const sql = `
-//           SELECT id, taskIndex, createdAt, status , days
-//           FROM slavecropcalendardays 
-//           WHERE taskIndex = ? AND cropCalendarId = ? AND userId = ? 
-//           ORDER BY taskIndex ASC`;
-//       db.query(sql, [taskIndex, cropCalendarId, userId], (err, results) => {
-//           if (err) {
-//               reject(err);
-//           } else {
-//               resolve(results);
-//           }
-//       });
-//   });
-// };
 
 exports.updateTaskStatus = (id, status) => {
     return new Promise((resolve, reject) => {
@@ -460,7 +385,7 @@ exports.deleteGeoLocationByTaskId = (id) => {
             if (err) {
                 reject(new Error("Error deleting geolocation: " + err.message));
             } else {
-                resolve(results);  // Returns the result of the delete operation
+                resolve(results);  
             }
         });
     });
@@ -492,7 +417,7 @@ exports.checkTaskExists = (taskId) => {
             if (err) {
                 reject(new Error("Error checking task existence: " + err.message));
             } else {
-                resolve(results[0].count > 0);  // Returns true if taskId exists
+                resolve(results[0].count > 0); 
             }
         });
     });

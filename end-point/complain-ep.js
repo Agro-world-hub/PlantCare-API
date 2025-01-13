@@ -21,8 +21,6 @@ exports.createComplain = asyncHandler(async(req, res) => {
         const { language, complain, category } = value;
         const status = "Opened";
 
-        // console.log("Creating complain:", { farmerId, language, complain, category, status });
-
         const newComplainId = await complainDao.createComplain(
             farmerId,
             language,
@@ -56,7 +54,6 @@ exports.getComplains = asyncHandler(async(req, res) => {
         }
 
         res.status(200).json(complains);
-        // console.log("Complaints fetched successfully", complains);
     } catch (error) {
         console.error("Error fetching complaints:", error);
         res.status(500).json({ message: "Failed to fetch complaints" });
@@ -72,7 +69,6 @@ exports.getComplainReplyByid = asyncHandler(async(req, res) => {
         }
 
         res.status(200).json(reply);
-        // console.log("reply fetched successfully", reply);
     } catch (error) {
         console.error("Error fetching complaints:", error);
         res.status(500).json({ message: "Failed to fetch complaints" });

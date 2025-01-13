@@ -64,7 +64,6 @@ exports.getRequiredImagesEndpoint = asyncHandler(async(req, res) => {
             return res.status(400).json({ message: 'No cropId provided.' });
         }
 
-        // Fetch the number of required images for the given cropId
         const requiredImages = await imageupDao.getRequiredImages(cropId);
 
         if (requiredImages === null) {
@@ -76,7 +75,7 @@ exports.getRequiredImagesEndpoint = asyncHandler(async(req, res) => {
             requiredImages: requiredImages,
         });
     } catch (error) {
-        console.error('Error fetching required images:', error); // Log detailed error
+        console.error('Error fetching required images:', error); 
         res.status(500).json({ message: 'Internal Server Error', error: error.message });
     }
 }); 
