@@ -1,22 +1,18 @@
-const { response } = require('express');
 const db = require('../startup/database');
 const {
     addFixedAssetSchema
 } = require("../validations/fixedAssest-validation");
 
-// Helper function to format date
 const formatDate = (dateString) => {
     if (!dateString) return null;
     const date = new Date(dateString);
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
 };
 
-// Add a fixed asset
 exports.addFixedAsset = (req, res) => {
     const { error } = addFixedAssetSchema.validate(req.body);
     if (error) {
         const errorMessages = error.details.map(detail => detail.message).join(', ');
-        console.log("Validation Error Messages:", errorMessages); // Log error messages
         return res.status(400).json({ message: errorMessages });
     }
 
@@ -57,18 +53,14 @@ exports.addFixedAsset = (req, res) => {
         toolbrand
     } = req.body;
 
-    console.log(req.body);
-
     const formattedIssuedDate = formatDate(issuedDate);
     const formattedPurchaseDate = formatDate(purchaseDate);
     const formattedExpireDate = formatDate(expireDate);
     const formattedStartDate = formatDate(startDate);
 
-    // Start a transaction
     db.plantcare.beginTransaction((err) => {
         if (err) return res.status(500).json({ message: 'Transaction error', error: err });
 
-        // Insert into fixedasset table
         const fixedAssetSql = `INSERT INTO fixedasset (userId, category) VALUES (?, ?)`;
         db.plantcare.query(fixedAssetSql, [userId, category], (fixedAssetErr, fixedAssetResult) => {
             if (fixedAssetErr) {
@@ -78,9 +70,7 @@ exports.addFixedAsset = (req, res) => {
             }
 
             const fixedAssetId = fixedAssetResult.insertId;
-            console.log("Fixed asset id:", fixedAssetId);
 
-            // Handle category 'Building and Infrastructures'
             if (category === 'Building and Infrastructures') {
                 const buildingSql = `INSERT INTO buildingfixedasset (fixedAssetId, type, floorArea, ownership, generalCondition, district)
                                      VALUES (?, ?, ?, ?, ?, ?)`;
@@ -93,9 +83,6 @@ exports.addFixedAsset = (req, res) => {
                     }
 
                     const buildingAssetId = buildingResult.insertId;
-                    console.log("Building asset id:", buildingAssetId);
-
-                    // Insert into appropriate ownership table based on ownership type
                     let ownershipSql = '';
                     let ownershipParams = [];
 
@@ -130,7 +117,6 @@ exports.addFixedAsset = (req, res) => {
                             });
                     }
 
-                    // Execute the ownership query
                     db.plantcare.query(ownershipSql, ownershipParams, (ownershipErr) => {
                         if (ownershipErr) {
                             return db.rollback(() => {
@@ -138,7 +124,6 @@ exports.addFixedAsset = (req, res) => {
                             });
                         }
 
-                        // Commit the transaction
                         db.plantcare.commit((commitErr) => {
                             if (commitErr) {
                                 return db.rollback(() => {
@@ -150,7 +135,6 @@ exports.addFixedAsset = (req, res) => {
                     });
                 });
 
-                // Handle category 'Land'
             } else if (category === 'Land') {
                 const landSql = `INSERT INTO landfixedasset (fixedAssetId, extentha, extentac, extentp, ownership, district, landFenced, perennialCrop)
                                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
@@ -163,7 +147,6 @@ exports.addFixedAsset = (req, res) => {
 
                     const landAssetId = landResult.insertId;
 
-                    // Handle ownership conditions
                     if (landownership === 'Own') {
                         const ownershipOwnerSql = `INSERT INTO ownershipownerfixedasset (landAssetId, issuedDate, estimateValue)
                                                    VALUES (?, ?, ?)`;
@@ -396,8 +379,8 @@ exports.addFixedAsset = (req, res) => {
 
 
 exports.getFixedAssetsByCategory = (req, res) => {
-    const userId = req.user.id; // Retrieve the userId from req.user.id
-    const { category } = req.params; // Get the category from request parameters
+    const userId = req.user.id; 
+    const { category } = req.params; 
 
     // Start a transaction
     db.plantcare.beginTransaction((err) => {
@@ -406,7 +389,7 @@ exports.getFixedAssetsByCategory = (req, res) => {
         }
 
         let sqlQuery = '';
-        let queryParams = [userId]; // Initialize with userId
+        let queryParams = [userId]; 
 
         // Determine which SQL to run based on category
         if (category === 'Land') {
@@ -451,15 +434,10 @@ exports.getFixedAssetsByCategory = (req, res) => {
 };
 
 
-//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-// Controller to get details for updating fixed assets
 exports.getFixedAssetDetailsById = (req, res) => {
-    const userId = req.user.id; // Retrieve userId from req.user.id
-    const { assetId, category } = req.params; // Get the assetId and category from request parameters
+    const userId = req.user.id; 
+    const { assetId, category } = req.params; 
 
-    // Start a transaction
     db.plantcare.beginTransaction((err) => {
         if (err) {
             return res.status(500).json({ message: 'Transaction error', error: err });
@@ -467,7 +445,7 @@ exports.getFixedAssetDetailsById = (req, res) => {
 
         let sqlQuery = '';
         let ownershipQuery = '';
-        let queryParams = [userId, assetId]; // Initialize with userId and assetId
+        let queryParams = [userId, assetId];
 
         // Determine which SQL query to run based on category
         if (category === 'Land') {
@@ -501,7 +479,6 @@ exports.getFixedAssetDetailsById = (req, res) => {
             return res.status(400).json({ message: 'Invalid category provided.' });
         }
 
-        // Execute the main asset query
         db.plantcare.query(sqlQuery, queryParams, (queryErr, assetResults) => {
             if (queryErr) {
                 return db.plantcare.rollback(() => {
@@ -517,7 +494,6 @@ exports.getFixedAssetDetailsById = (req, res) => {
             const assetOwnershipId = asset.id;
             const ownershipType = asset.ownership;
 
-            // Adjust ownershipQuery based on ownershipType after retrieving asset details
             if (category === 'Building and Infrastructures') {
                 if (ownershipType === 'Own Building (with title ownership)') {
                     ownershipQuery = `
@@ -1120,95 +1096,6 @@ function executeOwnershipUpdates(res, ...queries) {
     }
     executeNext(0);
 }
-
-
-//delete fixed asset
-// exports.deleteFixedAsset = (req, res) => {
-//     const userId = req.user.id; // Retrieve userId from req.user.id
-//     const { assetId, category } = req.params; // Get assetId and category from request parameters
-
-//     // Start a transaction
-//     db.beginTransaction((err) => {
-//         if (err) {
-//             return res.status(500).json({ message: 'Transaction error', error: err });
-//         }
-
-//         let deleteAssetQuery = '';
-//         let deleteOwnershipQuery = '';
-
-//         // Prepare the delete query based on the asset category
-//         if (category === 'Land') {
-//             deleteAssetQuery = `
-//                 DELETE lfa, fa
-//                 FROM landfixedasset lfa
-//                 JOIN fixedasset fa ON fa.id = lfa.fixedAssetId
-//                 WHERE fa.userId = ? AND fa.id = ?`;
-
-//             deleteOwnershipQuery = `
-//                 DELETE oof, olf, opf, osf
-//                 FROM ownershipownerfixedasset oof
-//                 LEFT JOIN ownershipleastfixedasset olf ON oof.landAssetId = olf.landAssetId
-//                 LEFT JOIN ownershippermitfixedasset opf ON oof.landAssetId = opf.landAssetId
-//                 LEFT JOIN ownershipsharedfixedasset osf ON oof.landAssetId = osf.landAssetId
-//                 WHERE oof.landAssetId = ?`;
-//         } else if (category === 'Building and Infrastructures') {
-//             deleteAssetQuery = `
-//                 DELETE bfa, fa
-//                 FROM buildingfixedasset bfa
-//                 JOIN fixedasset fa ON fa.id = bfa.fixedAssetId
-//                 WHERE fa.userId = ? AND fa.id = ?`;
-
-//             deleteOwnershipQuery = `
-//                 DELETE oof, olf, opf, osf
-//                 FROM ownershipownerfixedasset oof
-//                 LEFT JOIN ownershipleastfixedasset olf ON oof.buildingAssetId = olf.buildingAssetId
-//                 LEFT JOIN ownershippermitfixedasset opf ON oof.buildingAssetId = opf.buildingAssetId
-//                 LEFT JOIN ownershipsharedfixedasset osf ON oof.buildingAssetId = osf.buildingAssetId
-//                 WHERE oof.buildingAssetId = ?`;
-//         } else if (category === 'Machine and Vehicles' || category === 'Tools') {
-//             deleteAssetQuery = `
-//                 DELETE mtfa, fa
-//                 FROM machtoolsfixedasset mtfa
-//                 JOIN fixedasset fa ON fa.id = mtfa.fixedAssetId
-//                 WHERE fa.userId = ? AND fa.id = ?`;
-
-//             deleteOwnershipQuery = `
-//                 DELETE mtw
-//                 FROM machtoolsfixedassetwarranty mtw
-//                 WHERE mtw.machToolsId = ?`;
-//         } else {
-//             return res.status(400).json({ message: 'Invalid category provided.' });
-//         }
-
-//         // Execute the delete asset query
-//         db.query(deleteAssetQuery, [userId, assetId], (queryErr, results) => {
-//             if (queryErr) {
-//                 return db.rollback(() => {
-//                     return res.status(500).json({ message: 'Error deleting asset details', error: queryErr });
-//                 });
-//             }
-
-//             // Execute the ownership delete query
-//             db.query(deleteOwnershipQuery, [assetId], (ownershipErr, ownershipResults) => {
-//                 if (ownershipErr) {
-//                     return db.rollback(() => {
-//                         return res.status(500).json({ message: 'Error deleting ownership details', error: ownershipErr });
-//                     });
-//                 }
-
-//                 // Commit the transaction
-//                 db.commit((commitErr) => {
-//                     if (commitErr) {
-//                         return db.rollback(() => {
-//                             return res.status(500).json({ message: 'Commit error', error: commitErr });
-//                         });
-//                     }
-//                     return res.status(200).json({ message: 'Asset and ownership details deleted successfully.' });
-//                 });
-//             });
-//         });
-//     });
-// };
 
 exports.deleteFixedAsset = (req, res) => {
     const userId = req.user.id;

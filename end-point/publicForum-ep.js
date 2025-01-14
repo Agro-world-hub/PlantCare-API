@@ -8,19 +8,16 @@ const {
 } = require("../validations/publicForum-validation");
 const postsDao = require("../dao/publicForum-dao");
 const uploadFileToS3  = require('../Middlewares/s3upload')
+
 exports.getPosts = asyncHandler(async (req, res) => {
   try {
-    // Validate query parameters
     const { page, limit } = await getPostsSchema.validateAsync(req.query);
     const offset = (page - 1) * limit;
 
-    // Fetch posts using DAO
     const posts = await postsDao.getPaginatedPosts(limit, offset);
 
-    // Fetch the total number of posts using DAO
     const totalPosts = await postsDao.getTotalPostsCount();
 
-    // Send the response
     res.status(200).json({
       total: totalPosts,
       posts,
@@ -41,13 +38,10 @@ exports.getPosts = asyncHandler(async (req, res) => {
 
 exports.getReplies = asyncHandler(async (req, res) => {
   try {
-    // Validate the request parameter
     const { chatId } = await getRepliesSchema.validateAsync(req.params);
 
-    // Fetch replies using DAO
     const replies = await postsDao.getRepliesByChatId(chatId);
 
-    // Send the response
     res.status(200).json(replies);
   } catch (err) {
     console.error("Error fetching replies:", err);
@@ -65,20 +59,17 @@ exports.getReplies = asyncHandler(async (req, res) => {
 
 exports.createReply = asyncHandler(async (req, res) => {
   try {
-    // Validate the request body
     const { chatId, replyMessage } = await createReplySchema.validateAsync(
       req.body
     );
     const replyId = req.user.id;
 
-    // Create reply using DAO
     const newReplyId = await postsDao.createReply(
       chatId,
       replyId,
       replyMessage
     );
 
-    // Send the response
     res.status(201).json({ message: "Reply created", replyId: newReplyId });
   } catch (err) {
     console.error("Error creating reply:", err);
@@ -96,7 +87,6 @@ exports.createReply = asyncHandler(async (req, res) => {
 
 exports.createPost = asyncHandler(async (req, res) => {
   try {
-    // Validate the request body
     const { heading, message } = await createPostSchema.validateAsync(req.body);
     const userId = req.user.id;
 
@@ -106,17 +96,15 @@ exports.createPost = asyncHandler(async (req, res) => {
 
     let postimage = null;
 
-    // Check if an image was uploaded
     if (req.file) {
       const fileName = req.file.originalname;
       const imageBuffer = req.file.buffer
         const image = await uploadFileToS3(imageBuffer, fileName, "taskimages/image");
-      postimage = image; // Store image in buffer as binary data
+      postimage = image; 
     } else {
       console.log("No image uploaded");
     }
 
-    // Create post using DAO
     const newPostId = await postsDao.createPost(
       userId,
       heading,
@@ -124,7 +112,6 @@ exports.createPost = asyncHandler(async (req, res) => {
       postimage
     );
 
-    // Send the response
     res.status(201).json({ message: "Post created", postId: newPostId });
   } catch (err) {
     console.error("Error creating post:", err);

@@ -46,7 +46,6 @@ const viewCrops = (req, res) => {
   });
 };
 
-// Delete a crop for the logged-in user
 const deleteCrop = (req, res) => {
   const { cropId } = req.params;
   const userId = req.userId;
