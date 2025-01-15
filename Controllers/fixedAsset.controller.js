@@ -397,7 +397,7 @@ exports.getFixedAssetsByCategory = (req, res) => {
                     JOIN landfixedasset lfa ON fa.id = lfa.fixedAssetId
                     WHERE fa.userId = ? AND fa.category = 'Land'`;
         } else if (category === 'Building and Infrastructures') {
-            sqlQuery = `SELECT fa.id, fa.category, bfa.type FROM fixedasset fa
+            sqlQuery = `SELECT fa.id, fa.category, bfa.type , bfa.district FROM fixedasset fa
                     JOIN buildingfixedasset bfa ON fa.id = bfa.fixedAssetId
                     WHERE fa.userId = ? AND fa.category = 'Building and Infrastructures'`;
         } else if (category === 'Machine and Vehicles') {
