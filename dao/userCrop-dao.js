@@ -255,11 +255,11 @@ exports.enrollSlaveCrop = (userId, cropId, startDate, onCulscropID) => {
       INSERT INTO slavecropcalendardays (
         userId, cropCalendarId, taskIndex, startingDate, days, taskTypeEnglish, taskTypeSinhala, taskTypeTamil,
         taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, taskEnglish, taskSinhala, taskTamil,
-        taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, status, imageLink, videoLink, reqImages, reqGeo, onCulscropID
+        taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, status, imageLink, videoLinkEnglish,videoLinkSinhala,videoLinkTamil, reqImages, reqGeo, onCulscropID
       )
       SELECT ?, ccd.cropId, ccd.taskIndex, DATE_ADD(?, INTERVAL ccd.days DAY), ccd.days, ccd.taskTypeEnglish, ccd.taskTypeSinhala, ccd.taskTypeTamil,
              ccd.taskCategoryEnglish, ccd.taskCategorySinhala, ccd.taskCategoryTamil, ccd.taskEnglish, ccd.taskSinhala,
-             ccd.taskTamil, ccd.taskDescriptionEnglish, ccd.taskDescriptionSinhala, ccd.taskDescriptionTamil, 'pending', ccd.imageLink, ccd.videoLink, ccd.reqImages, ccd.reqGeo, ?
+             ccd.taskTamil, ccd.taskDescriptionEnglish, ccd.taskDescriptionSinhala, ccd.taskDescriptionTamil, 'pending', ccd.imageLink, ccd.videoLinkEnglish, ccd.videoLinkSinhala, ccd.videoLinkTamil, ccd.reqImages, ccd.reqGeo, ?
       FROM cropcalendardays ccd
       WHERE ccd.cropId = ?;
     `;

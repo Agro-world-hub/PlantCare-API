@@ -99,8 +99,6 @@ exports.SignupUser = asyncHandler(async(req, res) => {
 exports.getProfileDetails = asyncHandler(async(req, res) => {
     try {
         const userId = req.user.id;
-        console.log("hi..Fetching profile for userId:", userId);
-
         // Retrieve user profile from the database using the DAO function
         const user = await userProfileDao.getUserProfileById(userId);
 
@@ -263,8 +261,6 @@ exports.registerBankDetails = async (req, res) => {
         // Check if bank details already exist for the user
         const bankDetailsExist = await userAuthDao.checkBankDetailsExist(userId);
 
-        console.log("Bank details exist:", bankDetailsExist);
-
         if (bankDetailsExist) {
             return res.status(400).json({
                 message: "Bank details already exist for this user",
@@ -349,7 +345,6 @@ exports.uploadProfileImage = async (req, res) => {
         const uploadedImage = await uploadFileToS3(imageBuffer, fileName, "users/profile-images");
         profileImageUrl = uploadedImage; 
       } else {
-        console.log("No image uploaded");
       }
       await userAuthDao.updateUserProfileImage(userId, profileImageUrl);
   
