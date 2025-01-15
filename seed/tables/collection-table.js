@@ -240,6 +240,7 @@ const createRegisteredFarmerPayments = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       userId INT DEFAULT NULL,
       collectionOfficerId INT DEFAULT NULL,
+      invNo VARCHAR(255) DEFAULT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES plant_care.users(id)
         ON DELETE CASCADE
