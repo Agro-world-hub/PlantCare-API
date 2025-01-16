@@ -18,10 +18,6 @@ router.put("/user-update-names", auth, userAuthEp.updateFirstLastName);
 
 router.post('/registerBankDetails', auth, userAuthEp.registerBankDetails);
 
-router.put("/user-update-names", auth, userAuthEp.updateFirstLastName);
-
-router.post('/registerBankDetails', auth, userAuthEp.registerBankDetails);
-
 router.post('/upload-profile-image', auth, upload.single('profileImage'), userAuthEp.uploadProfileImage);
 
 module.exports = router;
