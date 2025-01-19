@@ -370,9 +370,7 @@ exports.uploadProfileImage = async (req, res) => {
   };
 
   exports.deleteUser = async (req, res) => {
-    try {
-      console.log("hittttt");
-  
+    try {  
       const userId = req.user?.id;
   
       if (!userId) {
@@ -397,11 +395,8 @@ exports.uploadProfileImage = async (req, res) => {
       const deleteuserResult = await userAuthDao.savedeletedUser(firstname, lastname);
   
       const deletedUserId = deleteuserResult.insertId;
-  
-      console.log("Deleted User ID:", deletedUserId);
-  
+    
       const { feedbackIds } = req.body;
-      console.log("Feedback IDs:", feedbackIds);
   
       for (const feedbackId of feedbackIds) {
         await userAuthDao.saveUserFeedback({
