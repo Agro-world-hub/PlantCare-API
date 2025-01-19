@@ -270,8 +270,6 @@ exports.updateUserProfileImage = async (userId, profileImageUrl) => {
           console.error('Error executing query:', err);
           return reject(err); 
         }
-  
-        console.log('Query executed successfully:', result);
         resolve({ insertId: result.insertId });      
     });
     });
