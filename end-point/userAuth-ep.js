@@ -194,9 +194,15 @@ exports.signupChecker = asyncHandler(async(req, res) => {
 
 exports.updateFirstLastName = asyncHandler(async(req, res) => {
     try {
-        const { firstName, lastName, buidingname, streetname, city  } =
-        await ValidationSchema.updateFirstLastNameSchema.validateAsync(req.body);
+        // const { firstName, lastName, buidingname, streetname, city  } =
+        // await ValidationSchema.updateFirstLastNameSchema.validateAsync(req.body);
        
+        const sanitizedBody = Object.fromEntries(
+            Object.entries(req.body).map(([key, value]) => [key, value === "" ? null : value])
+        );
+
+        const { firstName, lastName, buidingname, streetname, city } =
+            await ValidationSchema.updateFirstLastNameSchema.validateAsync(sanitizedBody);
 
         const userId = req.user.id;
 
@@ -247,7 +253,6 @@ const query = (sql, params) => {
 
 exports.registerBankDetails = async (req, res) => {
     const {
-        selectedDistrict,
         accountNumber,
         accountHolderName,
         bankName,
@@ -255,7 +260,6 @@ exports.registerBankDetails = async (req, res) => {
     } = req.body;
 
     const userId = req.user.id;
-    console.log(userId);
 
     try {
         // Check if bank details already exist for the user
@@ -274,7 +278,6 @@ exports.registerBankDetails = async (req, res) => {
             // Insert the bank details into the database
             await userAuthDao.insertBankDetails(
                 userId,
-                selectedDistrict,
                 accountNumber,
                 accountHolderName,
                 bankName,
@@ -305,8 +308,7 @@ exports.registerBankDetails = async (req, res) => {
                     accountHolderName,
                     accountNumber,
                     bankName,
-                    branchName,
-                    selectedDistrict,
+                    branchName
                 },
             });
         } catch (transactionErr) {
@@ -366,4 +368,87 @@ exports.uploadProfileImage = async (req, res) => {
       res.status(500).json({ error: "Internal Server Error" });
     }
   };
+
+  exports.deleteUser = async (req, res) => {
+    try {
+      console.log("hittttt");
   
+      const userId = req.user?.id;
+  
+      if (!userId) {
+        return res.status(400).json({
+          status: "error",
+          message: "User ID is required.",
+        });
+      }
+  
+      const userdetailsresult = await userAuthDao.getUserProfileById(userId);
+  
+      if (!userdetailsresult) {
+        return res.status(404).json({
+          status: "error",
+          message: "User not found.",
+        });
+      }
+  
+      const firstname = userdetailsresult.firstName;
+      const lastname = userdetailsresult.lastName;
+  
+      const deleteuserResult = await userAuthDao.savedeletedUser(firstname, lastname);
+  
+      const deletedUserId = deleteuserResult.insertId;
+  
+      console.log("Deleted User ID:", deletedUserId);
+  
+      const { feedbackIds } = req.body;
+      console.log("Feedback IDs:", feedbackIds);
+  
+      for (const feedbackId of feedbackIds) {
+        await userAuthDao.saveUserFeedback({
+          feedbackId,
+          deletedUserId,
+        });
+      }
+  
+      const deleteResult = await userAuthDao.deleteUserById(userId);
+  
+      if (!deleteResult || deleteResult.affectedRows === 0) {
+        return res.status(404).json({
+          status: "error",
+          message: "User not found or already deleted.",
+        });
+      }
+  
+      return res.status(200).json({
+        status: "success",
+        message: "User account deleted successfully.",
+      });
+    } catch (err) {
+      console.error("Error deleting user:", err);
+  
+      return res.status(500).json({
+        status: "error",
+        message: "Internal server error. Please try again later.",
+      });
+    }
+  };
+  
+  
+
+  exports.getFeedbackOptions = async (req, res) => {
+    try {
+      const feedbackOptions = await userAuthDao.getFeedbackOptions();
+  
+      return res.status(200).json({
+        status: 'success',
+        feedbackOptions,
+      });
+    } catch (err) {
+      console.error('Error fetching feedback options:', err);
+  
+      return res.status(500).json({
+        status: 'error',
+        message: 'Internal server error. Please try again later.',
+      });
+    }
+  }
