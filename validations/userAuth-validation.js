@@ -53,14 +53,15 @@ exports.signupCheckerSchema = Joi.object({
         "object.missing": "Please provide at least one of phoneNumber or NICnumber."
     });
 
+
 exports.updateFirstLastNameSchema = Joi.object({
     firstName: Joi.string().min(2).max(50).required().label('First Name'),
     lastName: Joi.string().min(2).max(50).required().label('Last Name'),
-    streetname: Joi.string().min(2).max(50).required().label('Steet Name'),
-    city: Joi.string().min(2).max(50).required().label('City Name'),
-    buidingname: Joi.string().min(1).max(50).required().label('House Name'),
-    
+    streetname: Joi.string().min(2).max(50).allow(null).optional().label('Street Name'),
+    city: Joi.string().min(2).max(50).allow(null).optional().label('City Name'),
+    buidingname: Joi.string().min(1).max(50).allow(null).optional().label('Building Name'),
 });
+
 
 
 exports.updateAddressSchema = Joi.object({

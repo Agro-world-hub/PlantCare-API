@@ -133,12 +133,12 @@ exports.checkBankDetailsExist = (userId) => {
     });
 };
 
-exports.insertBankDetails = (userId, address, accountNumber, accountHolderName, bankName, branchName, callback) => {
+exports.insertBankDetails = (userId, accountNumber, accountHolderName, bankName, branchName, callback) => {
     const query = `
-  INSERT INTO userbankdetails (userId, address, accNumber, accHolderName, bankName, branchName)
-  VALUES (?, ?, ?, ?, ?, ?)
+  INSERT INTO userbankdetails (userId, accNumber, accHolderName, bankName, branchName)
+  VALUES ( ?, ?, ?, ?, ?)
 `;
-    db.plantcare.query(query, [userId, address, accountNumber, accountHolderName, bankName, branchName], callback);
+    db.plantcare.query(query, [userId, accountNumber, accountHolderName, bankName, branchName], callback);
 };
 
 
@@ -227,6 +227,64 @@ exports.updateUserProfileImage = async (userId, profileImageUrl) => {
           console.log(result);
         }
       });
+    });
+  };
+  
+
+  exports.deleteUserById = async (userId) => {
+    return new Promise((resolve, reject) => {
+      const query = 'DELETE FROM users WHERE id = ?';
+  
+      db.plantcare.query(query, [userId], (err, result) => {
+        if (err) {
+          console.error('Error executing query:', err);
+          return reject(err); 
+        }
+  
+        console.log('Query executed successfully:', result);
+        resolve(result); 
+      });
+    });
+  };
+  
+  exports.getFeedbackOptions = async () => {
+    return new Promise((resolve, reject) => {
+      const query = 'SELECT * FROM feedbacklist';
+  
+      db.plantcare.query(query, (err, result) => {
+        if (err) {
+          console.error('Error executing query:', err);
+          return reject(err); 
+        }
+          resolve(result); 
+      });
+    });
+  }
+
+  exports.savedeletedUser= async (firstname,lastname) => {
+    return new Promise((resolve, reject) => {
+      const query = 'INSERT INTO deleteduser (firstName,lastName) VALUES (?,?)';
+  
+      db.plantcare.query(query, [firstname,lastname], (err, result) => {
+        if (err) {
+          console.error('Error executing query:', err);
+          return reject(err); 
+        }
+        resolve({ insertId: result.insertId });      
+    });
+    });
+}
+  exports.saveUserFeedback = async ({ feedbackId, deletedUserId }) => {
+    const query = `
+      INSERT INTO userfeedback (feedbackId, deletedUserId)
+      VALUES (?, ?)
+    `;
+    db.plantcare.query(query, [feedbackId, deletedUserId], (err, result) => {
+        if (err) {
+            console.error('Error executing query:', err);
+            return err; 
+        }
+        return result; 
     });
   };
   
