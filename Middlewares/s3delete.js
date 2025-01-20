@@ -32,7 +32,7 @@ const deleteFromS3 = async (imageUrl) => {
 
   try {
     await s3.deleteObject(deleteParams).promise();
-    console.log(`Deleted object from S3: ${s3Key}`);
+    // console.log(`Deleted object from S3: ${s3Key}`);
   } catch (error) {
     console.error("Error deleting file from S3:", error);
     throw new Error("Failed to delete file from S3");

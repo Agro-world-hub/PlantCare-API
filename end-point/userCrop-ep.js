@@ -43,7 +43,6 @@ exports.getCropByDistrict = asyncHandler(async(req, res) => {
         const { categorie, district } = req.params;
 
         const crops = await cropDao.getCropByDistrict(categorie, district);
-        console.log("Crops:", crops);
 
         res.status(200).json(crops);
     } catch (err) {
@@ -176,7 +175,6 @@ exports.OngoingCultivaionGetById = asyncHandler(async(req, res) => {
 ///
 
 exports.enroll = asyncHandler(async(req, res) => {
-    console.log("Enroll crop called");
     try {
         const cropId = req.body.cropId;
         const extentha = req.body.extentha || '0'; 
@@ -206,10 +204,8 @@ exports.enroll = asyncHandler(async(req, res) => {
         if (!ongoingCultivationResult[0]) {
             const newCultivationResult = await cropDao.createOngoingCultivation(userId);
             cultivationId = newCultivationResult.insertId;
-            console.log("Created new ongoing cultivation with ID:", cultivationId);
         } else {
             cultivationId = ongoingCultivationResult[0].id;
-            console.log("Existing ongoing cultivation ID:", cultivationId);
         }
 
         const cropCountResult = await cropDao.checkCropCount(cultivationId);
@@ -240,9 +236,6 @@ exports.enroll = asyncHandler(async(req, res) => {
 
         const responseenrollSlaveCrop = await cropDao.enrollSlaveCrop(userId, cropId, startDate, onCulscropID);
 
-        console.log("Successfully enrolled in crop ID:", cropId, "with extent:", extentp, "and start date:", startDate);
-        console.log("hi responseenrollSlaveCrop.....:", responseenrollSlaveCrop);
-
         return res.json({ message: "Enrollment successful" });
     } catch (err) {
         console.error("Error during enrollment:", err);
@@ -254,7 +247,6 @@ exports.getOngoingCultivationCropByid = asyncHandler(async(req, res) => {
     try {
         const id = req.params.id;
         const results = await cropDao.getEnrollOngoingCultivationCropByid(id);
-        console.log("Results:", results);
 
         if (results.length === 0) {
             return res.status(404).json({
@@ -304,7 +296,6 @@ exports.UpdateOngoingCultivationScrops = asyncHandler(async(req, res) => {
         }
 
         res.status(200).json({ message: "Ongoing cultivation crop and slavecropcalendardays updated successfully.", results });
-        console.log("Ongoing cultivation crop and slavecropcalendardays updated successfully.");
     } catch (err) {
         console.error("Error updating ongoing cultivation crop:", err);
         res.status(500).json({ message: "Server error. Unable to update ongoing cultivation crop." });
@@ -351,8 +342,6 @@ exports.getSlaveCropCalendarPrgress = asyncHandler(async (req, res) => { try {
   const userId = req.user.id;
   const cropCalendarId = req.params.cropCalendarId;
 
-  console.log("User ID:", userId);
-  console.log("Crop Calendar ID:", cropCalendarId);
 
   const results = await cropDao.getSlaveCropCalendarPrgress(userId, cropCalendarId);
 
@@ -362,8 +351,6 @@ exports.getSlaveCropCalendarPrgress = asyncHandler(async (req, res) => { try {
           
       });
   }
-
-  console.log("Query result:", results);
 
   return res.status(200).json(results);
 
@@ -381,7 +368,6 @@ exports.getSlaveCropCalendarPrgress = asyncHandler(async (req, res) => { try {
 }});
 
 exports.updateCropCalendarStatus = asyncHandler(async(req, res) => {
-    console.log("Update crop calendar status called");
     try {
         await updateCropCalendarStatusSchema.validateAsync(req.body);
 
@@ -408,7 +394,6 @@ exports.updateCropCalendarStatus = asyncHandler(async(req, res) => {
 
         if (currentStatus === "completed" && status === "pending") {
             const timeDiffInHours = Math.abs(currentTime - new Date(createdAt)) / 36e5;
-            console.log("Time difference in hours:", timeDiffInHours);
             if (timeDiffInHours > 1) {
                 return res.status(403).json({
                     message: "You cannot change the status back to pending after 1 hour of marking it as completed.",
@@ -445,7 +430,6 @@ exports.updateCropCalendarStatus = asyncHandler(async(req, res) => {
             if (lastCompletedTask && currentTask && lastCompletedTask.status === "completed") {
                 const previousCreatedAt = new Date(lastCompletedTask.createdAt);
                 const taskDays = currentTask.days;
-                console.log("TaskDyas:", taskDays);
                 const nextTaskStartDate = new Date(
                     previousCreatedAt.getTime() + taskDays * 24 * 60 * 60 * 1000
                 );
@@ -480,10 +464,8 @@ exports.updateCropCalendarStatus = asyncHandler(async(req, res) => {
                         images.forEach((img) => {
                             if (img.image) {
                                 const imageUrl = img.image;
-                                console.log("Image URL:", imageUrl);
                                 delectfilesOnS3(imageUrl); 
                             } else {
-                                console.log("Unexpected image structure:", img);
                             }
                         });
                     } else if (images.image) {

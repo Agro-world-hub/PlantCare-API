@@ -923,7 +923,6 @@ exports.updateFixedAsset = (req, res) => {
                 }
             });
         } else if (category === 'Machine and Vehicles' || category === 'Tools') {
-            console.log('Category matched:', category);
 
             const updateAssetQuery = `
                 UPDATE machtoolsfixedasset mtfa
@@ -950,8 +949,6 @@ exports.updateFixedAsset = (req, res) => {
                 userId,
                 assetData.faId
             ];
-
-            console.log('Update parameters:', updateParams);
 
             const warrantyDetails = assetData.ownershipDetails || {};
 
@@ -992,7 +989,6 @@ exports.updateFixedAsset = (req, res) => {
                             return db.plantcare.rollback(() => res.status(500).json({ message: 'Commit error', error: commitErr }));
                         }
 
-                        console.log('Transaction committed successfully'); // Confirms successful transaction commit
                         return res.status(200).json({ message: 'Asset and ownership details updated successfully.' });
                     });
                 });
@@ -1040,7 +1036,6 @@ function executeDeleteAndInsertQueries(res, deleteQueries, deleteParams, insertQ
 
 function executeUpdateQueries(res, assetId, updateQueries = [], updateParams = [], updateAssetQuery, updateParamsAsset) {
     if (!Array.isArray(updateQueries) || !Array.isArray(updateParams)) {
-        console.error("Error: updateQueries and updateParams must be arrays");
         return res.status(500).json({ message: 'Invalid parameters for update queries' });
     }
 
