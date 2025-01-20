@@ -29,7 +29,6 @@ exports.getCropByDistrict = (categorie, district) => {
         `;
 
         db.plantcare.query(sql, [categorie, `%${districtCleaned}%`], (err, results) => {
-            console.log("results", results);
             if (err) {
                 console.error("Error executing query:", err);
                 reject(err);
@@ -54,7 +53,6 @@ exports.getCropByDistrict = (categorie, district) => {
         `;
 
         db.plantcare.query(sql, [categorie, `%${districtCleaned}%`], (err, results) => {
-            console.log("results", results);
             if (err) {
                 console.error("Error executing query:", err);
                 reject(err);

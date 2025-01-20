@@ -90,10 +90,6 @@ exports.createPost = asyncHandler(async (req, res) => {
     const { heading, message } = await createPostSchema.validateAsync(req.body);
     const userId = req.user.id;
 
-    console.log("Heading:", heading);
-    console.log("Message:", message);
-    console.log("File received:", req.file); 
-
     let postimage = null;
 
     if (req.file) {
@@ -102,7 +98,6 @@ exports.createPost = asyncHandler(async (req, res) => {
         const image = await uploadFileToS3(imageBuffer, fileName, "taskimages/image");
       postimage = image; 
     } else {
-      console.log("No image uploaded");
     }
 
     const newPostId = await postsDao.createPost(

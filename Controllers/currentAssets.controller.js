@@ -56,7 +56,6 @@ exports.handleAddFixedAsset = (req, res) => {
 
     const volumeInt = parseInt(volume, 10);
     if (isNaN(volumeInt)) {
-        console.log('Volume is not a valid number');
         return res.status(400).json({ status: 'error', message: 'Volume must be a valid number.' });
     }
 
@@ -144,7 +143,6 @@ exports.handleAddFixedAsset = (req, res) => {
                 numberOfUnits, unitPrice, totalPrice, formattedPurchaseDate, formattedExpireDate, status
             ];
 
-            console.log('Executing insert SQL with values:', insertValues);
             db.plantcare.query(insertSql, insertValues, (insertErr, insertResult) => {
                 if (insertErr) {
                     console.error('Error inserting new asset:', insertErr);
@@ -169,7 +167,6 @@ exports.handleAddFixedAsset = (req, res) => {
                         });
                     }
 
-                    console.log('New asset record added successfully');
                     res.status(201).json({
                         status: 'success',
                         message: 'New asset created successfully',
