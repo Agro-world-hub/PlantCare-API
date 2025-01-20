@@ -43,7 +43,6 @@ exports.getCropByDistrict = asyncHandler(async(req, res) => {
         const { categorie, district } = req.params;
 
         const crops = await cropDao.getCropByDistrict(categorie, district);
-        console.log("Crops:", crops);
 
         res.status(200).json(crops);
     } catch (err) {
@@ -176,7 +175,6 @@ exports.OngoingCultivaionGetById = asyncHandler(async(req, res) => {
 ///
 
 exports.enroll = asyncHandler(async(req, res) => {
-    console.log("Enroll crop called");
     try {
         const cropId = req.body.cropId;
         const extentha = req.body.extentha || '0'; 
@@ -466,10 +464,8 @@ exports.updateCropCalendarStatus = asyncHandler(async(req, res) => {
                         images.forEach((img) => {
                             if (img.image) {
                                 const imageUrl = img.image;
-                                console.log("Image URL:", imageUrl);
                                 delectfilesOnS3(imageUrl); 
                             } else {
-                                console.log("Unexpected image structure:", img);
                             }
                         });
                     } else if (images.image) {

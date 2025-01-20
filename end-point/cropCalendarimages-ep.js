@@ -58,8 +58,6 @@ exports.getRequiredImagesEndpoint = asyncHandler(async(req, res) => {
     try {
         const { cropId } = req.params;
 
-        console.log(cropId);
-
         if (!cropId) {
             return res.status(400).json({ message: 'No cropId provided.' });
         }
