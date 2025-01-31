@@ -34,21 +34,43 @@ app.options(
     })
 );
 
-const DatabaseConnection = (db, name) => {
-    db.connect((err) => {
-        if (err) {
-            console.error(`Error connecting to the ${name} database:`, err);
-            return;
-        }
-        console.log(`Connected to the ${name} database.`);
-    });
-};
-
-DatabaseConnection(plantcare, "PlantCare");
-DatabaseConnection(collectionofficer, "CollectionOfficer");
-DatabaseConnection(marketPlace, "MarketPlace");
-DatabaseConnection(dash, "Dash");
-
+  
+  plantcare.getConnection((err, connection) => {
+    if (err) {
+      console.error('Error connecting to the database in index.js (plantcare):', err);
+      return;
+    }
+    console.log('Connected to the MySQL database in server.js (plantcare).');
+    connection.release();
+  });
+  
+  collectionofficer.getConnection((err, connection) => {
+    if (err) {
+      console.error('Error connecting to the database in index.js (collectionofficer):', err);
+      return;
+    }
+    console.log('Connected to the MySQL database in server.js.(collectionofficer)');
+    connection.release();
+  });
+  
+  marketPlace.getConnection((err, connection) => {
+    if (err) {
+      console.error('Error connecting to the database in index.js (marketPlace):', err);
+      return;
+    }
+    console.log('Connected to the MySQL database in server.js.(marketPlace)');
+    connection.release();
+  });
+  
+  dash.getConnection((err, connection) => {
+    if (err) {
+      console.error('Error connecting to the database in index.js (dash):', err);
+      return;
+    }
+    console.log('Connected to the MySQL database in server.js.(dash)');
+    connection.release();
+  });
+//hello
 const myCropRoutes = require("./routes/UserCrop.routes");
 app.use(process.env.AUTHOR, myCropRoutes);
 
