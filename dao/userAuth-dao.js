@@ -134,22 +134,35 @@ exports.checkBankDetailsExist = (userId) => {
 };
 
 exports.insertBankDetails = (userId, accountNumber, accountHolderName, bankName, branchName, callback) => {
-    const query = `
-  INSERT INTO userbankdetails (userId, accNumber, accHolderName, bankName, branchName)
-  VALUES ( ?, ?, ?, ?, ?)
-`;
-    db.plantcare.query(query, [userId, accountNumber, accountHolderName, bankName, branchName], callback);
-    
+    return new Promise((resolve, reject) => {
+        const query = `
+          INSERT INTO userbankdetails (userId, accNumber, accHolderName, bankName, branchName)
+          VALUES ( ?, ?, ?, ?, ?)
+        `;
+        db.plantcare.query(query, [userId, accountNumber, accountHolderName, bankName, branchName], (err, result) => {
+            if (err) {
+                return reject(err);
+            }
+            resolve(result); 
+        });
+    });
 };
 
 
 exports.updateQRCode = (userId, qrCodeImage, callback) => {
-    const query = `
-      UPDATE users
-      SET farmerQr = ?
-      WHERE id = ?
-    `;
-    db.plantcare.query(query, [qrCodeImage, userId], callback);
+    return new Promise((resolve, reject) => {
+        const query = `
+          UPDATE users
+          SET farmerQr = ?
+          WHERE id = ?
+        `;
+        db.plantcare.query(query, [qrCodeImage, userId], (err, result) => {
+            if (err) {
+                return reject(err);
+            }
+            resolve(result); 
+        });
+    });
 }
 
 
