@@ -262,7 +262,6 @@ exports.registerBankDetails = async (req, res) => {
     const userId = req.user.id;
 
     try {
-        // Check if bank details already exist for the user
         const bankDetailsExist = await userAuthDao.checkBankDetailsExist(userId);
 
         if (bankDetailsExist) {
@@ -271,11 +270,7 @@ exports.registerBankDetails = async (req, res) => {
             });
         }
 
-        // Start the transaction
-        await db.plantcare.promise().beginTransaction();
-
         try {
-            // Insert the bank details into the database
             await userAuthDao.insertBankDetails(
                 userId,
                 accountNumber,
@@ -284,7 +279,6 @@ exports.registerBankDetails = async (req, res) => {
                 branchName
             );
 
-            // Create and update QR code
             await new Promise((resolve, reject) => {
                 userAuthDao.createQrCode(userId, (qrErr, successMessage) => {
                     if (qrErr) {
@@ -296,9 +290,6 @@ exports.registerBankDetails = async (req, res) => {
                     }
                 });
             });
-
-            // Commit the transaction
-            await db.plantcare.promise().commit();
 
             // Send success response
             return res.status(200).json({

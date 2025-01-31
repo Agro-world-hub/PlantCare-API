@@ -139,6 +139,7 @@ exports.insertBankDetails = (userId, accountNumber, accountHolderName, bankName,
   VALUES ( ?, ?, ?, ?, ?)
 `;
     db.plantcare.query(query, [userId, accountNumber, accountHolderName, bankName, branchName], callback);
+    
 };
 
 
