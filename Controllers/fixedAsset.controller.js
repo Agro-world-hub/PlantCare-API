@@ -55,7 +55,6 @@ exports.addFixedAsset = (req, res) => {
 
     const formattedIssuedDate = formatDate(issuedDate);
     const formattedPurchaseDate = formatDate(purchaseDate);
-    console.log(formattedPurchaseDate)
     const formattedExpireDate = formatDate(expireDate);
     const formattedStartDate = formatDate(startDate);
 
@@ -621,9 +620,20 @@ exports.updateFixedAsset = (req, res) => {
 
                 // Proceed with ownership updates based on the ownership type
                 const ownershipDetails = assetData.ownershipDetails || {};
-                const { ownership, oldOwnership } = assetData;
+                // const { ownership, oldOwnership } = assetData;
+                const ownership= assetData.ownership
+                const oldOwnership = assetData.oldOwnership
+                function formatDateToMySQLDateOnly(date) {
+                    const d = new Date(date);
+                    return d.toISOString().slice(0, 10); // Get only the date part (YYYY-MM-DD)
+                }
+                const formatToMySQLDateTime = (date) => {
+                    if (!date) return null; // Handle null/undefined values
+                    return new Date(date).toISOString().slice(0, 19).replace('T', ' ');
+                };
 
                 if (ownership !== oldOwnership) {
+                    console.log("Ownership has changed!");
                     let deleteQueries = [];
                     let insertQueries = [];
                     let insertParams = [];
@@ -639,9 +649,10 @@ exports.updateFixedAsset = (req, res) => {
                             INSERT INTO ownershipownerfixedasset (landAssetId, issuedDate, estimateValue)
                             VALUES (?, COALESCE(NULLIF(?, ''), NULL), COALESCE(NULLIF(?, ''), NULL))
                         `);
+                        
                         insertParams.push([
                             assetData.id,
-                            ownershipDetails.issuedDate || null,
+                            formatToMySQLDateTime(ownershipDetails.issuedDate || null),
                             ownershipDetails.estimateValue || null
                         ]);
 
@@ -677,7 +688,7 @@ exports.updateFixedAsset = (req, res) => {
                         `);
                         insertParams.push([
                             assetData.id,
-                            ownershipDetails.issuedDate || null,
+                            formatToMySQLDateTime(ownershipDetails.issuedDate || null),
                             ownershipDetails.permitFeeAnnually || null
                         ]);
 
@@ -711,8 +722,12 @@ exports.updateFixedAsset = (req, res) => {
                             SET issuedDate = COALESCE(NULLIF(?, ''), issuedDate),
                                 estimateValue = COALESCE(NULLIF(?, ''), estimateValue)
                             WHERE landAssetId = ?`);
+
+                       
+                            
+                            const formattedIssuedDate = formatDateToMySQLDateOnly(ownershipDetails.issuedDate || null);
                         ownershipUpdateParams.push([
-                            ownershipDetails.issuedDate || null,
+                            formattedIssuedDate,
                             ownershipDetails.estimateValue || null,
                             assetId
                         ]);
@@ -726,7 +741,7 @@ exports.updateFixedAsset = (req, res) => {
                                 leastAmountAnnually = COALESCE(NULLIF(?, ''), leastAmountAnnually)
                             WHERE landAssetId = ?`);
                         ownershipUpdateParams.push([
-                            ownershipDetails.startDate || null,
+                            formatToMySQLDateTime(ownershipDetails.startDate || null),
                             ownershipDetails.durationYears || null,
                             ownershipDetails.durationMonths || null,
                             ownershipDetails.leastAmountAnnually || null,
@@ -740,7 +755,7 @@ exports.updateFixedAsset = (req, res) => {
                                 permitFeeAnnually = COALESCE(NULLIF(?, ''), permitFeeAnnually)
                             WHERE landAssetId = ?`);
                         ownershipUpdateParams.push([
-                            ownershipDetails.issuedDate || null,
+                            formatToMySQLDateTime(ownershipDetails.issuedDate || null),
                             ownershipDetails.permitFeeAnnually || null,
                             assetId
                         ]);
@@ -797,6 +812,7 @@ exports.updateFixedAsset = (req, res) => {
                     let deleteQueries = [];
                     let insertQueries = [];
                     let insertParams = [];
+                    
 
                     if (ownership === 'Own Building (with title ownership)') {
                         deleteQueries = [
@@ -913,10 +929,11 @@ exports.updateFixedAsset = (req, res) => {
                                 permitFeeAnnually = COALESCE(NULLIF(?, ''), permitFeeAnnually)
                             WHERE buildingAssetId = ?`);
                             ownershipUpdateParams.push([
-                                formattedIssuedDate, 
+                                formattedIssuedDate,  // Use the formatted date
                                 ownershipDetails.permitFeeAnnually || null,
                                 assetId
                             ]);
+                        console.log(ownershipUpdateParams)
                     } else if (ownership === 'Shared / No Ownership') {
                         ownershipUpdateQueries.push(`
                             UPDATE ownershipsharedfixedasset
@@ -1018,6 +1035,7 @@ exports.updateFixedAsset = (req, res) => {
 
 // Helper functions for executing delete/insert and update sequences
 function executeDeleteAndInsertQueries(res, deleteQueries, deleteParams, insertQueries, insertParams, updateAssetQuery, updateParams) {
+
     let deletePromises = deleteQueries.map(query => new Promise((resolve, reject) => {
         db.plantcare.query(query, deleteParams, (err) => {
             if (err) reject(err);
@@ -1035,6 +1053,7 @@ function executeDeleteAndInsertQueries(res, deleteQueries, deleteParams, insertQ
             }));
 
             return Promise.all(insertPromises);
+            
         })
         .then(() => {
             db.plantcare.query(updateAssetQuery, updateParams, (queryErr) => {
@@ -1047,6 +1066,7 @@ function executeDeleteAndInsertQueries(res, deleteQueries, deleteParams, insertQ
         })
         .catch((err) => {
             db.plantcare.rollback(() => res.status(500).json({ message: 'Error executing ownership change', error: err }));
+            console.log(err)
         });
 }
 
@@ -1074,6 +1094,7 @@ function executeUpdateQueries(res, assetId, updateQueries = [], updateParams = [
         })
         .catch((err) => {
             db.plantcare.rollback(() => res.status(500).json({ message: 'Error executing ownership update', error: err }));
+            console.log(err)
         });
 }
 
