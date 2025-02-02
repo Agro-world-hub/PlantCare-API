@@ -149,7 +149,22 @@ exports.insertBankDetails = (userId, accountNumber, accountHolderName, bankName,
 };
 
 
-exports.updateQRCode = (userId, qrCodeImage, callback) => {
+// exports.updateQRCode = (userId, qrCodeImage, callback) => {
+//     return new Promise((resolve, reject) => {
+//         const query = `
+//           UPDATE users
+//           SET farmerQr = ?
+//           WHERE id = ?
+//         `;
+//         db.plantcare.query(query, [qrCodeImage, userId], (err, result) => {
+//             if (err) {
+//                 return reject(err);
+//             }
+//             resolve(result); 
+//         });
+//     });
+// }
+exports.updateQRCode = (userId, qrCodeImage) => {
     return new Promise((resolve, reject) => {
         const query = `
           UPDATE users
@@ -158,12 +173,15 @@ exports.updateQRCode = (userId, qrCodeImage, callback) => {
         `;
         db.plantcare.query(query, [qrCodeImage, userId], (err, result) => {
             if (err) {
+                console.error("Error updating QR code:", err);
                 return reject(err);
             }
-            resolve(result); 
+            resolve(result);
+            console.log(result);
         });
     });
-}
+};
+
 
 
 exports.generateQRCode = (data, callback) => {
@@ -186,33 +204,60 @@ exports.generateQRCode = (data, callback) => {
 };
 
 
-exports.createQrCode = async (userId, callback) => {
+// exports.createQrCode = async (userId, callback) => {
+//     try {
+//         const qrData = {
+//             userInfo: {
+//                 id: userId,
+//             },
+//         };
+//         const qrCodeBase64 = await QRCode.toDataURL(JSON.stringify(qrData));
+
+//         const qrCodeBuffer = Buffer.from(
+//             qrCodeBase64.replace(/^data:image\/png;base64,/, ""),
+//             'base64'
+//         );
+//         const fileName =  `qrCode_${userId}.png`;
+//         const profileImageUrl = await uploadFileToS3(qrCodeBuffer, fileName, "users/farmerQr");
+        
+//         exports.updateQRCode(userId, profileImageUrl , (updateQrErr) => {
+//             if (updateQrErr) {
+//                 return callback(updateQrErr); 
+//             }
+
+//             callback(null, "QR code created and updated successfully");
+//         });
+//     } catch (err) {
+//         return callback(err); 
+//     }
+// };
+
+exports.createQrCode = async (userId) => {
     try {
         const qrData = {
             userInfo: {
                 id: userId,
             },
         };
+
         const qrCodeBase64 = await QRCode.toDataURL(JSON.stringify(qrData));
 
         const qrCodeBuffer = Buffer.from(
             qrCodeBase64.replace(/^data:image\/png;base64,/, ""),
             'base64'
         );
-        const fileName =  `qrCode_${userId}.png`;
-        const profileImageUrl = await uploadFileToS3(qrCodeBuffer, fileName, "users/farmerQr");
-        
-        exports.updateQRCode(userId, profileImageUrl , (updateQrErr) => {
-            if (updateQrErr) {
-                return callback(updateQrErr); 
-            }
+        const fileName = `qrCode_${userId}.png`;
 
-            callback(null, "QR code created and updated successfully");
-        });
+        const profileImageUrl = await uploadFileToS3(qrCodeBuffer, fileName, "users/farmerQr");
+        await exports.updateQRCode(userId, profileImageUrl); 
+
+        return "QR code created and updated successfully"; 
     } catch (err) {
-        return callback(err); 
+        console.error("Error in createQrCode:", err);
+        throw err; 
     }
 };
+
 
 exports.getUserProfileImage = async (userId) => {
     return new Promise((resolve, reject) => {
