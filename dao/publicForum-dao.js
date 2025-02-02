@@ -10,7 +10,7 @@ exports.getPaginatedPosts = (limit, offset) => {
                 p.message,
                 p.postimage,
                 p.createdAt,
-                COUNT(r.replyId) AS replyCount 
+                COUNT(r.chatId) AS replyCount 
             FROM 
                 publicforumposts p 
             LEFT JOIN 
@@ -48,6 +48,35 @@ exports.getTotalPostsCount = () => {
   });
 };
 
+// exports.getRepliesByChatId = (chatId) => {
+//   return new Promise((resolve, reject) => {
+//     const sql = `
+//             SELECT 
+//                 r.replyId, 
+//                 r.replyMessage, 
+//                 r.createdAt, 
+//                 u.firstName AS userName 
+//             FROM 
+//                 publicforumreplies r
+//             JOIN 
+//                 publicforumposts p ON r.chatId = p.id
+//             JOIN 
+//                 users u ON r.replyId = u.id
+//             WHERE 
+//                 r.chatId = ?
+//             ORDER BY 
+//                 r.createdAt DESC
+//         `;
+//     db.plantcare.query(sql, [chatId], (err, results) => {
+//       if (err) {
+//         reject(err);
+//       } else {
+//         resolve(results);
+//         console.log(results);
+//       }
+//     });
+//   });
+// };
 exports.getRepliesByChatId = (chatId) => {
   return new Promise((resolve, reject) => {
     const sql = `
@@ -55,13 +84,13 @@ exports.getRepliesByChatId = (chatId) => {
                 r.replyId, 
                 r.replyMessage, 
                 r.createdAt, 
-                u.firstName AS userName 
+                IFNULL(u.firstName, 'Admin') AS userName  -- If replyId is null, use 'Admin' as the userName
             FROM 
                 publicforumreplies r
             JOIN 
                 publicforumposts p ON r.chatId = p.id
-            JOIN 
-                users u ON p.userId = u.id
+            LEFT JOIN  -- Use LEFT JOIN to handle cases where there's no matching user
+                users u ON r.replyId = u.id
             WHERE 
                 r.chatId = ?
             ORDER BY 
@@ -72,10 +101,12 @@ exports.getRepliesByChatId = (chatId) => {
         reject(err);
       } else {
         resolve(results);
+        console.log(results);
       }
     });
   });
 };
+
 
 exports.createReply = (chatId, replyId, replyMessage) => {
   return new Promise((resolve, reject) => {
