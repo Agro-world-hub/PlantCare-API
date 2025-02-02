@@ -251,6 +251,77 @@ const query = (sql, params) => {
     });
 };
 
+// exports.registerBankDetails = async (req, res) => {
+//     const {
+//         accountNumber,
+//         accountHolderName,
+//         bankName,
+//         branchName,
+//     } = req.body;
+
+//     const userId = req.user.id;
+
+//     try {
+//         const bankDetailsExist = await userAuthDao.checkBankDetailsExist(userId);
+
+//         if (bankDetailsExist) {
+//             return res.status(400).json({
+//                 message: "Bank details already exist for this user",
+//             });
+//         }
+
+//         try {
+//            const response = await userAuthDao.insertBankDetails(
+//                 userId,
+//                 accountNumber,
+//                 accountHolderName,
+//                 bankName,
+//                 branchName
+//             );
+
+//             console.log("Bank details registered successfully", response);
+
+//             await new Promise((resolve, reject) => {
+//                 userAuthDao.createQrCode(userId, (qrErr, successMessage) => {
+//                     if (qrErr) {
+//                         console.error("Error creating QR code:", qrErr);
+//                         reject(qrErr);
+//                     } else {
+//                         console.log(successMessage);
+//                         resolve(successMessage);
+//                     }
+//                 });
+//             });
+
+//             // Send success response
+//             return response.status(200).json({
+//                 message: "Bank details registered successfully",
+//                 bankData: {
+//                     userId,
+//                     accountHolderName,
+//                     accountNumber,
+//                     bankName,
+//                     branchName
+//                 },
+//             });
+//         } catch (transactionErr) {
+//             // Rollback the transaction on error
+//             await db.plantcare.promise().rollback();
+//             console.error("Error during transaction:", transactionErr);
+//             return res.status(500).json({
+//                 message: "Failed to complete transaction",
+//                 error: transactionErr.message,
+//             });
+//         }
+//     } catch (err) {
+//         console.error("Error processing request:", err);
+//         return res.status(500).json({
+//             message: "An error occurred",
+//             error: err.message,
+//         });
+//     }
+// };
+
 exports.registerBankDetails = async (req, res) => {
     const {
         accountNumber,
@@ -271,7 +342,7 @@ exports.registerBankDetails = async (req, res) => {
         }
 
         try {
-            await userAuthDao.insertBankDetails(
+            const response = await userAuthDao.insertBankDetails(
                 userId,
                 accountNumber,
                 accountHolderName,
@@ -280,18 +351,17 @@ exports.registerBankDetails = async (req, res) => {
             );
 
             await new Promise((resolve, reject) => {
-                userAuthDao.createQrCode(userId, (qrErr, successMessage) => {
-                    if (qrErr) {
+                userAuthDao.createQrCode(userId)
+                    .then(successMessage => {
+                        console.log("QR code created successfully:", successMessage);
+                        resolve(successMessage); 
+                    })
+                    .catch(qrErr => {
                         console.error("Error creating QR code:", qrErr);
-                        reject(qrErr);
-                    } else {
-                        console.log(successMessage);
-                        resolve(successMessage);
-                    }
-                });
+                        reject(qrErr); 
+                    });
             });
-
-            // Send success response
+            
             return res.status(200).json({
                 message: "Bank details registered successfully",
                 bankData: {
@@ -319,6 +389,7 @@ exports.registerBankDetails = async (req, res) => {
         });
     }
 };
+
 
 exports.uploadProfileImage = async (req, res) => {
     try {
