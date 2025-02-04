@@ -192,74 +192,22 @@ exports.signupChecker = asyncHandler(async(req, res) => {
     }
 });
 
-// exports.updateFirstLastName = asyncHandler(async(req, res) => {
-//     try {
-//         console.log("Hitt update")
-//         // const { firstName, lastName, buidingname, streetname, city , district } =
-//         // await ValidationSchema.updateFirstLastNameSchema.validateAsync(req.body);
-//         // console.log("Hiiii")
-       
-//         const sanitizedBody = Object.fromEntries(
-//             Object.entries(req.body).map(([key, value]) => [key, value === "" ? null : value])
-//         );
-
-//         const { firstName, lastName, buidingname, streetname, city, district } =
-//             await ValidationSchema.updateFirstLastNameSchema.validateAsync(sanitizedBody);
-
-//         const userId = req.user.id;
-
-//         const affectedRows = await userAuthDao.updateFirstLastName(
-//             userId,
-//             firstName,
-//             lastName,
-//             buidingname,
-//             streetname,
-//             city,
-//             district
-//         );
-
-//         if (affectedRows === 0) {
-//             return res.status(404).json({
-//                 status: "error",
-//                 message: "User not found",
-//             });
-//         }
-
-//         return res.status(200).json({
-//             status: "success",
-//             message: "First and last name updated successfully",
-//         });
-//     } catch (err) {
-//         console.error("Error updating first and last name:", err);
-
-//         if (err.isJoi) {
-//             return res.status(400).json({
-//                 status: "error",
-//                 message: err.details[0].message,
-//             });
-//         }
-
-//         res.status(500).json({ error: "Internal Server Error" });
-//     }
-// });
-
-exports.updateFirstLastName = asyncHandler(async (req, res) => {
+exports.updateFirstLastName = asyncHandler(async(req, res) => {
     try {
-        // Sanitize and trim inputs
+        console.log("Hitt update")
+        // const { firstName, lastName, buidingname, streetname, city , district } =
+        // await ValidationSchema.updateFirstLastNameSchema.validateAsync(req.body);
+        // console.log("Hiiii")
+       
         const sanitizedBody = Object.fromEntries(
-            Object.entries(req.body).map(([key, value]) => 
-                [key, typeof value === "string" && value.trim() === "" ? null : value?.trim()]
-            )
+            Object.entries(req.body).map(([key, value]) => [key, value === "" ? null : value])
         );
 
-        // Validate input using Joi schema
         const { firstName, lastName, buidingname, streetname, city, district } =
             await ValidationSchema.updateFirstLastNameSchema.validateAsync(sanitizedBody);
 
-        // Retrieve user ID from authenticated request
         const userId = req.user.id;
 
-        // Update database record
         const affectedRows = await userAuthDao.updateFirstLastName(
             userId,
             firstName,
@@ -270,7 +218,6 @@ exports.updateFirstLastName = asyncHandler(async (req, res) => {
             district
         );
 
-        // Check if user was found and updated
         if (affectedRows === 0) {
             return res.status(404).json({
                 status: "error",
@@ -278,7 +225,6 @@ exports.updateFirstLastName = asyncHandler(async (req, res) => {
             });
         }
 
-        // Return success response
         return res.status(200).json({
             status: "success",
             message: "First and last name updated successfully",
@@ -286,7 +232,6 @@ exports.updateFirstLastName = asyncHandler(async (req, res) => {
     } catch (err) {
         console.error("Error updating first and last name:", err);
 
-        // Handle Joi validation errors
         if (err.isJoi) {
             return res.status(400).json({
                 status: "error",
@@ -294,14 +239,9 @@ exports.updateFirstLastName = asyncHandler(async (req, res) => {
             });
         }
 
-        // Handle other errors
-        return res.status(500).json({ 
-            status: "error", 
-            message: "Internal Server Error" 
-        });
+        res.status(500).json({ error: "Internal Server Error" });
     }
 });
-
 
 const query = (sql, params) => {
     return new Promise((resolve, reject) => {
