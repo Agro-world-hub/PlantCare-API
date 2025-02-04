@@ -194,15 +194,17 @@ exports.signupChecker = asyncHandler(async(req, res) => {
 
 exports.updateFirstLastName = asyncHandler(async(req, res) => {
     try {
-        // const { firstName, lastName, buidingname, streetname, city  } =
-        // await ValidationSchema.updateFirstLastNameSchema.validateAsync(req.body);
+        console.log("Hiillllllll")
+        const { firstName, lastName, buidingname, streetname, city , district } =
+        await ValidationSchema.updateFirstLastNameSchema.validateAsync(req.body);
+        console.log("Hiiii")
        
         const sanitizedBody = Object.fromEntries(
             Object.entries(req.body).map(([key, value]) => [key, value === "" ? null : value])
         );
 
-        const { firstName, lastName, buidingname, streetname, city, district } =
-            await ValidationSchema.updateFirstLastNameSchema.validateAsync(sanitizedBody);
+        // const { firstName, lastName, buidingname, streetname, city, district } =
+        //     await ValidationSchema.updateFirstLastNameSchema.validateAsync(sanitizedBody);
 
         const userId = req.user.id;
 
