@@ -201,7 +201,7 @@ exports.updateFirstLastName = asyncHandler(async(req, res) => {
             Object.entries(req.body).map(([key, value]) => [key, value === "" ? null : value])
         );
 
-        const { firstName, lastName, buidingname, streetname, city } =
+        const { firstName, lastName, buidingname, streetname, city, district } =
             await ValidationSchema.updateFirstLastNameSchema.validateAsync(sanitizedBody);
 
         const userId = req.user.id;
@@ -212,7 +212,8 @@ exports.updateFirstLastName = asyncHandler(async(req, res) => {
             lastName,
             buidingname,
             streetname,
-            city
+            city,
+            district
         );
 
         if (affectedRows === 0) {
