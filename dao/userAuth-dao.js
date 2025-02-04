@@ -107,10 +107,10 @@ exports.checkSignupDetails = (phoneNumber, NICnumber) => {
 };
 
 
-exports.updateFirstLastName = (userId, firstName, lastName, buidingname, streetname, city) => {
+exports.updateFirstLastName = (userId, firstName, lastName, buidingname, streetname, city, district) => {
     return new Promise((resolve, reject) => {
-        const sql = 'UPDATE users SET firstName = ?, lastName = ?, houseNo=?, streetName=?, city=? WHERE id = ?';
-        db.plantcare.query(sql, [firstName, lastName, buidingname, streetname,city, userId], (err, results) => {
+        const sql = 'UPDATE users SET firstName = ?, lastName = ?, houseNo=?, streetName=?, city=?, district=? WHERE id = ?';
+        db.plantcare.query(sql, [firstName, lastName, buidingname, streetname,city,district, userId], (err, results) => {
             if (err) {
                 reject(err);
             } else {

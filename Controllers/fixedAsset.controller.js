@@ -803,6 +803,15 @@ exports.updateFixedAsset = (req, res) => {
                     return db.plantcare.rollback(() => res.status(500).json({ message: 'Error updating asset', error: queryErr }));
                 }
 
+                function formatDateToMySQLDateOnly(date) {
+                    const d = new Date(date);
+                    return d.toISOString().slice(0, 10); // Get only the date part (YYYY-MM-DD)
+                }
+                const formatToMySQLDateTime = (date) => {
+                    if (!date) return null; // Handle null/undefined values
+                    return new Date(date).toISOString().slice(0, 19).replace('T', ' ');
+                };
+
 
                 // Proceed with ownership updates
                 const ownershipDetails = assetData.ownershipDetails || {};
@@ -894,7 +903,7 @@ exports.updateFixedAsset = (req, res) => {
                                 estimateValue = COALESCE(NULLIF(?, ''), estimateValue)
                             WHERE buildingAssetId = ?`);
                         ownershipUpdateParams.push([
-                            ownershipDetails.issuedDate || null,
+                           formatToMySQLDateTime(ownershipDetails.issuedDate || null),
                             ownershipDetails.estimateValue || null,
                             assetId
                         ]);
@@ -908,7 +917,7 @@ exports.updateFixedAsset = (req, res) => {
                                 leastAmountAnnually = COALESCE(NULLIF(?, ''), leastAmountAnnually)
                             WHERE buildingAssetId = ?`);
                         ownershipUpdateParams.push([
-                            ownershipDetails.startDate || null,
+                            formatToMySQLDateTime(ownershipDetails.startDate || null),
                             ownershipDetails.durationYears || null,
                             ownershipDetails.durationMonths || null,
                             ownershipDetails.leastAmountAnnually || null,
