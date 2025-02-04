@@ -3,7 +3,7 @@ const db = require("../startup/database");
 exports.createComplain = (farmerId, language, complain, category, status,referenceNumber) => {
     return new Promise((resolve, reject) => {
         const sql =
-            "INSERT INTO farmercomplains (farmerId,  language, complain, complainCategory, status, refNo) VALUES (?, ?, ?, ?, ?, ?)";
+            "INSERT INTO farmercomplains (farmerId,  language, complain, complainCategory, status, refNo, adminStatus) VALUES (?, ?, ?, ?, ?, ?, 'Assigned')";
         db.collectionofficer.query(sql, [farmerId, language, complain, category, status, referenceNumber], (err, result) => {
             if (err) {
                 reject(err);
