@@ -578,6 +578,7 @@ exports.updateFixedAsset = (req, res) => {
     const userId = req.user.id;
     const { assetId, category } = req.params;
     const assetData = req.body;
+    console.log("assetData:", assetData);
 
     // Start a transaction
     db.plantcare.beginTransaction((err) => {
@@ -670,8 +671,8 @@ exports.updateFixedAsset = (req, res) => {
                         insertParams.push([
                             assetData.id,
                             ownershipDetails.startDate || null,
-                            ownershipDetails.durationYears || null,
-                            ownershipDetails.durationMonths || null,
+                            ownershipDetails.durationYears !== undefined ? String(ownershipDetails.durationYears) : '0',
+                            ownershipDetails.durationMonths !== undefined ? String(ownershipDetails.durationMonths) : '0',
                             ownershipDetails.leastAmountAnnually || null
                         ]);
 
@@ -740,13 +741,21 @@ exports.updateFixedAsset = (req, res) => {
                                 durationMonths = COALESCE(NULLIF(?, ''), durationMonths),
                                 leastAmountAnnually = COALESCE(NULLIF(?, ''), leastAmountAnnually)
                             WHERE landAssetId = ?`);
+                        // ownershipUpdateParams.push([
+                        //     formatToMySQLDateTime(ownershipDetails.startDate || null),
+                        //     ownershipDetails.durationYears || null,
+                        //     ownershipDetails.durationMonths || null,
+                        //     ownershipDetails.leastAmountAnnually || null,
+                        //     assetId
+                        // ]);
                         ownershipUpdateParams.push([
-                            formatToMySQLDateTime(ownershipDetails.startDate || null),
-                            ownershipDetails.durationYears || null,
-                            ownershipDetails.durationMonths || null,
-                            ownershipDetails.leastAmountAnnually || null,
-                            assetId
-                        ]);
+    formatToMySQLDateTime(ownershipDetails.startDate || null),
+    ownershipDetails.durationYears !== undefined ? String(ownershipDetails.durationYears) : '0',
+    ownershipDetails.durationMonths !== undefined ? String(ownershipDetails.durationMonths) : '0',
+    ownershipDetails.leastAmountAnnually || null,
+    assetId
+]);
+
 
                     } else if (ownership === 'Permited') {
                         ownershipUpdateQueries.push(`
@@ -854,8 +863,10 @@ exports.updateFixedAsset = (req, res) => {
                         insertParams.push([
                             assetData.id,
                             ownershipDetails.startDate || null,
-                            ownershipDetails.durationYears || null,
-                            ownershipDetails.durationMonths || null,
+                            // ownershipDetails.durationYears || null,
+                            // ownershipDetails.durationMonths || null,
+                            ownershipDetails.durationYears !== undefined ? String(ownershipDetails.durationYears) : '0',
+                            ownershipDetails.durationMonths !== undefined ? String(ownershipDetails.durationMonths) : '0',
                             ownershipDetails.leastAmountAnnually || null
                         ]);
                     } else if (ownership === 'Permit Building') {
@@ -918,8 +929,8 @@ exports.updateFixedAsset = (req, res) => {
                             WHERE buildingAssetId = ?`);
                         ownershipUpdateParams.push([
                             formatToMySQLDateTime(ownershipDetails.startDate || null),
-                            ownershipDetails.durationYears || null,
-                            ownershipDetails.durationMonths || null,
+                            ownershipDetails.durationYears !== undefined ? String(ownershipDetails.durationYears) : '0',
+                            ownershipDetails.durationMonths !== undefined ? String(ownershipDetails.durationMonths) : '0',
                             ownershipDetails.leastAmountAnnually || null,
                             assetId
                         ]);
