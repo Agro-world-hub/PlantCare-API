@@ -105,7 +105,7 @@
 
 const express = require("express");
 const cors = require("cors"); 
-const { plantcare, collectionofficer, marketPlace, dash } = require("./startup/database"); 
+const { plantcare, collectionofficer, marketPlace, dash, admin } = require("./startup/database"); 
 
 require("dotenv").config();
 
@@ -139,20 +139,39 @@ app.options(
     })
 );
 
+// const DatabaseConnection = (db, name) => {
+//     db.connect((err) => {
+//         if (err) {
+//             console.error(`Error connecting to the ${name} database:`, err);
+//             return;
+//         }
+//         console.log(`Connected to the ${name} database.`);
+//     });
+// };
 const DatabaseConnection = (db, name) => {
     db.connect((err) => {
-        if (err) {
-            console.error(`Error connecting to the ${name} database:`, err);
-            return;
-        }
+      if (err) {
+        console.error(`Error connecting to the ${name} database:`, err);
+      } else {
         console.log(`Connected to the ${name} database.`);
+      }
     });
-};
+  
+    db.on('error', (err) => {
+      console.error(`Database error in ${name}:`, err);
+      if (err.code === 'PROTOCOL_CONNECTION_LOST') {
+        console.log(`Reconnecting to ${name} database...`);
+        DatabaseConnection(db, name);
+      }
+    });
+  };
+  
 
 DatabaseConnection(plantcare, "PlantCare");
 DatabaseConnection(collectionofficer, "CollectionOfficer");
 DatabaseConnection(marketPlace, "MarketPlace");
 DatabaseConnection(dash, "Dash");
+DatabaseConnection(admin, "Admin");
 
 const myCropRoutes = require("./routes/UserCrop.routes");
 app.use(process.env.AUTHOR, myCropRoutes);
