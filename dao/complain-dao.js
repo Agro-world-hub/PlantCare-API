@@ -50,3 +50,19 @@ exports.getAllComplaintsByUserId = async(userId) => {
         });
     });
 };
+
+exports.getComplainCategories = async() => {
+    return new Promise((resolve, reject) => {
+        const query = `
+        SELECT * FROM complaincategory
+      `;
+        db.admin.query(query , (error, results) => {
+            if (error) {
+                console.error("Error fetching complaints:", error);
+                reject(error);
+            } else {
+                resolve(results);
+            }
+        });
+    });
+};
