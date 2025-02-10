@@ -420,3 +420,22 @@ exports.checkTaskExists = (taskId) => {
         });
     });
 };
+
+exports.getUploadedImagesCount = (userId, cropId) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            SELECT COUNT(*) as count
+            FROM taskimages ti
+            JOIN slavecropcalendardays scc ON ti.slaveId = scc.id
+            WHERE scc.userId = ? AND scc.id= ?
+        `;
+        db.plantcare.query(sql, [userId, cropId], (err, results) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(results);
+            }
+        });
+
+    });
+}
