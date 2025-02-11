@@ -435,7 +435,8 @@ exports.updateCropCalendarStatus = asyncHandler(async(req, res) => {
                 );
                 const currentDate = new Date();
                 const remainingTime = nextTaskStartDate - currentDate;
-                const remainingDays = Math.ceil(remainingTime / (24 * 60 * 60 * 1000));
+                
+                const remainingDays = Math.floor(remainingTime / (24 * 60 * 60 * 1000));
 
                 if (remainingDays > 0) {
                     return res
@@ -535,6 +536,30 @@ exports.addGeoLocation = asyncHandler(async (req, res) => {
         });
     } catch (err) {
         console.error("Error fetching geo location details:", err);
+        res.status(500).json({ message: "Internal Server Error!" });
+    }
+});
+
+exports.getUploadedImagesCount = asyncHandler(async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const cropId = req.params.cropId;
+        console.log(cropId)
+
+
+        const results = await cropDao.getUploadedImagesCount(userId, cropId);
+
+        if (results.length === 0) {
+            return res.status(404).json({
+                status: "error",
+                message: "No records found for the given userId.",
+            });
+        }
+
+        res.status(200).json(results);
+        console.log(results)
+    } catch (err) {
+        console.error("Error fetching uploaded images count:", err);
         res.status(500).json({ message: "Internal Server Error!" });
     }
 });
