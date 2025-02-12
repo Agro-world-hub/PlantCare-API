@@ -35,51 +35,80 @@ app.options(
 );
 
   
-  plantcare.getConnection((err, connection) => {
-    if (err) {
-      console.error('Error connecting to the database in index.js (plantcare):', err);
-      return;
-    }
-    console.log('Connected to the MySQL database in server.js (plantcare).');
-    connection.release();
-  });
+//   plantcare.getConnection((err, connection) => {
+//     if (err) {
+//       console.error('Error connecting to the database in index.js (plantcare):', err);
+//       return;
+//     }
+//     console.log('Connected to the MySQL database in server.js (plantcare).');
+//     connection.release();
+//   });
   
-  collectionofficer.getConnection((err, connection) => {
-    if (err) {
-      console.error('Error connecting to the database in index.js (collectionofficer):', err);
-      return;
-    }
-    console.log('Connected to the MySQL database in server.js.(collectionofficer)');
-    connection.release();
-  });
+//   collectionofficer.getConnection((err, connection) => {
+//     if (err) {
+//       console.error('Error connecting to the database in index.js (collectionofficer):', err);
+//       return;
+//     }
+//     console.log('Connected to the MySQL database in server.js.(collectionofficer)');
+//     connection.release();
+//   });
   
-  marketPlace.getConnection((err, connection) => {
-    if (err) {
-      console.error('Error connecting to the database in index.js (marketPlace):', err);
-      return;
-    }
-    console.log('Connected to the MySQL database in server.js.(marketPlace)');
-    connection.release();
-  });
+//   marketPlace.getConnection((err, connection) => {
+//     if (err) {
+//       console.error('Error connecting to the database in index.js (marketPlace):', err);
+//       return;
+//     }
+//     console.log('Connected to the MySQL database in server.js.(marketPlace)');
+//     connection.release();
+//   });
   
-  dash.getConnection((err, connection) => {
-    if (err) {
-      console.error('Error connecting to the database in index.js (dash):', err);
-      return;
-    }
-    console.log('Connected to the MySQL database in server.js.(dash)');
-    connection.release();
-  });
+//   dash.getConnection((err, connection) => {
+//     if (err) {
+//       console.error('Error connecting to the database in index.js (dash):', err);
+//       return;
+//     }
+//     console.log('Connected to the MySQL database in server.js.(dash)');
+//     connection.release();
+//   });
 
-  admin.getConnection((err, connection) => {
-    if (err) {
-      console.error('Error connecting to the database in index.js (dash):', err);
-      return;
-    }
-    console.log('Connected to the MySQL database in server.js.(dash)');
-    connection.release();
-  });
-//hello
+//   admin.getConnection((err, connection) => {
+//     if (err) {
+//       console.error('Error connecting to the database in index.js (dash):', err);
+//       return;
+//     }
+//     console.log('Connected to the MySQL database in server.js.(dash)');
+//     connection.release();
+//   });
+// //hello
+
+const DatabaseConnection = (db, name) => {
+    db.getConnection((err, connection) => {
+        if (err) {
+            console.error(`Error connecting to the database in index.js (${name}):`, err);
+            return;
+        }
+        console.log(`Connected to the MySQL database in server.js (${name}).`);
+        connection.release();
+    });
+};
+
+// Initial database connections
+DatabaseConnection(plantcare, "PlantCare");
+DatabaseConnection(collectionofficer, "CollectionOfficer");
+DatabaseConnection(marketPlace, "MarketPlace");
+DatabaseConnection(dash, "Dash");
+DatabaseConnection(admin, "Admin");
+
+// Reconnect every hour
+setInterval(() => {
+    console.log("Reconnecting to databases...");
+    DatabaseConnection(plantcare, "PlantCare");
+    DatabaseConnection(collectionofficer, "CollectionOfficer");
+    DatabaseConnection(marketPlace, "MarketPlace");
+    DatabaseConnection(dash, "Dash");
+    DatabaseConnection(admin, "Admin");
+}, 3600000); // 1 hour interval
+
 const myCropRoutes = require("./routes/UserCrop.routes");
 app.use(process.env.AUTHOR, myCropRoutes);
 

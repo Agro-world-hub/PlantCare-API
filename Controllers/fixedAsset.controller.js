@@ -635,7 +635,6 @@ exports.updateFixedAsset = (req, res) => {
     const userId = req.user.id;
     const { assetId, category } = req.params;
     const assetData = req.body;
-    console.log("assetData:", assetData);
 
     // Start a transaction
     db.plantcare.getConnection((err, connection) => {
@@ -697,7 +696,6 @@ exports.updateFixedAsset = (req, res) => {
                 };
 
                 if (ownership !== oldOwnership) {
-                    console.log("Ownership has changed!");
                     let deleteQueries = [];
                     let insertQueries = [];
                     let insertParams = [];
@@ -982,7 +980,6 @@ exports.updateFixedAsset = (req, res) => {
                             ownershipDetails.estimateValue || null,
                             assetId
                         ]);
-                        console.log(ownershipUpdateParams)
                     } else if (ownership === 'Leased Building') {
                         ownershipUpdateQueries.push(`
                             UPDATE ownershipleastfixedasset 
@@ -1017,7 +1014,6 @@ exports.updateFixedAsset = (req, res) => {
                                 ownershipDetails.permitFeeAnnually || null,
                                 assetId
                             ]);
-                        console.log(ownershipUpdateParams)
                     } else if (ownership === 'Shared / No Ownership') {
                         ownershipUpdateQueries.push(`
                             UPDATE ownershipsharedfixedasset
@@ -1059,7 +1055,6 @@ exports.updateFixedAsset = (req, res) => {
                 assetData.faId
             ];
 
-            console.log("updateParams:", updateParams);
 
             const warrantyDetails = assetData.ownershipDetails || {};
 
