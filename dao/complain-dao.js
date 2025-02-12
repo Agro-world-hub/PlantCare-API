@@ -54,7 +54,7 @@ exports.getAllComplaintsByUserId = async(userId) => {
 exports.getComplainCategories = async() => {
     return new Promise((resolve, reject) => {
         const query = `
-        SELECT * FROM complaincategory
+        SELECT * FROM complaincategory WHERE appId = '1'
       `;
         db.admin.query(query , (error, results) => {
             if (error) {
