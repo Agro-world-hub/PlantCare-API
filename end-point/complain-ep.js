@@ -17,13 +17,6 @@ exports.createComplain = asyncHandler(async(req, res) => {
         const complaintsOnDate = await complainDao.countComplaintsByDate(today);
         const referenceNumber = `${datePrefix}${String(complaintsOnDate + 1).padStart(4, '0')}`;
 
-        if (error) {
-            return res.status(400).json({
-                status: "error",
-                message: error.details[0].message,
-            });
-        }
-
         const { language, complain, category } = value;
         const status = "Opened";
 
