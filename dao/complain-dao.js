@@ -54,7 +54,9 @@ exports.getAllComplaintsByUserId = async(userId) => {
 exports.getComplainCategories = async() => {
     return new Promise((resolve, reject) => {
         const query = `
-        SELECT * FROM complaincategory  WHERE appId = '1'
+        SELECT * FROM complaincategory cc
+        JOIN systemapplications ssa ON cc.appId = ssa.id
+        WHERE ssa.appName = 'PlantCare'
       `;
         db.admin.query(query , (error, results) => {
             if (error) {
