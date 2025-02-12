@@ -54,7 +54,7 @@ exports.getAllComplaintsByUserId = async(userId) => {
 exports.getComplainCategories = async() => {
     return new Promise((resolve, reject) => {
         const query = `
-        SELECT * FROM complaincategory cc
+                SELECT * FROM complaincategory cc
         JOIN systemapplications ssa ON cc.appId = ssa.id
         WHERE ssa.appName = 'PlantCare'
       `;

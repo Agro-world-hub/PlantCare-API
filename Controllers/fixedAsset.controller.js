@@ -2643,3 +2643,7 @@ exports.deleteFixedAsset = (req, res) => {
         });
     });
 };
+
+
+
+
