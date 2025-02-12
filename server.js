@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors"); 
-const { plantcare, collectionofficer, marketPlace, dash, admin } = require("./startup/database"); 
+const { plantcare, collectionofficer, marketPlace, dash, admin, plantcareTest, collectionofficerTest, marketPlaceTest, dashTest, adminTest } = require("./startup/database"); 
 
 require("dotenv").config();
 
@@ -34,64 +34,40 @@ app.options(
     })
 );
 
-  
-//   plantcare.getConnection((err, connection) => {
-//     if (err) {
-//       console.error('Error connecting to the database in index.js (plantcare):', err);
-//       return;
-//     }
-//     console.log('Connected to the MySQL database in server.js (plantcare).');
-//     connection.release();
-//   });
-  
-//   collectionofficer.getConnection((err, connection) => {
-//     if (err) {
-//       console.error('Error connecting to the database in index.js (collectionofficer):', err);
-//       return;
-//     }
-//     console.log('Connected to the MySQL database in server.js.(collectionofficer)');
-//     connection.release();
-//   });
-  
-//   marketPlace.getConnection((err, connection) => {
-//     if (err) {
-//       console.error('Error connecting to the database in index.js (marketPlace):', err);
-//       return;
-//     }
-//     console.log('Connected to the MySQL database in server.js.(marketPlace)');
-//     connection.release();
-//   });
-  
-//   dash.getConnection((err, connection) => {
-//     if (err) {
-//       console.error('Error connecting to the database in index.js (dash):', err);
-//       return;
-//     }
-//     console.log('Connected to the MySQL database in server.js.(dash)');
-//     connection.release();
-//   });
+const TestConnection = (db, name) => {
+    db.connect((err) => {
+        if (err) {
+            console.error(`Error connecting to the ${name} database:`, err);
+        } else {
+            console.log(`Connected to the ${name} database.`);
+        }
+    });
 
-//   admin.getConnection((err, connection) => {
-//     if (err) {
-//       console.error('Error connecting to the database in index.js (dash):', err);
-//       return;
-//     }
-//     console.log('Connected to the MySQL database in server.js.(dash)');
-//     connection.release();
-//   });
-// //hello
+    db.on('error', (err) => {
+        console.error(`Database error in ${name}:`, err);
+        if (err.code === 'PROTOCOL_CONNECTION_LOST') {
+            console.log(`Reconnecting to ${name} database...`);
+            DatabaseConnection(db, name);
+        }
+    });
+};
 
 const DatabaseConnection = (db, name) => {
     db.getConnection((err, connection) => {
         if (err) {
-            console.error(`Error connecting to the database in index.js (${name}):`, err);
-            return;
+            console.error(`Error getting connection from ${name}:`, err);
+        } else {
+            connection.ping((err) => {
+                if (err) {
+                    console.error(`Error pinging ${name} database:`, err);
+                } else {
+                    console.log(`Ping to ${name} database successful.`);
+                }
+                connection.release();
+            });
         }
-        console.log(`Connected to the MySQL database in server.js (${name}).`);
-        connection.release();
     });
 };
-
 // Initial database connections
 DatabaseConnection(plantcare, "PlantCare");
 DatabaseConnection(collectionofficer, "CollectionOfficer");
@@ -99,15 +75,24 @@ DatabaseConnection(marketPlace, "MarketPlace");
 DatabaseConnection(dash, "Dash");
 DatabaseConnection(admin, "Admin");
 
-// Reconnect every hour
+
+
+
+TestConnection(plantcareTest, "PlantCareTest");
+TestConnection(collectionofficerTest, "CollectionOfficerTest");
+TestConnection(marketPlaceTest, "MarketPlaceTest");
+TestConnection(dashTest, "DashTest");
+TestConnection(adminTest, "AdminTest");
+
+// Reconnect to the database every hour (3600000 ms = 1 hour)
 setInterval(() => {
     console.log("Reconnecting to databases...");
-    DatabaseConnection(plantcare, "PlantCare");
-    DatabaseConnection(collectionofficer, "CollectionOfficer");
-    DatabaseConnection(marketPlace, "MarketPlace");
-    DatabaseConnection(dash, "Dash");
-    DatabaseConnection(admin, "Admin");
-}, 3600000); // 1 hour interval
+    TestConnection(plantcareTest, "PlantCare");
+    TestConnection(collectionofficerTest, "CollectionOfficer");
+    TestConnection(marketPlaceTest, "MarketPlace");
+    TestConnection(dashTest, "Dash");
+    TestConnection(adminTest, "Admin");
+}, 3600000); 
 
 const myCropRoutes = require("./routes/UserCrop.routes");
 app.use(process.env.AUTHOR, myCropRoutes);
@@ -127,15 +112,13 @@ app.use(process.env.AUTHOR, publicforumRoutes);
 const calendartaskImages = require("./routes/cropCalendarimages-routes");
 app.use(process.env.AUTHOR, calendartaskImages);
 
-
 app.use("/api/news", newsRoutes);
 app.use("/api/crop", cropRoutes);
 app.use("/api/market-price", MarketPriceRoutes);
 app.use("/api/complain", complainRoutes);
 app.use("/home", (req, res) => {
     res.send("Welcome to the home page");
-}
-)
+});
 
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
