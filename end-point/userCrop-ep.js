@@ -544,8 +544,6 @@ exports.getUploadedImagesCount = asyncHandler(async (req, res) => {
     try {
         const userId = req.user.id;
         const cropId = req.params.cropId;
-        console.log(cropId)
-
 
         const results = await cropDao.getUploadedImagesCount(userId, cropId);
 
@@ -557,7 +555,6 @@ exports.getUploadedImagesCount = asyncHandler(async (req, res) => {
         }
 
         res.status(200).json(results);
-        console.log(results)
     } catch (err) {
         console.error("Error fetching uploaded images count:", err);
         res.status(500).json({ message: "Internal Server Error!" });
