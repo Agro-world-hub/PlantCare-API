@@ -64,6 +64,7 @@ exports.getComplainCategories = async() => {
                 reject(error);
             } else {
                 resolve(results);
+                console.log(results)
             }
         });
     });
