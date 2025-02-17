@@ -253,11 +253,11 @@ exports.enrollSlaveCrop = (userId, cropId, startDate, onCulscropID) => {
       INSERT INTO slavecropcalendardays (
         userId, cropCalendarId, taskIndex, startingDate, days, taskTypeEnglish, taskTypeSinhala, taskTypeTamil,
         taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, taskEnglish, taskSinhala, taskTamil,
-        taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, status, imageLink, videoLinkEnglish,videoLinkSinhala,videoLinkTamil, reqImages, reqGeo, onCulscropID
+        taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, status, imageLink, videoLinkEnglish,videoLinkSinhala,videoLinkTamil, reqImages, onCulscropID
       )
       SELECT ?, ccd.cropId, ccd.taskIndex, DATE_ADD(?, INTERVAL ccd.days DAY), ccd.days, ccd.taskTypeEnglish, ccd.taskTypeSinhala, ccd.taskTypeTamil,
              ccd.taskCategoryEnglish, ccd.taskCategorySinhala, ccd.taskCategoryTamil, ccd.taskEnglish, ccd.taskSinhala,
-             ccd.taskTamil, ccd.taskDescriptionEnglish, ccd.taskDescriptionSinhala, ccd.taskDescriptionTamil, 'pending', ccd.imageLink, ccd.videoLinkEnglish, ccd.videoLinkSinhala, ccd.videoLinkTamil, ccd.reqImages, ccd.reqGeo, ?
+             ccd.taskTamil, ccd.taskDescriptionEnglish, ccd.taskDescriptionSinhala, ccd.taskDescriptionTamil, 'pending', ccd.imageLink, ccd.videoLinkEnglish, ccd.videoLinkSinhala, ccd.videoLinkTamil, ccd.reqImages, ?
       FROM cropcalendardays ccd
       WHERE ccd.cropId = ?;
     `;
@@ -376,24 +376,36 @@ exports.deleteImagesBySlaveId = (slaveId) => {
     });
 };
 
-exports.deleteGeoLocationByTaskId = (id) => {
-    const sql = "DELETE FROM cropgeo WHERE taskId = ?";
-    return new Promise((resolve, reject) => {
-        db.plantcare.query(sql, [id], (err, results) => {
-            if (err) {
-                reject(new Error("Error deleting geolocation: " + err.message));
-            } else {
-                resolve(results);  
-            }
-        });
-    });
-};
+// exports.deleteGeoLocationByTaskId = (id) => {
+//     const sql = "DELETE FROM cropgeo WHERE taskId = ?";
+//     return new Promise((resolve, reject) => {
+//         db.plantcare.query(sql, [id], (err, results) => {
+//             if (err) {
+//                 reject(new Error("Error deleting geolocation: " + err.message));
+//             } else {
+//                 resolve(results);  
+//             }
+//         });
+//     });
+// };
 
 
-exports.addGeoLocation = (taskId,  longitude, latitude) => {
-    const sql = "INSERT INTO cropgeo(taskid, longitude, latitude) VALUES ( ?, ?, ?)";
+// exports.addGeoLocation = (taskId,  longitude, latitude) => {
+//     const sql = "INSERT INTO cropgeo(taskid, longitude, latitude) VALUES ( ?, ?, ?)";
+//     return new Promise((resolve, reject) => {
+//         db.plantcare.query(sql, [taskId,  longitude, latitude], (err, results) => {
+//             if (err) {
+//                 reject(err);
+//             } else {
+//                 resolve(results);
+//             }
+//         });
+//     });
+// }
+exports.addGeoLocation = (longitude, latitude, onCulscropID) => {
+    const sql = "UPDATE ongoingcultivationscrops SET longitude = ?, latitude = ? WHERE id = ?";
     return new Promise((resolve, reject) => {
-        db.plantcare.query(sql, [taskId,  longitude, latitude], (err, results) => {
+        db.plantcare.query(sql, [longitude, latitude, onCulscropID], (err, results) => {
             if (err) {
                 reject(err);
             } else {
@@ -402,6 +414,7 @@ exports.addGeoLocation = (taskId,  longitude, latitude) => {
         });
     });
 }
+
 
 exports.checkTaskExists = (taskId) => {
     return new Promise((resolve, reject) => {

@@ -490,7 +490,7 @@ exports.updateCropCalendarStatus = asyncHandler(async(req, res) => {
                         res.status(200).json({ message: "Status updated successfully." });
                     }
                 });
-            cropDao.deleteGeoLocationByTaskId(id);
+            // cropDao.deleteGeoLocationByTaskId(id);
         } else {
             if (!res.headersSent) {
                 res.status(200).json({ message: "Status updated successfully." });
@@ -508,9 +508,41 @@ exports.updateCropCalendarStatus = asyncHandler(async(req, res) => {
     }
 });
 
+// exports.addGeoLocation = asyncHandler(async (req, res) => {
+//     try {
+//         const { latitude, longitude, taskId } = req.body;
+//         const taskExists = await cropDao.checkTaskExists(taskId);
+
+//         if (!taskExists) {
+//             return res.status(404).json({
+//                 status: "error",
+//                 message: `No task found for taskId ${taskId}. Please ensure the taskId is correct.`,
+//             });
+//         }
+
+//         const results = await cropDao.addGeoLocation(taskId, longitude, latitude);
+
+//         if (results.affectedRows === 0) {
+//             return res.status(400).json({
+//                 status: "error",
+//                 message: "Failed to insert geo location.",
+//             });
+//         }
+
+//         res.status(200).json({
+//             status: "success",
+//             message: "Geo-location added successfully.",
+//             data: results,
+//         });
+//     } catch (err) {
+//         console.error("Error fetching geo location details:", err);
+//         res.status(500).json({ message: "Internal Server Error!" });
+//     }
+// });
 exports.addGeoLocation = asyncHandler(async (req, res) => {
     try {
-        const { latitude, longitude, taskId } = req.body;
+        const { latitude, longitude, taskId, onCulscropID } = req.body;
+        console.log("onCulscropID", onCulscropID);
         const taskExists = await cropDao.checkTaskExists(taskId);
 
         if (!taskExists) {
@@ -519,8 +551,9 @@ exports.addGeoLocation = asyncHandler(async (req, res) => {
                 message: `No task found for taskId ${taskId}. Please ensure the taskId is correct.`,
             });
         }
+        
 
-        const results = await cropDao.addGeoLocation(taskId, longitude, latitude);
+        const results = await cropDao.addGeoLocation(longitude, latitude, onCulscropID);
 
         if (results.affectedRows === 0) {
             return res.status(400).json({
