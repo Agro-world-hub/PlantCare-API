@@ -1,18 +1,51 @@
 const db = require("../startup/database");
 
-exports.createComplain = (farmerId, language, complain, category, status,referenceNumber) => {
+// exports.createComplain = (farmerId, language, complain, category, status,referenceNumber) => {
+//     return new Promise((resolve, reject) => {
+//         const sql =
+//             "INSERT INTO farmercomplains (farmerId,  language, complain, complainCategory, status, refNo, adminStatus) VALUES (?, ?, ?, ?, ?, ?, 'Assigned')";
+//         db.collectionofficer.query(sql, [farmerId, language, complain, category, status, referenceNumber], (err, result) => {
+//             if (err) {
+//                 reject(err);
+//             } else {
+//                 resolve(result.insertId);
+//             }
+//         });
+//     });
+// };
+exports.createComplain = (farmerId, language, complain, category, status, referenceNumber) => {
     return new Promise((resolve, reject) => {
-        const sql =
-            "INSERT INTO farmercomplains (farmerId,  language, complain, complainCategory, status, refNo, adminStatus) VALUES (?, ?, ?, ?, ?, ?, 'Assigned')";
-        db.collectionofficer.query(sql, [farmerId, language, complain, category, status, referenceNumber], (err, result) => {
+        const checkCategorySql = "SELECT id FROM agro_world_admin.complaincategory WHERE id = ?";
+        
+        db.collectionofficer.query(checkCategorySql, [category], (err, rows) => {
             if (err) {
-                reject(err);
-            } else {
-                resolve(result.insertId);
+                return reject(new Error("Database error while checking complain category: " + err.message));
             }
+            
+            if (rows.length === 0) {
+                return reject(new Error("Invalid complain category: The category does not exist"));
+            }
+            
+            // If category exists, proceed with inserting the complaint
+            const insertSql = `
+                INSERT INTO farmercomplains 
+                (farmerId, language, complain, complainCategory, status, refNo, adminStatus) 
+                VALUES (?, ?, ?, ?, ?, ?, 'Assigned')
+            `;
+            
+            db.collectionofficer.query(insertSql, 
+                [farmerId, language, complain, category, status, referenceNumber], 
+                (err, result) => {
+                    if (err) {
+                        return reject(new Error("Database error while inserting complain: " + err.message));
+                    }
+                    resolve(result.insertId);
+                }
+            );
         });
     });
 };
+
 
 exports.countComplaintsByDate = async (date) => {
     const formattedDate = date.toISOString().split('T')[0]; // Convert date to YYYY-MM-DD
