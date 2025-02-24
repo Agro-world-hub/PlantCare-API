@@ -102,7 +102,7 @@
 
 const express = require("express");
 const cors = require("cors"); 
-const { plantcare, collectionofficer, marketPlace, dash, admin, plantcareTest, collectionofficerTest, marketPlaceTest, dashTest, adminTest } = require("./startup/database"); 
+const { plantcare, collectionofficer, marketPlace, dash, admin } = require("./startup/database"); 
 
 require("dotenv").config();
 
@@ -137,24 +137,6 @@ app.options(
     })
 );
 
-const TestConnection = (db, name) => {
-    db.connect((err) => {
-        if (err) {
-            console.error(`Error connecting to the ${name} database:`, err);
-        } else {
-            console.log(`Connected to the ${name} database.`);
-        }
-    });
-
-    db.on('error', (err) => {
-        console.error(`Database error in ${name}:`, err);
-        if (err.code === 'PROTOCOL_CONNECTION_LOST') {
-            console.log(`Reconnecting to ${name} database...`);
-            DatabaseConnection(db, name);
-        }
-    });
-};
-
 const DatabaseConnection = (db, name) => {
     db.getConnection((err, connection) => {
         if (err) {
@@ -179,22 +161,14 @@ DatabaseConnection(dash, "Dash");
 DatabaseConnection(admin, "Admin");
 
 
-
-
-TestConnection(plantcareTest, "PlantCareTest");
-TestConnection(collectionofficerTest, "CollectionOfficerTest");
-TestConnection(marketPlaceTest, "MarketPlaceTest");
-TestConnection(dashTest, "DashTest");
-TestConnection(adminTest, "AdminTest");
-
 // Reconnect to the database every hour (3600000 ms = 1 hour)
 setInterval(() => {
     console.log("Reconnecting to databases...");
-    TestConnection(plantcareTest, "PlantCare");
-    TestConnection(collectionofficerTest, "CollectionOfficer");
-    TestConnection(marketPlaceTest, "MarketPlace");
-    TestConnection(dashTest, "Dash");
-    TestConnection(adminTest, "Admin");
+    DatabaseConnection(plantcare, "PlantCare");
+    DatabaseConnection(collectionofficer, "CollectionOfficer");
+    DatabaseConnection(marketPlace, "MarketPlace");
+    DatabaseConnection(dash, "Dash");
+    DatabaseConnection(admin, "Admin");
 }, 3600000); 
 
 const myCropRoutes = require("./routes/UserCrop.routes");

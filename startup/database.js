@@ -84,84 +84,6 @@
 const mysql = require('mysql2');
 require('dotenv').config();
 
-
-const plantcareTest = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME_PC,
-  charset: 'utf8mb4',
-  waitForConnections: true,
-  connectionLimit: 10,
-  maxIdle: 6, 
-  queueLimit: 0,
-  enableKeepAlive: true,
-  keepAliveInitialDelay : 0,
-});
-
-
-const collectionofficerTest = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME_CO,
-  charset: 'utf8mb4',
-  charset: 'utf8mb4',
-  waitForConnections: true,
-  connectionLimit: 10,
-  maxIdle: 6, 
-  queueLimit: 0,
-  enableKeepAlive: true,
-  keepAliveInitialDelay : 0,
-});
-
-const marketPlaceTest = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME_MP,
-  charset: 'utf8mb4',
-  charset: 'utf8mb4',
-  waitForConnections: true,
-  connectionLimit: 10,
-  maxIdle: 6, 
-  queueLimit: 0,
-  enableKeepAlive: true,
-  keepAliveInitialDelay : 0,
-});
-
-
-const dashTest = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME_DS,
-  charset: 'utf8mb4',
-  charset: 'utf8mb4',
-  waitForConnections: true,
-  connectionLimit: 10,
-  maxIdle: 6, 
-  queueLimit: 0,
-  enableKeepAlive: true,
-  keepAliveInitialDelay : 0,
-});
-
-const adminTest = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME_AD,
-  charset: 'utf8mb4',
-  charset: 'utf8mb4',
-  waitForConnections: true,
-  connectionLimit: 10,
-  maxIdle: 6, 
-  queueLimit: 0,
-  enableKeepAlive: true,
-  keepAliveInitialDelay : 0,
-});
-
-
 const plantcare = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -183,7 +105,7 @@ const collectionofficer = mysql.createPool({
   database: process.env.DB_NAME_CO,
   charset: 'utf8mb4',
   waitForConnections: true,
-  connectionLimit: 10,
+  connectionLimit: 20,
   maxIdle: 6,
   queueLimit: 0,
   enableKeepAlive: true,
@@ -233,4 +155,4 @@ const admin = mysql.createPool({
 });
 
 
-module.exports = {plantcare, collectionofficer, marketPlace, dash, admin, plantcareTest, collectionofficerTest, marketPlaceTest, dashTest, adminTest};
+module.exports = {plantcare, collectionofficer, marketPlace, dash, admin};
