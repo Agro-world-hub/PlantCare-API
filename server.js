@@ -161,16 +161,6 @@ DatabaseConnection(dash, "Dash");
 DatabaseConnection(admin, "Admin");
 
 
-// Reconnect to the database every hour (3600000 ms = 1 hour)
-setInterval(() => {
-    console.log("Reconnecting to databases...");
-    DatabaseConnection(plantcare, "PlantCare");
-    DatabaseConnection(collectionofficer, "CollectionOfficer");
-    DatabaseConnection(marketPlace, "MarketPlace");
-    DatabaseConnection(dash, "Dash");
-    DatabaseConnection(admin, "Admin");
-}, 3600000); 
-
 const myCropRoutes = require("./routes/UserCrop.routes");
 app.use(process.env.AUTHOR, myCropRoutes);
 
