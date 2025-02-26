@@ -435,7 +435,8 @@ exports.updateCropCalendarStatus = asyncHandler(async(req, res) => {
                 );
                 const currentDate = new Date();
                 const remainingTime = nextTaskStartDate - currentDate;
-                const remainingDays = Math.ceil(remainingTime / (24 * 60 * 60 * 1000));
+                
+                const remainingDays = Math.floor(remainingTime / (24 * 60 * 60 * 1000));
 
                 if (remainingDays > 0) {
                     return res
@@ -489,7 +490,7 @@ exports.updateCropCalendarStatus = asyncHandler(async(req, res) => {
                         res.status(200).json({ message: "Status updated successfully." });
                     }
                 });
-            cropDao.deleteGeoLocationByTaskId(id);
+            // cropDao.deleteGeoLocationByTaskId(id);
         } else {
             if (!res.headersSent) {
                 res.status(200).json({ message: "Status updated successfully." });
@@ -507,9 +508,41 @@ exports.updateCropCalendarStatus = asyncHandler(async(req, res) => {
     }
 });
 
+// exports.addGeoLocation = asyncHandler(async (req, res) => {
+//     try {
+//         const { latitude, longitude, taskId } = req.body;
+//         const taskExists = await cropDao.checkTaskExists(taskId);
+
+//         if (!taskExists) {
+//             return res.status(404).json({
+//                 status: "error",
+//                 message: `No task found for taskId ${taskId}. Please ensure the taskId is correct.`,
+//             });
+//         }
+
+//         const results = await cropDao.addGeoLocation(taskId, longitude, latitude);
+
+//         if (results.affectedRows === 0) {
+//             return res.status(400).json({
+//                 status: "error",
+//                 message: "Failed to insert geo location.",
+//             });
+//         }
+
+//         res.status(200).json({
+//             status: "success",
+//             message: "Geo-location added successfully.",
+//             data: results,
+//         });
+//     } catch (err) {
+//         console.error("Error fetching geo location details:", err);
+//         res.status(500).json({ message: "Internal Server Error!" });
+//     }
+// });
 exports.addGeoLocation = asyncHandler(async (req, res) => {
     try {
-        const { latitude, longitude, taskId } = req.body;
+        const { latitude, longitude, taskId, onCulscropID } = req.body;
+        console.log("onCulscropID", onCulscropID);
         const taskExists = await cropDao.checkTaskExists(taskId);
 
         if (!taskExists) {
@@ -518,8 +551,9 @@ exports.addGeoLocation = asyncHandler(async (req, res) => {
                 message: `No task found for taskId ${taskId}. Please ensure the taskId is correct.`,
             });
         }
+        
 
-        const results = await cropDao.addGeoLocation(taskId, longitude, latitude);
+        const results = await cropDao.addGeoLocation(longitude, latitude, onCulscropID);
 
         if (results.affectedRows === 0) {
             return res.status(400).json({
@@ -535,6 +569,27 @@ exports.addGeoLocation = asyncHandler(async (req, res) => {
         });
     } catch (err) {
         console.error("Error fetching geo location details:", err);
+        res.status(500).json({ message: "Internal Server Error!" });
+    }
+});
+
+exports.getUploadedImagesCount = asyncHandler(async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const cropId = req.params.cropId;
+
+        const results = await cropDao.getUploadedImagesCount(userId, cropId);
+
+        if (results.length === 0) {
+            return res.status(404).json({
+                status: "error",
+                message: "No records found for the given userId.",
+            });
+        }
+
+        res.status(200).json(results);
+    } catch (err) {
+        console.error("Error fetching uploaded images count:", err);
         res.status(500).json({ message: "Internal Server Error!" });
     }
 });

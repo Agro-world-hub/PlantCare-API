@@ -6,6 +6,7 @@ const {
 const { Console } = require("winston/lib/winston/transports");
 
 exports.createComplain = asyncHandler(async(req, res) => {
+
     try {
         const farmerId = req.user.id;
         const input = {...req.body, farmerId };
@@ -16,13 +17,6 @@ exports.createComplain = asyncHandler(async(req, res) => {
         const { value, error } = createComplain.validate(input);
         const complaintsOnDate = await complainDao.countComplaintsByDate(today);
         const referenceNumber = `${datePrefix}${String(complaintsOnDate + 1).padStart(4, '0')}`;
-
-        if (error) {
-            return res.status(400).json({
-                status: "error",
-                message: error.details[0].message,
-            });
-        }
 
         const { language, complain, category } = value;
         const status = "Opened";
@@ -90,7 +84,7 @@ exports.getComplainCategory = asyncHandler(async(req, res) => {
             return res.status(404).json({ message: "No categories found" });
         }
 
-        res.status(200).json({ status: "success", data: categories });        console.log(categories);
+        res.status(200).json({ status: "success", data: categories }); 
     } catch (error) {
         console.error("Error fetching categories:", error);
         res.status(500).json({ message: "Failed to fetch categories" });

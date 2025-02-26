@@ -32,6 +32,8 @@ router.get(
   userCrop.getSlaveCropCalendarPrgress
 );
 
+router.get("/get-uploaded-images-count/:cropId", auth, userCrop.getUploadedImagesCount);
+
 router.post("/update-slave", auth, userCrop.updateCropCalendarStatus);
 
 router.post("/geo-location", userCrop.addGeoLocation);
