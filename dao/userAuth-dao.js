@@ -31,12 +31,12 @@ exports.checkUserByPhoneNumber = (phoneNumber) => {
     });
 };
 
-exports.insertUser = (firstName, lastName, phoneNumber, NICnumber, district) => {
+exports.insertUser = (firstName, lastName, phoneNumber, NICnumber, district, farmerLanguage) => {
     return new Promise((resolve, reject) => {
         const query =
-            "INSERT INTO users(`firstName`, `lastName`, `phoneNumber`, `NICnumber`, `district`) VALUES(?, ?, ?, ?,?)";
+            "INSERT INTO users(`firstName`, `lastName`, `phoneNumber`, `NICnumber`, `district`, `language`) VALUES(?, ?, ?, ?,?, ?)";
         db.plantcare.query(
-            query, [firstName, lastName, phoneNumber, NICnumber, district],
+            query, [firstName, lastName, phoneNumber, NICnumber, district, farmerLanguage],
             (err, results) => {
                 if (err) {
                     reject(err);

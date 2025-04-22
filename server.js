@@ -179,6 +179,9 @@ app.use(process.env.AUTHOR, publicforumRoutes);
 const calendartaskImages = require("./routes/cropCalendarimages-routes");
 app.use(process.env.AUTHOR, calendartaskImages);
 
+const reportRoutes = require("./routes/reportRoutes");
+app.use(process.env.AUTHOR, reportRoutes);
+
 app.use("/api/news", newsRoutes);
 app.use("/api/crop", cropRoutes);
 app.use("/api/market-price", MarketPriceRoutes);
@@ -190,3 +193,6 @@ app.use("", heathRoutes);
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
 });
+
+
+module.exports = app;
