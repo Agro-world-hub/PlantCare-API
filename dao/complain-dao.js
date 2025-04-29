@@ -87,9 +87,10 @@ exports.getAllComplaintsByUserId = async(userId) => {
 exports.getComplainCategories = async() => {
     return new Promise((resolve, reject) => {
         const query = `
-                SELECT * FROM complaincategory cc
-        JOIN systemapplications ssa ON cc.appId = ssa.id
-        WHERE ssa.appName = 'PlantCare'
+                            SELECT cc.id, cc.roleId, cc.appId, cc.categoryEnglish, cc.categorySinhala, cc.categoryTamil, ssa.appName
+                FROM complaincategory cc
+                JOIN systemapplications ssa ON cc.appId = ssa.id
+                WHERE ssa.appName = 'PlantCare'
       `;
         db.admin.query(query , (error, results) => {
             if (error) {

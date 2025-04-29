@@ -24,6 +24,7 @@ exports.signupUserSchema = Joi.object({
             "string.max": "NIC Number must be no more than 12 characters."
         }),
     district: Joi.string().required().label('District'),
+    farmerLanguage: Joi.string(),
 });
 
 exports.updatePhoneNumberSchema = Joi.object({

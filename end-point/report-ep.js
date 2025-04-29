@@ -86,6 +86,7 @@ exports.GetFarmerReportDetails = async (req, res) => {
 
       const cropDetails = await transactionDAO.GetFarmerReportDetailsDao(userId, createdAt, farmerId);
       res.status(200).json(cropDetails);
+      console.log('cropDetails:', cropDetails);
   } catch (error) {
       console.error('Error fetching crop details:', error);
       res.status(500).json({ error: 'An error occurred while fetching crop details' });
