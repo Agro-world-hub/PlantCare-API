@@ -18,6 +18,8 @@ exports.getTransactionHistoryByUserIdAndDate = (userId, date) => {
               SUM(FPC.gradeAprice * FPC.gradeAquan) +
               SUM(FPC.gradeBprice * FPC.gradeBquan) +
               SUM(FPC.gradeCprice * FPC.gradeCquan) AS totalAmount,
+              /* Count the number of records in farmerpaymentscrops for this registered farmer */
+              COUNT(FPC.id) AS cropRecordCount,
               UB.accNumber AS accountNumber,
               UB.accHolderName AS accountHolderName,
               UB.bankName AS bankName,
@@ -41,6 +43,7 @@ exports.getTransactionHistoryByUserIdAndDate = (userId, date) => {
               U.firstName,
               U.lastName,
               U.phoneNumber,
+              U.profileImage,
               CONCAT_WS(', ', U.houseNo, U.streetName, U.city, U.district),
               U.NICnumber,
               UB.accNumber,
@@ -61,7 +64,6 @@ exports.getTransactionHistoryByUserIdAndDate = (userId, date) => {
     });
   });
 };
-
 
 exports.getUserWithBankDetailsById = async (userId, centerId, companyId) => {
   const query = `

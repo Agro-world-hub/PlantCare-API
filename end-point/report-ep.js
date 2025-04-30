@@ -115,6 +115,7 @@ exports.getTransactionHistory = async (req, res) => {
       address: transaction.address,
       NICnumber: transaction.NICnumber,
       totalAmount: parseFloat(transaction.totalAmount || 0).toFixed(2),
+      cropRecordCount: transaction.cropRecordCount,
       accountNumber: transaction.accountNumber,
       accountHolderName: transaction.accountHolderName,
       bankName: transaction.bankName,
