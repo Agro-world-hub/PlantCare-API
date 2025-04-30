@@ -50,8 +50,10 @@ exports.loginUser = async(req, res) => {
 
 exports.SignupUser = asyncHandler(async(req, res) => {
     try {
-        const { firstName, lastName, phoneNumber, NICnumber, district } =
+        const { firstName, lastName, phoneNumber, NICnumber, district, farmerLanguage} =
         await ValidationSchema.signupUserSchema.validateAsync(req.body);
+
+        console.log("Signup User Data:", req.body);
 
         const formattedPhoneNumber = `+${String(phoneNumber).replace(/^\+/, "")}`;
 
@@ -71,7 +73,8 @@ exports.SignupUser = asyncHandler(async(req, res) => {
             lastName,
             formattedPhoneNumber,
             NICnumber,
-            district
+            district,
+            farmerLanguage
         );
 
         const payload = {
