@@ -6,9 +6,9 @@ const userProfileDao = require("../dao/userAuth-dao");
 const signupDao = require('../dao/userAuth-dao');
 const ValidationSchema = require('../validations/userAuth-validation')
 const uploadFileToS3 = require('../Middlewares/s3upload');
-const delectfilesOnS3  = require('../Middlewares/s3delete')
+const delectfilesOnS3 = require('../Middlewares/s3delete')
 
-exports.loginUser = async(req, res) => {
+exports.loginUser = async (req, res) => {
     try {
         const { phonenumber } = await ValidationSchema.loginUserSchema.validateAsync(req.body);
         const users = await userAuthDao.loginUser(phonenumber);
@@ -24,8 +24,8 @@ exports.loginUser = async(req, res) => {
 
         const token = jwt.sign({ id: user.id, phoneNumber: user.phoneNumber },
             process.env.JWT_SECRET || Tl, {
-                expiresIn: "8h",
-            }
+            expiresIn: "8h",
+        }
         );
 
         res.status(200).json({
@@ -48,10 +48,10 @@ exports.loginUser = async(req, res) => {
 };
 
 
-exports.SignupUser = asyncHandler(async(req, res) => {
+exports.SignupUser = asyncHandler(async (req, res) => {
     try {
-        const { firstName, lastName, phoneNumber, NICnumber, district, farmerLanguage} =
-        await ValidationSchema.signupUserSchema.validateAsync(req.body);
+        const { firstName, lastName, phoneNumber, NICnumber, district, farmerLanguage } =
+            await ValidationSchema.signupUserSchema.validateAsync(req.body);
 
         console.log("Signup User Data:", req.body);
 
@@ -99,7 +99,7 @@ exports.SignupUser = asyncHandler(async(req, res) => {
     }
 });
 
-exports.getProfileDetails = asyncHandler(async(req, res) => {
+exports.getProfileDetails = asyncHandler(async (req, res) => {
     try {
         const userId = req.user.id;
         // Retrieve user profile from the database using the DAO function
@@ -125,7 +125,7 @@ exports.getProfileDetails = asyncHandler(async(req, res) => {
     }
 });
 
-exports.updatePhoneNumber = asyncHandler(async(req, res) => {
+exports.updatePhoneNumber = asyncHandler(async (req, res) => {
     const userId = req.user.id;
 
     // Validate the request body
@@ -149,10 +149,10 @@ exports.updatePhoneNumber = asyncHandler(async(req, res) => {
     });
 });
 
-exports.signupChecker = asyncHandler(async(req, res) => {
+exports.signupChecker = asyncHandler(async (req, res) => {
     try {
         const { phoneNumber, NICnumber } =
-        await ValidationSchema.signupCheckerSchema.validateAsync(req.body);
+            await ValidationSchema.signupCheckerSchema.validateAsync(req.body);
 
         const results = await signupDao.checkSignupDetails(phoneNumber, NICnumber);
 
@@ -195,13 +195,13 @@ exports.signupChecker = asyncHandler(async(req, res) => {
     }
 });
 
-exports.updateFirstLastName = asyncHandler(async(req, res) => {
+exports.updateFirstLastName = asyncHandler(async (req, res) => {
     try {
         console.log("Hitt update")
         // const { firstName, lastName, buidingname, streetname, city , district } =
         // await ValidationSchema.updateFirstLastNameSchema.validateAsync(req.body);
         // console.log("Hiiii")
-       
+
         const sanitizedBody = Object.fromEntries(
             Object.entries(req.body).map(([key, value]) => [key, value === "" ? null : value])
         );
@@ -289,14 +289,14 @@ exports.registerBankDetails = async (req, res) => {
                 userAuthDao.createQrCode(userId)
                     .then(successMessage => {
                         console.log("QR code created successfully:", successMessage);
-                        resolve(successMessage); 
+                        resolve(successMessage);
                     })
                     .catch(qrErr => {
                         console.error("Error creating QR code:", qrErr);
-                        reject(qrErr); 
+                        reject(qrErr);
                     });
             });
-            
+
             return res.status(200).json({
                 message: "Bank details registered successfully",
                 bankData: {
@@ -328,119 +328,126 @@ exports.registerBankDetails = async (req, res) => {
 
 exports.uploadProfileImage = async (req, res) => {
     try {
-      const userId = req.user.id;
+        const userId = req.user.id;
 
-      const existingProfileImage = await userAuthDao.getUserProfileImage(userId);
-      if (existingProfileImage) {
-        delectfilesOnS3(existingProfileImage);
-      }
-  
-      let profileImageUrl = null;
-  
-      if (req.file) {
-        const fileName = req.file.originalname;
-        const imageBuffer = req.file.buffer;
-  
-        const uploadedImage = await uploadFileToS3(imageBuffer, fileName, "users/profile-images");
-        profileImageUrl = uploadedImage; 
-      } else {
-      }
-      await userAuthDao.updateUserProfileImage(userId, profileImageUrl);
-  
-      res.status(200).json({
-        status: "success",
-        message: "Profile image uploaded successfully",
-        profileImageUrl,
-      });
+        console.log("R2_ACCOUNT_ID", process.env.R2_ACCOUNT_ID);
+        console.log("R2_BUCKET_NAME", process.env.R2_BUCKET_NAME);
+        console.log("R2_ACCESS_KEY_ID", process.env.R2_ACCESS_KEY_ID);
+        console.log("R2_SECRET_ACCESS_KEY", process.env.R2_SECRET_ACCESS_KEY);
+        console.log("R2_REGION", process.env.R2_REGION);
+        console.log("R2_ENDPOINT", process.env.R2_ENDPOINT);
+
+        const existingProfileImage = await userAuthDao.getUserProfileImage(userId);
+        if (existingProfileImage) {
+            delectfilesOnS3(existingProfileImage);
+        }
+
+        let profileImageUrl = null;
+
+        if (req.file) {
+            const fileName = req.file.originalname;
+            const imageBuffer = req.file.buffer;
+
+            const uploadedImage = await uploadFileToS3(imageBuffer, fileName, "users/profile-images");
+            profileImageUrl = uploadedImage;
+        } else {
+        }
+        await userAuthDao.updateUserProfileImage(userId, profileImageUrl);
+
+        res.status(200).json({
+            status: "success",
+            message: "Profile image uploaded successfully",
+            profileImageUrl,
+        });
     } catch (err) {
-      console.error("Error uploading profile image:", err);
-  
-      if (err.isJoi) {
-        return res.status(400).json({
-          status: "error",
-          message: err.details[0].message,
-        });
-      }
-  
-      res.status(500).json({ error: "Internal Server Error" });
-    }
-  };
+        console.error("Error uploading profile image:", err);
 
-  exports.deleteUser = async (req, res) => {
-    try {  
-      const userId = req.user?.id;
-  
-      if (!userId) {
-        return res.status(400).json({
-          status: "error",
-          message: "User ID is required.",
-        });
-      }
-  
-      const userdetailsresult = await userAuthDao.getUserProfileById(userId);
-  
-      if (!userdetailsresult) {
-        return res.status(404).json({
-          status: "error",
-          message: "User not found.",
-        });
-      }
-  
-      const firstname = userdetailsresult.firstName;
-      const lastname = userdetailsresult.lastName;
-  
-      const deleteuserResult = await userAuthDao.savedeletedUser(firstname, lastname);
-  
-      const deletedUserId = deleteuserResult.insertId;
-    
-      const { feedbackIds } = req.body;
-  
-      for (const feedbackId of feedbackIds) {
-        await userAuthDao.saveUserFeedback({
-          feedbackId,
-          deletedUserId,
-        });
-      }
-  
-      const deleteResult = await userAuthDao.deleteUserById(userId);
-  
-      if (!deleteResult || deleteResult.affectedRows === 0) {
-        return res.status(404).json({
-          status: "error",
-          message: "User not found or already deleted.",
-        });
-      }
-  
-      return res.status(200).json({
-        status: "success",
-        message: "User account deleted successfully.",
-      });
-    } catch (err) {
-      console.error("Error deleting user:", err);
-  
-      return res.status(500).json({
-        status: "error",
-        message: "Internal server error. Please try again later.",
-      });
-    }
-  };
-  
-  
+        if (err.isJoi) {
+            return res.status(400).json({
+                status: "error",
+                message: err.details[0].message,
+            });
+        }
 
-  exports.getFeedbackOptions = async (req, res) => {
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+};
+
+exports.deleteUser = async (req, res) => {
     try {
-      const feedbackOptions = await userAuthDao.getFeedbackOptions();
-  
-      return res.status(200).json({
-        status: 'success',
-        feedbackOptions,
-      });
+        const userId = req.user?.id;
+
+        if (!userId) {
+            return res.status(400).json({
+                status: "error",
+                message: "User ID is required.",
+            });
+        }
+
+        const userdetailsresult = await userAuthDao.getUserProfileById(userId);
+
+        if (!userdetailsresult) {
+            return res.status(404).json({
+                status: "error",
+                message: "User not found.",
+            });
+        }
+
+        const firstname = userdetailsresult.firstName;
+        const lastname = userdetailsresult.lastName;
+
+        const deleteuserResult = await userAuthDao.savedeletedUser(firstname, lastname);
+
+        const deletedUserId = deleteuserResult.insertId;
+
+        const { feedbackIds } = req.body;
+
+        for (const feedbackId of feedbackIds) {
+            await userAuthDao.saveUserFeedback({
+                feedbackId,
+                deletedUserId,
+            });
+        }
+
+        const deleteResult = await userAuthDao.deleteUserById(userId);
+
+        if (!deleteResult || deleteResult.affectedRows === 0) {
+            return res.status(404).json({
+                status: "error",
+                message: "User not found or already deleted.",
+            });
+        }
+
+        return res.status(200).json({
+            status: "success",
+            message: "User account deleted successfully.",
+        });
     } catch (err) {
-      console.error('Error fetching feedback options:', err);
-  
-      return res.status(500).json({
-        status: 'error',
-        message: 'Internal server error. Please try again later.',
-      });
+        console.error("Error deleting user:", err);
+
+        return res.status(500).json({
+            status: "error",
+            message: "Internal server error. Please try again later.",
+        });
     }
-  }
+};
+
+
+
+exports.getFeedbackOptions = async (req, res) => {
+    try {
+        const feedbackOptions = await userAuthDao.getFeedbackOptions();
+
+        return res.status(200).json({
+            status: 'success',
+            feedbackOptions,
+        });
+    } catch (err) {
+        console.error('Error fetching feedback options:', err);
+
+        return res.status(500).json({
+            status: 'error',
+            message: 'Internal server error. Please try again later.',
+        });
+    }
+}
