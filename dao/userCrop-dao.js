@@ -246,32 +246,190 @@ exports.updateSlaveCropCalendarDay = (id, formattedDate) => {
 
 
 
-exports.enrollSlaveCrop = (userId, cropId, startDate, onCulscropID) => {
-    console.log("enrollSlaveCrop", userId, cropId, startDate, onCulscropID);
-    return new Promise((resolve, reject) => {
-        const sql = `
-      INSERT INTO slavecropcalendardays (
-        userId, cropCalendarId, taskIndex, startingDate, days, taskTypeEnglish, taskTypeSinhala, taskTypeTamil,
-        taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, taskEnglish, taskSinhala, taskTamil,
-        taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, status, imageLink, videoLinkEnglish,videoLinkSinhala,videoLinkTamil, reqImages, onCulscropID
-      )
-      SELECT ?, ccd.cropId, ccd.taskIndex, DATE_ADD(?, INTERVAL ccd.days DAY), ccd.days, ccd.taskTypeEnglish, ccd.taskTypeSinhala, ccd.taskTypeTamil,
-             ccd.taskCategoryEnglish, ccd.taskCategorySinhala, ccd.taskCategoryTamil, ccd.taskEnglish, ccd.taskSinhala,
-             ccd.taskTamil, ccd.taskDescriptionEnglish, ccd.taskDescriptionSinhala, ccd.taskDescriptionTamil, 'pending', ccd.imageLink, ccd.videoLinkEnglish, ccd.videoLinkSinhala, ccd.videoLinkTamil, ccd.reqImages, ?
-      FROM cropcalendardays ccd
-      WHERE ccd.cropId = ?;
-    `;
-        db.plantcare.query(sql, [userId, startDate, onCulscropID, cropId], (err, result) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(result);
-                console.log("enrollSlaveCrop", result);
-            }
-        });
-    });
-};
+// exports.enrollSlaveCrop = (userId, cropId, startDate, onCulscropID) => {
+//     console.log("enrollSlaveCrop", userId, cropId, startDate, onCulscropID);
+//     return new Promise((resolve, reject) => {
+//         const sql = `
+//       INSERT INTO slavecropcalendardays (
+//         userId, cropCalendarId, taskIndex, startingDate, days, taskTypeEnglish, taskTypeSinhala, taskTypeTamil,
+//         taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, taskEnglish, taskSinhala, taskTamil,
+//         taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, status, imageLink, videoLinkEnglish,videoLinkSinhala,videoLinkTamil, reqImages, onCulscropID
+//       )
+//       SELECT ?, ccd.cropId, ccd.taskIndex, DATE_ADD(?, INTERVAL ccd.days DAY), ccd.days, ccd.taskTypeEnglish, ccd.taskTypeSinhala, ccd.taskTypeTamil,
+//              ccd.taskCategoryEnglish, ccd.taskCategorySinhala, ccd.taskCategoryTamil, ccd.taskEnglish, ccd.taskSinhala,
+//              ccd.taskTamil, ccd.taskDescriptionEnglish, ccd.taskDescriptionSinhala, ccd.taskDescriptionTamil, 'pending', ccd.imageLink, ccd.videoLinkEnglish, ccd.videoLinkSinhala, ccd.videoLinkTamil, ccd.reqImages, ?
+//       FROM cropcalendardays ccd
+//       WHERE ccd.cropId = ?;
+//     `;
+//         db.plantcare.query(sql, [userId, startDate, onCulscropID, cropId], (err, result) => {
+//             if (err) {
+//                 reject(err);
+//             } else {
+//                 resolve(result);
+//                 console.log("enrollSlaveCrop", result);
+//             }
+//         });
+//     });
+// };
 
+
+// exports.enrollSlaveCrop = (userId, cropId, startDate, onCulscropID) => {
+//   console.log("enrollSlaveCrop", userId, cropId, startDate, onCulscropID);
+//   return new Promise((resolve, reject) => {
+//     const fetchSql = `
+//       SELECT * FROM cropcalendardays
+//       WHERE cropId = ?
+//       ORDER BY taskIndex ASC
+//     `;
+
+//     db.plantcare.query(fetchSql, [cropId], (err, rows) => {
+//       if (err) return reject(err);
+
+//       const tasks = rows;
+//       const insertSql = `
+//         INSERT INTO slavecropcalendardays (
+//           userId, cropCalendarId, taskIndex, startingDate, days,
+//           taskTypeEnglish, taskTypeSinhala, taskTypeTamil,
+//           taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil,
+//           taskEnglish, taskSinhala, taskTamil,
+//           taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil,
+//           status, imageLink, videoLinkEnglish, videoLinkSinhala, videoLinkTamil,
+//           reqImages, onCulscropID
+//         ) VALUES ?
+//       `;
+
+//       const start = new Date(startDate);
+//       const values = [];
+//       let currentDate = new Date(start);
+
+//       tasks.forEach((task, index) => {
+//         if (index === 0) {
+//           currentDate = new Date(start.getTime() + task.days * 86400000);
+//         } else {
+//           currentDate = new Date(currentDate.getTime() + task.days * 86400000);
+//         }
+
+//         const formattedDate = currentDate.toISOString().split("T")[0];
+
+//         values.push([
+//           userId,
+//           task.cropId,
+//           task.taskIndex,
+//           formattedDate,
+//           task.days,
+//           task.taskTypeEnglish,
+//           task.taskTypeSinhala,
+//           task.taskTypeTamil,
+//           task.taskCategoryEnglish,
+//           task.taskCategorySinhala,
+//           task.taskCategoryTamil,
+//           task.taskEnglish,
+//           task.taskSinhala,
+//           task.taskTamil,
+//           task.taskDescriptionEnglish,
+//           task.taskDescriptionSinhala,
+//           task.taskDescriptionTamil,
+//           'pending',
+//           task.imageLink,
+//           task.videoLinkEnglish,
+//           task.videoLinkSinhala,
+//           task.videoLinkTamil,
+//           task.reqImages,
+//           onCulscropID
+//         ]);
+//       });
+
+//       db.plantcare.query(insertSql, [values], (insertErr, result) => {
+//         if (insertErr) {
+//           reject(insertErr);
+//         } else {
+//           console.log("Inserted tasks:", result);
+//           resolve(result);
+//         }
+//       });
+//     });
+//   });
+// };
+
+exports.enrollSlaveCrop = (userId, cropId, startDate, onCulscropID) => {
+  console.log("enrollSlaveCrop", userId, cropId, startDate, onCulscropID);
+  return new Promise((resolve, reject) => {
+    const fetchSql = `
+      SELECT * FROM cropcalendardays
+      WHERE cropId = ?
+      ORDER BY taskIndex ASC
+    `;
+
+    db.plantcare.query(fetchSql, [cropId], (err, rows) => {
+      if (err) return reject(err);
+
+      const tasks = rows;
+      const insertSql = `
+        INSERT INTO slavecropcalendardays (
+          userId, cropCalendarId, taskIndex, startingDate, days,
+          taskTypeEnglish, taskTypeSinhala, taskTypeTamil,
+          taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil,
+          taskEnglish, taskSinhala, taskTamil,
+          taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil,
+          status, imageLink, videoLinkEnglish, videoLinkSinhala, videoLinkTamil,
+          reqImages, onCulscropID
+        ) VALUES ?
+      `;
+
+      const start = new Date(startDate);
+      const values = [];
+      let currentDate = new Date(start);
+
+      tasks.forEach((task, index) => {
+        if (index === 0) {
+          currentDate = new Date(start.getTime() + task.days * 86400000);
+        } else {
+          currentDate = new Date(currentDate.getTime() + task.days * 86400000);
+        }
+
+        const formattedDate = currentDate.toISOString().split("T")[0];
+        const today = new Date().toISOString().split("T")[0];
+        const status = formattedDate < today ? "completed" : "pending";
+
+        values.push([
+          userId,
+          task.cropId,
+          task.taskIndex,
+          formattedDate,
+          task.days,
+          task.taskTypeEnglish,
+          task.taskTypeSinhala,
+          task.taskTypeTamil,
+          task.taskCategoryEnglish,
+          task.taskCategorySinhala,
+          task.taskCategoryTamil,
+          task.taskEnglish,
+          task.taskSinhala,
+          task.taskTamil,
+          task.taskDescriptionEnglish,
+          task.taskDescriptionSinhala,
+          task.taskDescriptionTamil,
+          status,
+          task.imageLink,
+          task.videoLinkEnglish,
+          task.videoLinkSinhala,
+          task.videoLinkTamil,
+          task.reqImages,
+          onCulscropID
+        ]);
+      });
+
+      db.plantcare.query(insertSql, [values], (insertErr, result) => {
+        if (insertErr) {
+          reject(insertErr);
+        } else {
+          console.log("Inserted tasks:", result);
+          resolve(result);
+        }
+      });
+    });
+  });
+};
 
 exports.getSlaveCropCalendarDaysByUserAndCrop = (userId, cropCalendarId) => {
     return new Promise((resolve, reject) => {
