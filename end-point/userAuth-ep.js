@@ -9,6 +9,7 @@ const uploadFileToS3 = require('../Middlewares/s3upload');
 const delectfilesOnS3 = require('../Middlewares/s3delete')
 
 exports.loginUser = async (req, res) => {
+    console.log("hittt")
     try {
         const { phonenumber } = await ValidationSchema.loginUserSchema.validateAsync(req.body);
         const users = await userAuthDao.loginUser(phonenumber);
@@ -330,12 +331,12 @@ exports.uploadProfileImage = async (req, res) => {
     try {
         const userId = req.user.id;
 
-        console.log("R2_ACCOUNT_ID", process.env.R2_ACCOUNT_ID);
-        console.log("R2_BUCKET_NAME", process.env.R2_BUCKET_NAME);
-        console.log("R2_ACCESS_KEY_ID", process.env.R2_ACCESS_KEY_ID);
-        console.log("R2_SECRET_ACCESS_KEY", process.env.R2_SECRET_ACCESS_KEY);
-        console.log("R2_REGION", process.env.R2_REGION);
-        console.log("R2_ENDPOINT", process.env.R2_ENDPOINT);
+        // console.log("R2_ACCOUNT_ID", process.env.R2_ACCOUNT_ID);
+        // console.log("R2_BUCKET_NAME", process.env.R2_BUCKET_NAME);
+        // console.log("R2_ACCESS_KEY_ID", process.env.R2_ACCESS_KEY_ID);
+        // console.log("R2_SECRET_ACCESS_KEY", process.env.R2_SECRET_ACCESS_KEY);
+        // console.log("R2_REGION", process.env.R2_REGION);
+        // console.log("R2_ENDPOINT", process.env.R2_ENDPOINT);
 
         const existingProfileImage = await userAuthDao.getUserProfileImage(userId);
         if (existingProfileImage) {
