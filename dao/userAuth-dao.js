@@ -4,7 +4,7 @@ const asyncHandler = require("express-async-handler");
 const QRCode = require('qrcode');
 const fs = require('fs');
 const path = require('path');
-const uploadFileToS3  = require('../Middlewares/s3upload')
+const uploadFileToS3 = require('../Middlewares/s3upload')
 exports.loginUser = (phonenumber) => {
     return new Promise((resolve, reject) => {
         const sql = "SELECT * FROM users WHERE phoneNumber = ? LIMIT 1";
@@ -71,7 +71,7 @@ exports.updateUserPhoneNumber = (userId, newPhoneNumber) => {
         const sql = "UPDATE users SET phoneNumber = ? WHERE id = ?";
         db.plantcare.query(sql, [newPhoneNumber, userId], (err, results) => {
             if (err) {
-                return reject(err); 
+                return reject(err);
             }
             resolve(results);
         });
@@ -110,11 +110,11 @@ exports.checkSignupDetails = (phoneNumber, NICnumber) => {
 exports.updateFirstLastName = (userId, firstName, lastName, buidingname, streetname, city, district) => {
     return new Promise((resolve, reject) => {
         const sql = 'UPDATE users SET firstName = ?, lastName = ?, houseNo=?, streetName=?, city=?, district=? WHERE id = ?';
-        db.plantcare.query(sql, [firstName, lastName, buidingname, streetname,city,district, userId], (err, results) => {
+        db.plantcare.query(sql, [firstName, lastName, buidingname, streetname, city, district, userId], (err, results) => {
             if (err) {
                 reject(err);
             } else {
-                resolve(results.affectedRows); 
+                resolve(results.affectedRows);
             }
         });
     });
@@ -128,7 +128,7 @@ exports.checkBankDetailsExist = (userId) => {
             if (err) {
                 return reject(err);
             }
-            resolve(result[0].count > 0); 
+            resolve(result[0].count > 0);
         });
     });
 };
@@ -143,7 +143,7 @@ exports.insertBankDetails = (userId, accountNumber, accountHolderName, bankName,
             if (err) {
                 return reject(err);
             }
-            resolve(result); 
+            resolve(result);
         });
     });
 };
@@ -219,7 +219,7 @@ exports.generateQRCode = (data, callback) => {
 //         );
 //         const fileName =  `qrCode_${userId}.png`;
 //         const profileImageUrl = await uploadFileToS3(qrCodeBuffer, fileName, "users/farmerQr");
-        
+
 //         exports.updateQRCode(userId, profileImageUrl , (updateQrErr) => {
 //             if (updateQrErr) {
 //                 return callback(updateQrErr); 
@@ -249,91 +249,91 @@ exports.createQrCode = async (userId) => {
         const fileName = `qrCode_${userId}.png`;
 
         const profileImageUrl = await uploadFileToS3(qrCodeBuffer, fileName, "users/farmerQr");
-        await exports.updateQRCode(userId, profileImageUrl); 
+        await exports.updateQRCode(userId, profileImageUrl);
 
-        return "QR code created and updated successfully"; 
+        return "QR code created and updated successfully";
     } catch (err) {
         console.error("Error in createQrCode:", err);
-        throw err; 
+        throw err;
     }
 };
 
 
 exports.getUserProfileImage = async (userId) => {
     return new Promise((resolve, reject) => {
-      const sql = "SELECT profileImage FROM users WHERE id = ?";
-      db.plantcare.query(sql, [userId], (err, results) => {
-        if (err) {
-          reject(err);
-        } else if (results.length > 0) {
-          resolve(results[0].profileImage); 
-        } else {
-          resolve(null); 
-        }
-      });
+        const sql = "SELECT profileImage FROM users WHERE id = ?";
+        db.plantcare.query(sql, [userId], (err, results) => {
+            if (err) {
+                reject(err);
+            } else if (results.length > 0) {
+                resolve(results[0].profileImage);
+            } else {
+                resolve(null);
+            }
+        });
     });
-  };
-  
+};
+
 
 exports.updateUserProfileImage = async (userId, profileImageUrl) => {
     return new Promise((resolve, reject) => {
-      const sql = "UPDATE users SET profileImage = ? WHERE id = ?";
-      db.plantcare.query(sql, [profileImageUrl, userId], (err, result) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(result); 
-          console.log(result);
-        }
-      });
+        const sql = "UPDATE users SET profileImage = ? WHERE id = ?";
+        db.plantcare.query(sql, [profileImageUrl, userId], (err, result) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(result);
+                console.log(result);
+            }
+        });
     });
-  };
-  
+};
 
-  exports.deleteUserById = async (userId) => {
-    return new Promise((resolve, reject) => {
-      const query = 'DELETE FROM users WHERE id = ?';
-  
-      db.plantcare.query(query, [userId], (err, result) => {
-        if (err) {
-          console.error('Error executing query:', err);
-          return reject(err); 
-        }
-  
-        console.log('Query executed successfully:', result);
-        resolve(result); 
-      });
-    });
-  };
-  
-  exports.getFeedbackOptions = async () => {
-    return new Promise((resolve, reject) => {
-      const query = 'SELECT * FROM feedbacklist';
-  
-      db.plantcare.query(query, (err, result) => {
-        if (err) {
-          console.error('Error executing query:', err);
-          return reject(err); 
-        }
-          resolve(result); 
-      });
-    });
-  }
 
-  exports.savedeletedUser= async (firstname,lastname) => {
+exports.deleteUserById = async (userId) => {
     return new Promise((resolve, reject) => {
-      const query = 'INSERT INTO deleteduser (firstName,lastName) VALUES (?,?)';
-  
-      db.plantcare.query(query, [firstname,lastname], (err, result) => {
-        if (err) {
-          console.error('Error executing query:', err);
-          return reject(err); 
-        }
-        resolve({ insertId: result.insertId });      
+        const query = 'DELETE FROM users WHERE id = ?';
+
+        db.plantcare.query(query, [userId], (err, result) => {
+            if (err) {
+                console.error('Error executing query:', err);
+                return reject(err);
+            }
+
+            console.log('Query executed successfully:', result);
+            resolve(result);
+        });
     });
+};
+
+exports.getFeedbackOptions = async () => {
+    return new Promise((resolve, reject) => {
+        const query = 'SELECT * FROM feedbacklist';
+
+        db.plantcare.query(query, (err, result) => {
+            if (err) {
+                console.error('Error executing query:', err);
+                return reject(err);
+            }
+            resolve(result);
+        });
     });
 }
-  exports.saveUserFeedback = async ({ feedbackId, deletedUserId }) => {
+
+exports.savedeletedUser = async (firstname, lastname) => {
+    return new Promise((resolve, reject) => {
+        const query = 'INSERT INTO deleteduser (firstName,lastName) VALUES (?,?)';
+
+        db.plantcare.query(query, [firstname, lastname], (err, result) => {
+            if (err) {
+                console.error('Error executing query:', err);
+                return reject(err);
+            }
+            resolve({ insertId: result.insertId });
+        });
+    });
+}
+exports.saveUserFeedback = async ({ feedbackId, deletedUserId }) => {
     const query = `
       INSERT INTO userfeedback (feedbackId, deletedUserId)
       VALUES (?, ?)
@@ -341,9 +341,8 @@ exports.updateUserProfileImage = async (userId, profileImageUrl) => {
     db.plantcare.query(query, [feedbackId, deletedUserId], (err, result) => {
         if (err) {
             console.error('Error executing query:', err);
-            return err; 
+            return err;
         }
-        return result; 
+        return result;
     });
-  };
-  
+};

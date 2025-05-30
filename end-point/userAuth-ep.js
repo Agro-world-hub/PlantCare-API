@@ -9,6 +9,7 @@ const uploadFileToS3 = require('../Middlewares/s3upload');
 const delectfilesOnS3 = require('../Middlewares/s3delete')
 
 exports.loginUser = async (req, res) => {
+    console.log("hittt")
     try {
         const { phonenumber } = await ValidationSchema.loginUserSchema.validateAsync(req.body);
         const users = await userAuthDao.loginUser(phonenumber);
