@@ -102,7 +102,7 @@
 
 const express = require("express");
 const cors = require("cors"); 
-const { plantcare, collectionofficer, marketPlace, dash, admin } = require("./startup/database"); 
+const { plantcare, collectionofficer, marketPlace,  admin } = require("./startup/database"); 
 
 require("dotenv").config();
 
@@ -157,7 +157,6 @@ const DatabaseConnection = (db, name) => {
 DatabaseConnection(plantcare, "PlantCare");
 DatabaseConnection(collectionofficer, "CollectionOfficer");
 DatabaseConnection(marketPlace, "MarketPlace");
-DatabaseConnection(dash, "Dash");
 DatabaseConnection(admin, "Admin");
 
 
