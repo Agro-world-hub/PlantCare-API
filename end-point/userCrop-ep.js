@@ -372,6 +372,7 @@ exports.updateCropCalendarStatus = asyncHandler(async(req, res) => {
         await updateCropCalendarStatusSchema.validateAsync(req.body);
 
         const { id, status } = req.body;
+        console.log(id)
         const currentTime = new Date();
 
         const taskResults = await cropDao.getTaskById(id);
@@ -400,7 +401,6 @@ exports.updateCropCalendarStatus = asyncHandler(async(req, res) => {
                 });
             }
         }
-
         if (status === "completed" && taskIndex > 1) {
             const previousTasksResults = await cropDao.getPreviousTasks(
                 taskIndex,
@@ -427,25 +427,26 @@ exports.updateCropCalendarStatus = asyncHandler(async(req, res) => {
                     });
             }
 
-            if (lastCompletedTask && currentTask && lastCompletedTask.status === "completed") {
-                const previousCreatedAt = new Date(lastCompletedTask.createdAt);
-                const taskDays = currentTask.days;
-                const nextTaskStartDate = new Date(
-                    previousCreatedAt.getTime() + taskDays * 24 * 60 * 60 * 1000
-                );
-                const currentDate = new Date();
-                const remainingTime = nextTaskStartDate - currentDate;
+            // if (lastCompletedTask && currentTask && lastCompletedTask.status === "completed") {
+            //     const previousCreatedAt = new Date(lastCompletedTask.createdAt);
+            //     const taskDays = currentTask.days;
+            //     const nextTaskStartDate = new Date(
+            //         previousCreatedAt.getTime() + taskDays * 24 * 60 * 60 * 1000
+            //     );
+            //     const currentDate = new Date();
+            //     const remainingTime = nextTaskStartDate - currentDate;
                 
-                const remainingDays = Math.floor(remainingTime / (24 * 60 * 60 * 1000));
+            //     const remainingDays = Math.floor(remainingTime / (24 * 60 * 60 * 1000));
+            //     console.log("re", remainingDays)
 
-                if (remainingDays > 0) {
-                    return res
-                        .status(400)
-                        .json({
-                            message: `You need to wait ${remainingDays} days before marking this task as completed.`,
-                        });
-                }
-            }
+            //     if (remainingDays > 0) {
+            //         return res
+            //             .status(400)
+            //             .json({
+            //                 message: `You need to wait ${remainingDays} days before marking this task as completed.`,
+            //             });
+            //     }
+            // }
         }
 
         const updateResults = await cropDao.updateTaskStatus(id, status);
