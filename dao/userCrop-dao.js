@@ -372,7 +372,7 @@ exports.enrollSlaveCrop = (userId, cropId, startDate, onCulscropID) => {
           taskEnglish, taskSinhala, taskTamil,
           taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil,
           status, imageLink, videoLinkEnglish, videoLinkSinhala, videoLinkTamil,
-          reqImages, onCulscropID
+          reqImages, onCulscropID, autoCompleted
         ) VALUES ?
       `;
 
@@ -386,10 +386,10 @@ exports.enrollSlaveCrop = (userId, cropId, startDate, onCulscropID) => {
         } else {
           currentDate = new Date(currentDate.getTime() + task.days * 86400000);
         }
-
         const formattedDate = currentDate.toISOString().split("T")[0];
         const today = new Date().toISOString().split("T")[0];
         const status = formattedDate < today ? "completed" : "pending";
+        const autoCompleted = formattedDate < today ? "1" : "0";
 
         values.push([
           userId,
@@ -415,7 +415,8 @@ exports.enrollSlaveCrop = (userId, cropId, startDate, onCulscropID) => {
           task.videoLinkSinhala,
           task.videoLinkTamil,
           task.reqImages,
-          onCulscropID
+          onCulscropID,
+          autoCompleted
         ]);
       });
 
@@ -481,7 +482,7 @@ exports.getTaskById = (id) => {
 exports.getPreviousTasks = (taskIndex, cropCalendarId, userId) => {
     return new Promise((resolve, reject) => {
         const sql = `
-          SELECT id, taskIndex, createdAt, status , days
+          SELECT id, taskIndex, createdAt, status , days, startingDate
           FROM slavecropcalendardays 
           WHERE taskIndex < ? AND cropCalendarId = ? AND userId = ? 
           ORDER BY taskIndex ASC`;
