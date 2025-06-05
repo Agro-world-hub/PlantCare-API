@@ -16,6 +16,7 @@ const createPool = (database) => {
     queueLimit: 0,
     enableKeepAlive: true,
     keepAliveInitialDelay: 0,
+    timezone: '+05:30'
   });
 };
 
