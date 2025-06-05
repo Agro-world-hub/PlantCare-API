@@ -1,6 +1,7 @@
 const db = require('../startup/database');
 
 exports.getAllCurrentAssets = async (req, res) => {
+    console.log("hitt")
     try {
         const userId = req.user.id;
 
@@ -9,6 +10,7 @@ exports.getAllCurrentAssets = async (req, res) => {
         FROM currentasset 
         WHERE userId = ? 
         GROUP BY category
+        HAVING totalSum > 0
       `;
 
         const [results] = await db.plantcare.promise().query(sql, [userId]);
