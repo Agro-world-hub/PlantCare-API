@@ -1,5 +1,5 @@
 const asyncHandler = require("express-async-handler");
-const delectfilesOnS3  = require('../Middlewares/s3delete')
+const delectfilesOnS3 = require('../Middlewares/s3delete')
 
 const cropDao = require("../dao/userCrop-dao");
 
@@ -13,7 +13,7 @@ const {
     updateCropCalendarStatusSchema
 } = require("../validations/userCrop-validation");
 
-exports.getCropByCategory = asyncHandler(async(req, res) => {
+exports.getCropByCategory = asyncHandler(async (req, res) => {
     try {
         const { error } = getCropByCategorySchema.validate(req.params);
         if (error) {
@@ -37,7 +37,7 @@ exports.getCropByCategory = asyncHandler(async(req, res) => {
     }
 });
 
-exports.getCropByDistrict = asyncHandler(async(req, res) => {
+exports.getCropByDistrict = asyncHandler(async (req, res) => {
     try {
 
         const { categorie, district } = req.params;
@@ -54,7 +54,7 @@ exports.getCropByDistrict = asyncHandler(async(req, res) => {
     }
 });
 
-exports.getCropVariety = asyncHandler(async(req, res) => {
+exports.getCropVariety = asyncHandler(async (req, res) => {
     try {
         await getCropByIdSchema.validateAsync(req.params);
 
@@ -76,15 +76,15 @@ exports.getCropVariety = asyncHandler(async(req, res) => {
     }
 });
 
-exports.getCropCalenderDetails = asyncHandler(async(req, res) => {
+exports.getCropCalenderDetails = asyncHandler(async (req, res) => {
     try {
 
 
-        const id = req.params.id; 
+        const id = req.params.id;
         const method = req.params.method;
         const naofcul = req.params.naofcul;
 
-        const results = await cropDao.getCropCalenderDetails(id, method, naofcul); 
+        const results = await cropDao.getCropCalenderDetails(id, method, naofcul);
 
         if (results.length === 0) {
             return res.status(404).json({
@@ -101,18 +101,18 @@ exports.getCropCalenderDetails = asyncHandler(async(req, res) => {
 });
 
 
-exports.CropCalanderFeed = asyncHandler(async(req, res) => {
+exports.CropCalanderFeed = asyncHandler(async (req, res) => {
     try {
         const { error } = cropCalendarFeedSchema.validate(req.params);
         if (error) {
             return res.status(400).json({
                 status: "error",
-                message: error.details[0].message, 
+                message: error.details[0].message,
             });
         }
 
-        const userId = req.user.id; 
-        const cropId = req.params.cropid; 
+        const userId = req.user.id;
+        const cropId = req.params.cropid;
 
         const results = await cropDao.getCropCalendarFeed(userId, cropId);
 
@@ -133,18 +133,18 @@ exports.CropCalanderFeed = asyncHandler(async(req, res) => {
     }
 });
 
-exports.OngoingCultivaionGetById = asyncHandler(async(req, res) => {
+exports.OngoingCultivaionGetById = asyncHandler(async (req, res) => {
     try {
         const { error, value } = ongoingCultivationSchema.validate(req.query);
 
         if (error) {
             return res.status(400).json({
                 status: "error",
-                message: error.details[0].message, 
+                message: error.details[0].message,
             });
         }
 
-        const userId = req.user.id; 
+        const userId = req.user.id;
 
         cropDao.getOngoingCultivationsByUserId(userId, (err, results) => {
             if (err) {
@@ -174,12 +174,12 @@ exports.OngoingCultivaionGetById = asyncHandler(async(req, res) => {
 
 ///
 
-exports.enroll = asyncHandler(async(req, res) => {
+exports.enroll = asyncHandler(async (req, res) => {
     try {
         const cropId = req.body.cropId;
-        const extentha = req.body.extentha || '0'; 
-        const extentac = req.body.extentac || '0'; 
-        const extentp = req.body.extentp || '0';   
+        const extentha = req.body.extentha || '0';
+        const extentac = req.body.extentac || '0';
+        const extentp = req.body.extentp || '0';
         const startDate = req.body.startDate;
         const userId = req.user.id;
 
@@ -188,8 +188,8 @@ exports.enroll = asyncHandler(async(req, res) => {
             extentac,
             extentp,
             startedAt: startDate,
-            ongoingCultivationId: null, 
-            createdAt: undefined, 
+            ongoingCultivationId: null,
+            createdAt: undefined,
         });
 
         console.log("Error:", error);
@@ -197,7 +197,7 @@ exports.enroll = asyncHandler(async(req, res) => {
         if (error) {
             return res.status(400).json({ message: error.details[0].message });
         }
-        
+
         let cultivationId;
         const ongoingCultivationResult = await cropDao.checkOngoingCultivation(userId);
 
@@ -224,8 +224,9 @@ exports.enroll = asyncHandler(async(req, res) => {
                 .json({ message: "You are already enrolled in this crop!" });
         }
 
-        await cropDao.enrollOngoingCultivationCrop(cultivationId, cropId, extentha, extentac,extentp, startDate);
-        const enroledoncultivationcrop = await cropDao.getEnrollOngoingCultivationCrop(cropId);
+        await cropDao.enrollOngoingCultivationCrop(cultivationId, cropId, extentha, extentac, extentp, startDate);
+        const enroledoncultivationcrop = await cropDao.getEnrollOngoingCultivationCrop(cropId, userId);
+        console.log("data", res)
         let onCulscropID;
         if (enroledoncultivationcrop.length > 0) {
             onCulscropID = enroledoncultivationcrop[0].id;
@@ -243,7 +244,7 @@ exports.enroll = asyncHandler(async(req, res) => {
     }
 });
 
-exports.getOngoingCultivationCropByid = asyncHandler(async(req, res) => {
+exports.getOngoingCultivationCropByid = asyncHandler(async (req, res) => {
     try {
         const id = req.params.id;
         const results = await cropDao.getEnrollOngoingCultivationCropByid(id);
@@ -263,14 +264,14 @@ exports.getOngoingCultivationCropByid = asyncHandler(async(req, res) => {
 });
 
 
-exports.UpdateOngoingCultivationScrops = asyncHandler(async(req, res) => {
+exports.UpdateOngoingCultivationScrops = asyncHandler(async (req, res) => {
     try {
-        const { extentha,extentac, extentp, startedAt, onCulscropID } = req.body;
-        if (!extentha|| !extentac || !extentp || !startedAt) {
+        const { extentha, extentac, extentp, startedAt, onCulscropID } = req.body;
+        if (!extentha || !extentac || !extentp || !startedAt) {
             return res.status(400).json({ message: "Extent and Start Date are required." });
         }
 
-        const results = await cropDao.updateOngoingCultivationCrop(onCulscropID, extentha, extentac,extentp, startedAt);
+        const results = await cropDao.updateOngoingCultivationCrop(onCulscropID, extentha, extentac, extentp, startedAt);
 
         if (results.affectedRows === 0) {
             return res.status(404).json({ message: "Ongoing cultivation crop not found or not updated." });
@@ -285,9 +286,9 @@ exports.UpdateOngoingCultivationScrops = asyncHandler(async(req, res) => {
         for (const cropDay of slaveCropDays) {
             const { id, days } = cropDay;
             const newStartingDate = new Date(startedAt);
-            newStartingDate.setDate(newStartingDate.getDate() + days); 
+            newStartingDate.setDate(newStartingDate.getDate() + days);
 
-            const formattedDate = newStartingDate.toISOString().split('T')[0]; 
+            const formattedDate = newStartingDate.toISOString().split('T')[0];
 
             const updateResult = await cropDao.updateSlaveCropCalendarDay(id, formattedDate);
             if (updateResult.affectedRows === 0) {
@@ -303,7 +304,7 @@ exports.UpdateOngoingCultivationScrops = asyncHandler(async(req, res) => {
 });
 
 
-exports.getSlaveCropCalendarDaysByUserAndCrop = asyncHandler(async(req, res) => {
+exports.getSlaveCropCalendarDaysByUserAndCrop = asyncHandler(async (req, res) => {
     try {
         await getSlaveCropCalendarDaysSchema.validateAsync(req.params);
 
@@ -336,38 +337,40 @@ exports.getSlaveCropCalendarDaysByUserAndCrop = asyncHandler(async(req, res) => 
 });
 
 
-exports.getSlaveCropCalendarPrgress = asyncHandler(async (req, res) => { try {
-  await getSlaveCropCalendarDaysSchema.validateAsync(req.params);
+exports.getSlaveCropCalendarPrgress = asyncHandler(async (req, res) => {
+    try {
+        await getSlaveCropCalendarDaysSchema.validateAsync(req.params);
 
-  const userId = req.user.id;
-  const cropCalendarId = req.params.cropCalendarId;
+        const userId = req.user.id;
+        const cropCalendarId = req.params.cropCalendarId;
 
 
-  const results = await cropDao.getSlaveCropCalendarPrgress(userId, cropCalendarId);
+        const results = await cropDao.getSlaveCropCalendarPrgress(userId, cropCalendarId);
 
-  if (results.length === 0) {
-      return res.status(404).json({
-          message: "No records found for the given userId and cropCalendarId.",
-          
-      });
-  }
+        if (results.length === 0) {
+            return res.status(404).json({
+                message: "No records found for the given userId and cropCalendarId.",
 
-  return res.status(200).json(results);
+            });
+        }
 
-} catch (err) {
-  console.error("Error in getSlaveCropCalendarDaysByUserAndCrop:", err);
+        return res.status(200).json(results);
 
-  if (err.isJoi) {
-      return res.status(400).json({
-          status: 'error',
-          message: err.details[0].message,
-      });
-  }
+    } catch (err) {
+        console.error("Error in getSlaveCropCalendarDaysByUserAndCrop:", err);
 
-  return res.status(500).json({ message: "Internal Server Error!" });
-}});
+        if (err.isJoi) {
+            return res.status(400).json({
+                status: 'error',
+                message: err.details[0].message,
+            });
+        }
 
-exports.updateCropCalendarStatus = asyncHandler(async(req, res) => {
+        return res.status(500).json({ message: "Internal Server Error!" });
+    }
+});
+
+exports.updateCropCalendarStatus = asyncHandler(async (req, res) => {
     try {
         await updateCropCalendarStatusSchema.validateAsync(req.body);
 
@@ -435,7 +438,7 @@ exports.updateCropCalendarStatus = asyncHandler(async(req, res) => {
             //     );
             //     const currentDate = new Date();
             //     const remainingTime = nextTaskStartDate - currentDate;
-                
+
             //     const remainingDays = Math.floor(remainingTime / (24 * 60 * 60 * 1000));
             //     console.log("re", remainingDays)
 
@@ -459,27 +462,27 @@ exports.updateCropCalendarStatus = asyncHandler(async(req, res) => {
 
         if (status === "pending") {
             cropDao.gettaskImagesByID(id)
-            .then((images) => {
-                if (!images || images.length === 0) {
-                } else {
-                    if (Array.isArray(images)) {
-                        images.forEach((img) => {
-                            if (img.image) {
-                                const imageUrl = img.image;
-                                delectfilesOnS3(imageUrl); 
-                            } else {
-                            }
-                        });
-                    } else if (images.image) {
-                        const imageUrl = images.image;
-                        delectfilesOnS3(imageUrl);
+                .then((images) => {
+                    if (!images || images.length === 0) {
                     } else {
-                        console.log("Image data structure is not as expected:", images);
+                        if (Array.isArray(images)) {
+                            images.forEach((img) => {
+                                if (img.image) {
+                                    const imageUrl = img.image;
+                                    delectfilesOnS3(imageUrl);
+                                } else {
+                                }
+                            });
+                        } else if (images.image) {
+                            const imageUrl = images.image;
+                            delectfilesOnS3(imageUrl);
+                        } else {
+                            console.log("Image data structure is not as expected:", images);
+                        }
                     }
-                }
-        
-                return cropDao.deleteImagesBySlaveId(id);
-            })
+
+                    return cropDao.deleteImagesBySlaveId(id);
+                })
                 .then((deleteImagesResult) => {
                 })
                 .catch((error) => {
@@ -552,7 +555,7 @@ exports.addGeoLocation = asyncHandler(async (req, res) => {
                 message: `No task found for taskId ${taskId}. Please ensure the taskId is correct.`,
             });
         }
-        
+
 
         const results = await cropDao.addGeoLocation(longitude, latitude, onCulscropID);
 
