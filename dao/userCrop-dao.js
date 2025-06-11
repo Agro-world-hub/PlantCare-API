@@ -207,6 +207,7 @@ exports.getEnrollOngoingCultivationCrop = (cropId, UserId) => {
 
 
 exports.getEnrollOngoingCultivationCropByid = (id) => {
+    console.log(id)
     const sql = `
     SELECT * 
     FROM ongoingcultivationscrops 
@@ -219,6 +220,7 @@ exports.getEnrollOngoingCultivationCropByid = (id) => {
                 reject(err);
             } else {
                 resolve(results);
+                console.log(results)
             }
         });
     });
