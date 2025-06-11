@@ -163,10 +163,10 @@ exports.checkEnrollCrop = (cultivationId) => {
     return query(sql, [cultivationId]);
 };
 
-// exports.enrollOngoingCultivationCrop = (cultivationId, cropId, extentha, extentac, extentp, startDate) => {
-//     const sql = "INSERT INTO ongoingcultivationscrops(ongoingCultivationId, cropCalendar,  extentha, extentac, extentp , startedAt) VALUES (?, ?,?,?,?,?)";
-//     return query(sql, [cultivationId, cropId, extentha, extentac, extentp, startDate]);
-// };
+exports.enrollOngoingCultivationCrop = (cultivationId, cropId, extentha, extentac, extentp, startDate) => {
+    const sql = "INSERT INTO ongoingcultivationscrops(ongoingCultivationId, cropCalendar,  extentha, extentac, extentp , startedAt) VALUES (?, ?,?,?,?,?)";
+    return query(sql, [cultivationId, cropId, extentha, extentac, extentp, startDate]);
+};
 
 // exports.getEnrollOngoingCultivationCrop = (cropId) => {
 //     const sql = `
