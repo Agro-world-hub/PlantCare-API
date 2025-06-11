@@ -7,6 +7,7 @@ exports.getAllCurrentAssets = (userId) => {
             FROM currentasset 
             WHERE userId = ? 
             GROUP BY category
+             HAVING totalSum > 0
         `;
     db.plantcare.query(sql, [userId], (err, results) => {
       if (err) {
