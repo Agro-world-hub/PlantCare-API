@@ -181,6 +181,9 @@ app.use(process.env.AUTHOR, calendartaskImages);
 const reportRoutes = require("./routes/reportRoutes");
 app.use(process.env.AUTHOR, reportRoutes);
 
+app.get("/test",(req,res)=>{
+    res.json("test run!")
+})
 app.use("/api/news", newsRoutes);
 app.use("/api/crop", cropRoutes);
 app.use("/api/market-price", MarketPriceRoutes);
