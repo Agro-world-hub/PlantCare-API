@@ -5,31 +5,31 @@ const QRCode = require('qrcode');
 const fs = require('fs');
 const path = require('path');
 const uploadFileToS3 = require('../Middlewares/s3upload')
-// exports.loginUser = (phonenumber) => {
-//     return new Promise((resolve, reject) => {
-//         const sql = "SELECT * FROM users WHERE phoneNumber = ? LIMIT 1";
-//         db.plantcare.query(sql, [phonenumber], (err, results) => {
-//             if (err) {
-//                 reject(err);
-//             } else {
-//                 resolve(results);
-//             }
-//         });
-//     });
-// };
+exports.loginUser = (phonenumber) => {
+    return new Promise((resolve, reject) => {
+        const sql = "SELECT * FROM users WHERE phoneNumber = ? LIMIT 1";
+        db.plantcare.query(sql, [phonenumber], (err, results) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(results);
+            }
+        });
+    });
+};
 
-// exports.checkUserByPhoneNumber = (phoneNumber) => {
-//     return new Promise((resolve, reject) => {
-//         const query = "SELECT * FROM users WHERE phoneNumber = ?";
-//         db.plantcare.query(query, [phoneNumber], (err, results) => {
-//             if (err) {
-//                 reject(err);
-//             } else {
-//                 resolve(results);
-//             }
-//         });
-//     });
-// };
+exports.checkUserByPhoneNumber = (phoneNumber) => {
+    return new Promise((resolve, reject) => {
+        const query = "SELECT * FROM users WHERE phoneNumber = ?";
+        db.plantcare.query(query, [phoneNumber], (err, results) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(results);
+            }
+        });
+    });
+};
 
 exports.insertUser = (firstName, lastName, phoneNumber, NICnumber, district, farmerLanguage) => {
     return new Promise((resolve, reject) => {
