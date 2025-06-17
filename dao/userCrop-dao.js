@@ -226,10 +226,10 @@ exports.getEnrollOngoingCultivationCropByid = (id) => {
     });
 };
 
-exports.updateOngoingCultivationCrop = (onCulscropID, extentha, extentac, extentp, formattedStartDate) => {
+exports.updateOngoingCultivationCrop = (onCulscropID, extentha, extentac, extentp) => {
     return new Promise((resolve, reject) => {
-        const sql = "UPDATE ongoingcultivationscrops SET extentha = ?, extentac=?, extentp=?, startedAt = ? WHERE id = ?";
-        db.plantcare.query(sql, [extentha, extentac, extentp, formattedStartDate, onCulscropID], (err, results) => {
+        const sql = "UPDATE ongoingcultivationscrops SET extentha = ?, extentac=?, extentp=? WHERE id = ?";
+        db.plantcare.query(sql, [extentha, extentac, extentp,  onCulscropID], (err, results) => {
             if (err) {
                 reject(err);
             } else {
