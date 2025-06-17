@@ -264,38 +264,57 @@ exports.getOngoingCultivationCropByid = asyncHandler(async (req, res) => {
 });
 
 
+// exports.UpdateOngoingCultivationScrops = asyncHandler(async (req, res) => {
+//     try {
+//         const { extentha, extentac, extentp, startedAt, onCulscropID } = req.body;
+//         if (!extentha || !extentac || !extentp || !startedAt) {
+//             return res.status(400).json({ message: "Extent and Start Date are required." });
+//         }
+
+//         const results = await cropDao.updateOngoingCultivationCrop(onCulscropID, extentha, extentac, extentp, startedAt);
+
+//         if (results.affectedRows === 0) {
+//             return res.status(404).json({ message: "Ongoing cultivation crop not found or not updated." });
+//         }
+
+//         const slaveCropDays = await cropDao.getSlaveCropCalendarDays(onCulscropID);
+
+//         if (slaveCropDays.length === 0) {
+//             return res.status(404).json({ message: "No related records found in slavecropcalendardays." });
+//         }
+
+//         for (const cropDay of slaveCropDays) {
+//             const { id, days } = cropDay;
+//             const newStartingDate = new Date(startedAt);
+//             newStartingDate.setDate(newStartingDate.getDate() + days);
+
+//             const formattedDate = newStartingDate.toISOString().split('T')[0];
+
+//             const updateResult = await cropDao.updateSlaveCropCalendarDay(id, formattedDate);
+//             if (updateResult.affectedRows === 0) {
+//                 console.error("Failed to update slavecropcalendardays for ID:", id);
+//             }
+//         }
+
+//         res.status(200).json({ message: "Ongoing cultivation crop and slavecropcalendardays updated successfully.", results });
+//     } catch (err) {
+//         console.error("Error updating ongoing cultivation crop:", err);
+//         res.status(500).json({ message: "Server error. Unable to update ongoing cultivation crop." });
+//     }
+// });
+
 exports.UpdateOngoingCultivationScrops = asyncHandler(async (req, res) => {
     try {
-        const { extentha, extentac, extentp, startedAt, onCulscropID } = req.body;
-        if (!extentha || !extentac || !extentp || !startedAt) {
+        const { extentha, extentac, extentp, onCulscropID } = req.body;
+        if (!extentha || !extentac || !extentp ) {
             return res.status(400).json({ message: "Extent and Start Date are required." });
         }
 
-        const results = await cropDao.updateOngoingCultivationCrop(onCulscropID, extentha, extentac, extentp, startedAt);
+        const results = await cropDao.updateOngoingCultivationCrop(onCulscropID, extentha, extentac, extentp);
 
         if (results.affectedRows === 0) {
             return res.status(404).json({ message: "Ongoing cultivation crop not found or not updated." });
         }
-
-        const slaveCropDays = await cropDao.getSlaveCropCalendarDays(onCulscropID);
-
-        if (slaveCropDays.length === 0) {
-            return res.status(404).json({ message: "No related records found in slavecropcalendardays." });
-        }
-
-        for (const cropDay of slaveCropDays) {
-            const { id, days } = cropDay;
-            const newStartingDate = new Date(startedAt);
-            newStartingDate.setDate(newStartingDate.getDate() + days);
-
-            const formattedDate = newStartingDate.toISOString().split('T')[0];
-
-            const updateResult = await cropDao.updateSlaveCropCalendarDay(id, formattedDate);
-            if (updateResult.affectedRows === 0) {
-                console.error("Failed to update slavecropcalendardays for ID:", id);
-            }
-        }
-
         res.status(200).json({ message: "Ongoing cultivation crop and slavecropcalendardays updated successfully.", results });
     } catch (err) {
         console.error("Error updating ongoing cultivation crop:", err);
