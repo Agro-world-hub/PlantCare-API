@@ -306,6 +306,7 @@ exports.getOngoingCultivationCropByid = asyncHandler(async (req, res) => {
 exports.UpdateOngoingCultivationScrops = asyncHandler(async (req, res) => {
     try {
         const { extentha, extentac, extentp, onCulscropID } = req.body;
+
         if (!extentha || !extentac || !extentp ) {
             return res.status(400).json({ message: "Extent and Start Date are required." });
         }
