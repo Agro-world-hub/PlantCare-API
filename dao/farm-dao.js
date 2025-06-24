@@ -369,3 +369,83 @@ exports.getAllFarmByUserId = async (userId) => {
         });
     });
 };
+
+
+exports.createPaymentAndUpdateMembership = async (paymentData) => {
+    let connection;
+
+    try {
+        // Get connection from pool
+        connection = await new Promise((resolve, reject) => {
+            db.plantcare.getConnection((err, conn) => {
+                if (err) return reject(err);
+                resolve(conn);
+            });
+        });
+
+        // Start transaction
+        await new Promise((resolve, reject) => {
+            connection.beginTransaction(err => {
+                if (err) return reject(err);
+                resolve(true);
+            });
+        });
+
+        // Insert payment record
+        const insertPaymentSql = `
+            INSERT INTO membershippayment 
+            (userId, payment, plan, expireDate, activeStatus)
+            VALUES (?, ?, ?, ?, 1)
+        `;
+
+        const paymentValues = [
+            paymentData.userId,
+            paymentData.payment,
+            paymentData.plan,
+            paymentData.expireDate
+        ];
+
+        const [paymentResult] = await connection.promise().query(insertPaymentSql, paymentValues);
+        const paymentId = paymentResult.insertId;
+
+        // Update user membership to 'Pro'
+        const updateUserSql = `
+            UPDATE users 
+            SET membership = 'Pro'
+            WHERE id = ?
+        `;
+
+        const [userResult] = await connection.promise().query(updateUserSql, [paymentData.userId]);
+
+        // Commit transaction
+        await new Promise((resolve, reject) => {
+            connection.commit(err => {
+                if (err) return reject(err);
+                resolve(true);
+            });
+        });
+
+        return {
+            success: true,
+            paymentId,
+            userUpdated: userResult.affectedRows > 0,
+            message: 'Payment processed and membership updated successfully'
+        };
+
+    } catch (error) {
+        // Rollback transaction if connection exists
+        if (connection) {
+            await new Promise(resolve => {
+                connection.rollback(() => resolve(true));
+            });
+        }
+        console.error('Database error:', error);
+        throw error;
+
+    } finally {
+        // Release connection back to pool
+        if (connection) {
+            connection.release();
+        }
+    }
+};
