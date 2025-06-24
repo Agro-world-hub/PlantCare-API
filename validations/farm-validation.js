@@ -6,8 +6,9 @@ const createFarm = Joi.object({
 
     // Basic farm details
     farmName: Joi.string().required(),
-    //farmIndex: Joi.number().optional().default(1),
+    farmIndex: Joi.number().optional().default(1), // Uncommented this line
     farmImage: Joi.number().optional().default(1),
+
     // Extent details
     extentha: Joi.string().required(),
     extentac: Joi.string().required(),
@@ -39,4 +40,16 @@ const createFarm = Joi.object({
         .required(),
 });
 
-module.exports = { createFarm };
+const createPayment = Joi.object({
+    userId: Joi.number().integer().positive().required(),
+    payment: Joi.number().positive().required(),
+    plan: Joi.string().valid('1month', '3months', '6months', '12months').required(),
+    expireDate: Joi.date().iso().required(),
+    activeStatus: Joi.number().valid(0, 1).default(1)
+});
+
+// Export both schemas in a single module.exports
+module.exports = {
+    createFarm,
+    createPayment
+};
