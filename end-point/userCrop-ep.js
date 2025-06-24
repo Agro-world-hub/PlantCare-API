@@ -224,7 +224,9 @@ exports.enroll = asyncHandler(async (req, res) => {
                 .json({ message: "You are already enrolled in this crop!" });
         }
 
-        await cropDao.enrollOngoingCultivationCrop(cultivationId, cropId, extentha, extentac, extentp, startDate);
+        const cultivationIndex = cropCount + 1;
+
+        await cropDao.enrollOngoingCultivationCrop(cultivationId, cropId, extentha, extentac, extentp, startDate, cultivationIndex);
         const enroledoncultivationcrop = await cropDao.getEnrollOngoingCultivationCrop(cropId, userId);
         console.log("data", res)
         let onCulscropID;
