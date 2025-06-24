@@ -22,7 +22,7 @@ exports.loginUser = async (req, res) => {
         }
 
         const user = users[0];
-
+        console.log("user", user)
         const token = jwt.sign({ id: user.id, phoneNumber: user.phoneNumber },
             process.env.JWT_SECRET || Tl, {
             expiresIn: "8h",
@@ -33,6 +33,11 @@ exports.loginUser = async (req, res) => {
             status: "success",
             message: "Login successful",
             token,
+              user: {
+                membership: user.membership,
+                paymentActiveStatus: user.paymentActiveStatus,
+                farmCount : user.farmCount
+            }
         });
     } catch (err) {
         console.error("hi.... Error:", err);
