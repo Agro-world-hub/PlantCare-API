@@ -23,7 +23,10 @@ exports.loginUser = async (req, res) => {
 
         const user = users[0];
         console.log("user", user)
-        const token = jwt.sign({ id: user.id, phoneNumber: user.phoneNumber },
+        const token = jwt.sign({ id: user.id, phoneNumber: user.phoneNumber, membership: user.membership,
+                paymentActiveStatus: user.paymentActiveStatus,
+                farmCount : user.farmCount
+             },
             process.env.JWT_SECRET || Tl, {
             expiresIn: "8h",
         }
@@ -107,6 +110,11 @@ exports.SignupUser = asyncHandler(async (req, res) => {
 
 exports.getProfileDetails = asyncHandler(async (req, res) => {
     try {
+         const token = req.headers.authorization?.split(" ")[1];
+         const decoded = jwt.verify(token, process.env.JWT_SECRET || "Tl");
+
+        const {  membership, paymentActiveStatus, farmCount } = decoded;
+        console.log(decoded)
         const userId = req.user.id;
         // Retrieve user profile from the database using the DAO function
         const user = await userProfileDao.getUserProfileById(userId);
@@ -121,6 +129,11 @@ exports.getProfileDetails = asyncHandler(async (req, res) => {
         res.status(200).json({
             status: "success",
             user: user,
+            usermembership: {
+ membership: membership,
+                paymentActiveStatus: paymentActiveStatus,
+                farmCount : farmCount
+            }
         });
     } catch (err) {
         console.error("Error fetching profile details:", err);
