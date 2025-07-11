@@ -1,3 +1,4 @@
+const { date } = require('joi');
 const db = require('../startup/database');
 const {
     addFixedAssetSchema
@@ -1066,20 +1067,21 @@ exports.updateFixedAsset = (req, res) => {
                 if (!date) return null; // Handle null/undefined values
                 return new Date(date).toISOString().slice(0, 19).replace('T', ' ');
             };
+          
 
-            const warrantyQuery = `
-                UPDATE machtoolsfixedassetwarranty 
-                SET purchaseDate = COALESCE(NULLIF(?, ''), purchaseDate),
-                    expireDate = COALESCE(NULLIF(?, ''), expireDate),
-                    warrantystatus = COALESCE(NULLIF(?, ''), warrantystatus)
-                WHERE machToolsId = ?`;
-
-            // const warrantyParams = [
-            //     warrantyDetails.purchaseDate || null,
-            //     warrantyDetails.expireDate || null,
-            //     warrantyDetails.warrantystatus || null,
-            //     assetId
-            // ];
+            // const warrantyQuery = `
+            //     UPDATE machtoolsfixedassetwarranty 
+            //     SET purchaseDate = COALESCE(NULLIF(?, ''), purchaseDate),
+            //         expireDate = COALESCE(NULLIF(?, ''), expireDate),
+            //         warrantystatus = COALESCE(NULLIF(?, ''), warrantystatus)
+            //     WHERE machToolsId = ?`;
+             const warrantyQuery = `
+                    UPDATE machtoolsfixedassetwarranty
+                    SET purchaseDate = ?, 
+                        expireDate = ?, 
+                        warrantystatus = ?
+                    WHERE machToolsId = ?`;
+                    ;
 
             const warrantyParams = [
                 formatToMySQLDateTime(warrantyDetails.purchaseDate) || null,
@@ -1088,6 +1090,7 @@ exports.updateFixedAsset = (req, res) => {
                 assetId
             ];
 
+            console.log("params", warrantyParams)
             // Execute the update queries in sequence with enhanced error logging
             db.plantcare.query(updateAssetQuery, updateParams, (queryErr) => {
                 if (queryErr) {
