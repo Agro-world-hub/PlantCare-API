@@ -354,7 +354,7 @@ exports.createFarmWithStaff = async (farmData) => {
 exports.getAllFarmByUserId = async (userId) => {
     return new Promise((resolve, reject) => {
         const query = `
-        SELECT userId, farmName, farmIndex, extentha, extentac, extentp, district, plotNo, street, city, staffCount, appUserCount, imageId
+        SELECT id,userId, farmName, farmIndex, extentha, extentac, extentp, district, plotNo, street, city, staffCount, appUserCount, imageId
         FROM farms
         WHERE userId = ?
         ORDER BY createdAt DESC
@@ -369,6 +369,59 @@ exports.getAllFarmByUserId = async (userId) => {
         });
     });
 };
+
+exports.getFarmByIdWithStaff = async (farmId, userId) => {
+    return new Promise((resolve, reject) => {
+        // First get farm data
+        const farmQuery = `
+            SELECT id, userId, farmName, farmIndex, extentha, extentac, extentp, 
+                   district, plotNo, street, city, staffCount, appUserCount, imageId
+            FROM farms
+            WHERE id = ? AND userId = ?
+        `;
+
+        db.plantcare.query(farmQuery, [farmId, userId], (error, farmResults) => {
+            if (error) {
+                console.error("Error fetching farm:", error);
+                reject(error);
+                return;
+            }
+
+            if (farmResults.length === 0) {
+                resolve(null);
+                return;
+            }
+
+            const farm = farmResults[0];
+
+            // Get staff data for this farm
+            const staffQuery = `
+                SELECT id, ownerId, farmId, firstName, lastName, phoneCode, 
+                       phoneNumber, role, LEFT(image, 256) as image, createdAt
+                FROM farmstaff
+                WHERE farmId = ?
+                ORDER BY role ASC, firstName ASC, lastName ASC
+            `;
+
+            db.plantcare.query(staffQuery, [farmId], (staffError, staffResults) => {
+                if (staffError) {
+                    console.error("Error fetching staff:", staffError);
+                    reject(staffError);
+                    return;
+                }
+
+                // Combine farm and staff data
+                const result = {
+                    farm: farm,
+                    staff: staffResults || []
+                };
+
+                resolve(result);
+            });
+        });
+    });
+};
+
 
 
 exports.createPaymentAndUpdateMembership = async (paymentData) => {

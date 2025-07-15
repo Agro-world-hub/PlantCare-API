@@ -93,6 +93,27 @@ exports.getFarms = asyncHandler(async (req, res) => {
     }
 });
 
+
+exports.getFarmById = asyncHandler(async (req, res) => {
+    try {
+        const farmId = req.params.id;
+        const userId = req.user.id;
+
+        // Get farm data with staff
+        const farmData = await farmDao.getFarmByIdWithStaff(farmId, userId);
+
+        if (!farmData) {
+            return res.status(404).json({ message: "Farm not found" });
+        }
+
+        res.status(200).json(farmData);
+    } catch (error) {
+        console.error("Error fetching farm:", error);
+        res.status(500).json({ message: "Failed to fetch farm" });
+    }
+});
+
+
 exports.CreatePayment = asyncHandler(async (req, res) => {
     try {
         const userId = req.user.id;
