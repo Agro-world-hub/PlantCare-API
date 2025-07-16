@@ -23,23 +23,40 @@ exports.loginUser = async (req, res) => {
 
         const user = users[0];
         console.log("user", user)
-        const token = jwt.sign({ id: user.id, phoneNumber: user.phoneNumber, membership: user.membership,
-                paymentActiveStatus: user.paymentActiveStatus,
-                farmCount : user.farmCount
-             },
+        // const token = jwt.sign({
+        //     id: user.id, phoneNumber: user.phoneNumber, membership: user.membership,
+        //     paymentActiveStatus: user.paymentActiveStatus,
+        //     farmCount: user.farmCount
+        // },
+        //     process.env.JWT_SECRET || Tl, {
+        //     expiresIn: "8h",
+        // }
+        // );
+        const token = jwt.sign({
+            id: user.id, phoneNumber: user.phoneNumber, membership: user.membership
+
+        },
             process.env.JWT_SECRET || Tl, {
             expiresIn: "8h",
         }
+
         );
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || "Tl");
+        const { membership, paymentActiveStatus, farmCount } = decoded;
+        console.log("decodeeeeeeeee", decoded)
+
+
+        console.log("------token----------", token)
 
         res.status(200).json({
             status: "success",
             message: "Login successful",
             token,
-              user: {
+            user: {
                 membership: user.membership,
                 paymentActiveStatus: user.paymentActiveStatus,
-                farmCount : user.farmCount
+                farmCount: user.farmCount
             }
         });
     } catch (err) {
@@ -108,16 +125,51 @@ exports.SignupUser = asyncHandler(async (req, res) => {
     }
 });
 
+// exports.getProfileDetails = asyncHandler(async (req, res) => {
+//     try {
+//          const token = req.headers.authorization?.split(" ")[1];
+//          const decoded = jwt.verify(token, process.env.JWT_SECRET || "Tl");
+
+//         const {  membership, paymentActiveStatus, farmCount } = decoded;
+//         console.log(decoded)
+//         const userId = req.user.id;
+//         // Retrieve user profile from the database using the DAO function
+//         const user = await userProfileDao.getUserProfileById(userId);
+
+//         if (!user) {
+//             return res.status(404).json({
+//                 status: "error",
+//                 message: "User not found",
+//             });
+//         }
+
+//         res.status(200).json({
+//             status: "success",
+//             user: user,
+//             usermembership: {
+//  membership: membership,
+//                 paymentActiveStatus: paymentActiveStatus,
+//                 farmCount : farmCount
+//             }
+//         });
+//     } catch (err) {
+//         console.error("Error fetching profile details:", err);
+//         res.status(500).json({
+//             status: "error",
+//             message: "An error occurred while fetching profile details.",
+//         });
+//     }
+// });
+
+
 exports.getProfileDetails = asyncHandler(async (req, res) => {
     try {
-         const token = req.headers.authorization?.split(" ")[1];
-         const decoded = jwt.verify(token, process.env.JWT_SECRET || "Tl");
-
-        const {  membership, paymentActiveStatus, farmCount } = decoded;
-        console.log(decoded)
         const userId = req.user.id;
+
         // Retrieve user profile from the database using the DAO function
         const user = await userProfileDao.getUserProfileById(userId);
+
+        console.log("usetttt", user)
 
         if (!user) {
             return res.status(404).json({
@@ -126,13 +178,16 @@ exports.getProfileDetails = asyncHandler(async (req, res) => {
             });
         }
 
+        // Extract the additional fields from the user object
+        const { membership, paymentActiveStatus, farmCount, ...userProfile } = user;
+
         res.status(200).json({
             status: "success",
-            user: user,
+            user: userProfile,
             usermembership: {
- membership: membership,
+                membership: membership,
                 paymentActiveStatus: paymentActiveStatus,
-                farmCount : farmCount
+                farmCount: farmCount
             }
         });
     } catch (err) {

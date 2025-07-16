@@ -72,7 +72,7 @@ exports.loginUser = (phonenumber) => {
             }
 
             if (userResults.length > 0) {
-                return resolve(userResults);  
+                return resolve(userResults);
             }
 
             const farmstaffSql = `
@@ -150,37 +150,141 @@ exports.insertUser = (firstName, lastName, phoneNumber, NICnumber, district, far
 //         });
 //     });
 // };
+// exports.getUserProfileById = (userId) => {
+//     return new Promise((resolve, reject) => {
+//         // First, check if the user exists in the users table
+//         const usersSql = "SELECT * FROM users WHERE id = ?";
+
+//         db.plantcare.query(usersSql, [userId], (err, userResults) => {
+//             if (err) {
+//                 return reject(err);
+//             }
+
+//             // If a user is found in the users table, return the user profile
+//             if (userResults.length > 0) {
+//                 return resolve(userResults[0]);  // Return the user profile from users table
+//             }
+
+//             // If no user found in users table, check the farmstaff table
+//             const farmstaffSql = "SELECT * FROM farmstaff WHERE id = ?";
+
+//             db.plantcare.query(farmstaffSql, [userId], (err, farmstaffResults) => {
+//                 if (err) {
+//                     return reject(err);
+//                 }
+
+//                 // If farmstaff record is found, return the farmstaff profile
+//                 if (farmstaffResults.length > 0) {
+//                     return resolve(farmstaffResults[0]);  // Return the farmstaff profile
+//                 }
+
+//                 // If no record is found in either table, return null
+//                 resolve(null);
+//             });
+//         });
+//     });
+// };
+
 exports.getUserProfileById = (userId) => {
     return new Promise((resolve, reject) => {
         // First, check if the user exists in the users table
-        const usersSql = "SELECT * FROM users WHERE id = ?";
-        
+        const usersSql = `
+            SELECT 
+                id,
+                firstName,
+                lastName,
+                phoneNumber,
+                NICnumber,
+                LEFT(profileImage, 256) as profileImage,
+                LEFT(farmerQr, 256) as farmerQr,
+                membership,
+                activeStatus
+            FROM users 
+            WHERE id = ?
+        `;
+
         db.plantcare.query(usersSql, [userId], (err, userResults) => {
             if (err) {
                 return reject(err);
             }
 
-            // If a user is found in the users table, return the user profile
+            // If a user is found in the users table
             if (userResults.length > 0) {
-                return resolve(userResults[0]);  // Return the user profile from users table
+                const user = userResults[0];
+
+                // Get farm count for this user
+                const farmCountSql = "SELECT COUNT(*) as farmCount FROM farms WHERE userId = ?";
+
+                db.plantcare.query(farmCountSql, [userId], (err, farmCountResults) => {
+                    if (err) {
+                        return reject(err);
+                    }
+
+                    const farmCount = farmCountResults[0].farmCount || 0;
+
+                    // Prepare the response with additional fields
+                    const userProfile = {
+                        ...user,
+                        membership: user.membership || null,
+                        paymentActiveStatus: user.activeStatus === 1 ? 1 : 0, // 1 for active, 0 for inactive
+                        farmCount: farmCount
+                    };
+
+                    return resolve(userProfile);
+                });
+            } else {
+                // If no user found in users table, check the farmstaff table
+                const farmstaffSql = `
+                    SELECT 
+                        id,
+                        firstName,
+                        lastName,
+                        phoneNumber,
+                        NICnumber,
+                        LEFT(profileImage, 256) as profileImage,
+                        LEFT(farmerQr, 256) as farmerQr,
+                        membership,
+                        activeStatus
+                    FROM farmstaff 
+                    WHERE id = ?
+                `;
+
+                db.plantcare.query(farmstaffSql, [userId], (err, farmstaffResults) => {
+                    if (err) {
+                        return reject(err);
+                    }
+
+                    // If farmstaff record is found
+                    if (farmstaffResults.length > 0) {
+                        const farmstaff = farmstaffResults[0];
+
+                        // For farmstaff, they might not have farms directly associated
+                        // But we can still check if there are any farms associated with this staff member
+                        const farmCountSql = "SELECT COUNT(*) as farmCount FROM farms WHERE userId = ?";
+
+                        db.plantcare.query(farmCountSql, [userId], (err, farmCountResults) => {
+                            if (err) {
+                                return reject(err);
+                            }
+
+                            const farmCount = farmCountResults[0].farmCount || 0;
+
+                            // Prepare the response with additional fields
+                            const farmstaffProfile = {
+                                ...farmstaff,
+                                membership: farmstaff.membership || null,
+                                paymentActiveStatus: farmstaff.activeStatus === 1 ? 1 : 0, // 1 for active, 0 for inactive
+                                farmCount: farmCount
+                            };
+
+                            return resolve(farmstaffProfile);
+                        });
+                    } else {
+                        // If no record is found in either table, return null
+                        resolve(null);
+                    }
+                });
             }
-
-            // If no user found in users table, check the farmstaff table
-            const farmstaffSql = "SELECT * FROM farmstaff WHERE id = ?";
-
-            db.plantcare.query(farmstaffSql, [userId], (err, farmstaffResults) => {
-                if (err) {
-                    return reject(err);
-                }
-
-                // If farmstaff record is found, return the farmstaff profile
-                if (farmstaffResults.length > 0) {
-                    return resolve(farmstaffResults[0]);  // Return the farmstaff profile
-                }
-
-                // If no record is found in either table, return null
-                resolve(null);
-            });
         });
     });
 };

@@ -14,11 +14,16 @@ router.get('/get-farms/byFarm-Id/:id', auth, farmEp.getFarmById);
 
 router.post('/add-payment', auth, farmEp.CreatePayment);
 
+router.get('/get-cropCount/:farmId', auth, farmEp.getCropCountByFarmId);
+
 
 //cultivation
 router.get("/get-user-ongoing-cul/:farmId", auth, farmEp.OngoingCultivaionGetById);
 
 router.post("/enroll-crop/:farmId", auth, farmEp.enroll);
+
+
+router.post("/members-phoneNumber-checker", farmEp.phoneNumberChecker);
 
 
 module.exports = router;

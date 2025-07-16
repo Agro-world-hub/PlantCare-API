@@ -94,9 +94,23 @@ const enrollSchema = Joi.object({
     }),
 });
 
+
+exports.signupCheckerSchema = Joi.object({
+    phoneNumber: Joi.string()
+        .pattern(/^\+?\d{10,15}$/)
+        .optional()
+        .label('Phone Number')
+        .messages({
+            "string.pattern.base": "Phone number must be a valid format with 10-15 digits."
+        }),
+
+});
+
+
 // Export both schemas in a single module.exports
 module.exports = {
     createFarm,
     createPayment,
-    enrollSchema
+    enrollSchema,
+    signupCheckerSchema: exports.signupCheckerSchema
 };
