@@ -1,26 +1,65 @@
 const db = require("../startup/database");
 
+// exports.getPaginatedPosts = (limit, offset) => {
+//   return new Promise((resolve, reject) => {
+//     const sql = `
+//             SELECT 
+//                 p.id,
+//                 p.userId,
+//                 p.heading,
+//                 p.message,
+//                 p.postimage,
+//                 p.createdAt,
+//                 COUNT(r.chatId) AS replyCount 
+//             FROM 
+//                 publicforumposts p 
+//             LEFT JOIN 
+//                 publicforumreplies r ON p.id = r.chatId 
+//             GROUP BY 
+//                 p.id 
+//             ORDER BY 
+//                 p.createdAt DESC
+//             LIMIT ? OFFSET ?;
+//         `;
+//     db.plantcare.query(sql, [limit, offset], (err, results) => {
+//       if (err) {
+//         reject(err);
+//       } else {
+//         const posts = results.map((post) => ({
+//           ...post,
+//           postimage: post.postimage ? post.postimage.toString("base64") : null,
+//         }));
+//         resolve(posts);
+//       }
+//     });
+//   });
+// };
 exports.getPaginatedPosts = (limit, offset) => {
   return new Promise((resolve, reject) => {
     const sql = `
-            SELECT 
-                p.id,
-                p.userId,
-                p.heading,
-                p.message,
-                p.postimage,
-                p.createdAt,
-                COUNT(r.chatId) AS replyCount 
-            FROM 
-                publicforumposts p 
-            LEFT JOIN 
-                publicforumreplies r ON p.id = r.chatId 
-            GROUP BY 
-                p.id 
-            ORDER BY 
-                p.createdAt DESC
-            LIMIT ? OFFSET ?;
-        `;
+      SELECT 
+        p.id,
+        p.userId,
+        p.heading,
+        p.message,
+        p.postimage,
+        p.createdAt,
+        COUNT(r.chatId) AS replyCount,
+        COALESCE(CONCAT(u.firstName, ' ', u.lastName), CONCAT(s.firstName, ' ', s.lastName)) AS userName
+      FROM 
+        publicforumposts p
+      LEFT JOIN 
+        publicforumreplies r ON p.id = r.chatId
+      LEFT JOIN
+        users u ON p.userId = u.id
+      LEFT JOIN
+        farmstaff s ON p.userId = s.id
+      GROUP BY 
+        p.id, u.firstName, u.lastName, s.firstName, s.lastName
+      ORDER BY 
+        p.createdAt DESC
+      LIMIT ? OFFSET ?;
+    `;
     db.plantcare.query(sql, [limit, offset], (err, results) => {
       if (err) {
         reject(err);
@@ -34,6 +73,8 @@ exports.getPaginatedPosts = (limit, offset) => {
     });
   });
 };
+
+
 
 exports.getTotalPostsCount = () => {
   return new Promise((resolve, reject) => {
