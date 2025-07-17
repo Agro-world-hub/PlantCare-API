@@ -7,6 +7,8 @@ const signupDao = require('../dao/userAuth-dao');
 const ValidationSchema = require('../validations/userAuth-validation')
 const uploadFileToS3 = require('../Middlewares/s3upload');
 const delectfilesOnS3 = require('../Middlewares/s3delete')
+const delectfloders3 = require('../Middlewares/s3folderdelete')
+
 
 exports.loginUser = async (req, res) => {
     console.log("hittt")
@@ -357,9 +359,11 @@ exports.uploadProfileImage = async (req, res) => {
         // console.log("R2_ENDPOINT", process.env.R2_ENDPOINT);
 
         const existingProfileImage = await userAuthDao.getUserProfileImage(userId);
-        if (existingProfileImage) {
-            delectfilesOnS3(existingProfileImage);
-        }
+        // if (existingProfileImage) {
+        //     delectfilesOnS3(existingProfileImage);
+        // }
+
+        await delectfloders3(`users/profile-images/${userId}`)
 
         let profileImageUrl = null;
 
@@ -367,7 +371,7 @@ exports.uploadProfileImage = async (req, res) => {
             const fileName = req.file.originalname;
             const imageBuffer = req.file.buffer;
 
-            const uploadedImage = await uploadFileToS3(imageBuffer, fileName, "users/profile-images");
+            const uploadedImage = await uploadFileToS3(imageBuffer, fileName, `users/profile-images/${userId}`);
             profileImageUrl = uploadedImage;
         } else {
         }
