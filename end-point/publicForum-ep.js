@@ -8,6 +8,7 @@ const {
 } = require("../validations/publicForum-validation");
 const postsDao = require("../dao/publicForum-dao");
 const uploadFileToS3  = require('../Middlewares/s3upload')
+const delectfilesOnS3 = require('../Middlewares/s3delete')
 
 exports.getPosts = asyncHandler(async (req, res) => {
   try {
@@ -110,6 +111,33 @@ exports.createPost = asyncHandler(async (req, res) => {
     res.status(201).json({ message: "Post created", postId: newPostId });
   } catch (err) {
     console.error("Error creating post:", err);
+
+    if (err.isJoi) {
+      return res.status(400).json({
+        status: "error",
+        message: err.details[0].message,
+      });
+    }
+
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+exports.deletePost = asyncHandler(async (req, res) => {
+  console.log("Deleting post...");
+  console.log("Request params:", req.params);
+  console.log("Req body:", req.body);
+  try {
+    const { postId } = req.params;
+
+    await postsDao.deletePost(postId);
+
+    res.status(200).json({ message: "Post deleted successfully" });
+    if(res.statusCode === 200 && req.body.postimage) {
+      await delectfilesOnS3(req.body.postimage);
+    }
+  } catch (err) {
+    console.error("Error deleting post:", err);
 
     if (err.isJoi) {
       return res.status(400).json({
