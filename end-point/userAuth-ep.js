@@ -33,7 +33,7 @@ exports.loginUser = async (req, res) => {
         // }
         // );
         const token = jwt.sign({
-            id: user.id, phoneNumber: user.phoneNumber, membership: user.membership
+            id: user.id, phoneNumber: user.phoneNumber, membership: user.membership, ownerId: user.ownerId
 
         },
             process.env.JWT_SECRET || Tl, {
@@ -179,12 +179,13 @@ exports.getProfileDetails = asyncHandler(async (req, res) => {
         }
 
         // Extract the additional fields from the user object
-        const { membership, paymentActiveStatus, farmCount, ...userProfile } = user;
+        const { id, membership, paymentActiveStatus, farmCount, ...userProfile } = user;
 
         res.status(200).json({
             status: "success",
             user: userProfile,
             usermembership: {
+                id: id,
                 membership: membership,
                 paymentActiveStatus: paymentActiveStatus,
                 farmCount: farmCount

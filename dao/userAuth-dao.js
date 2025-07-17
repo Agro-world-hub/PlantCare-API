@@ -58,7 +58,8 @@ exports.loginUser = (phonenumber) => {
                     FROM farms f 
                     WHERE f.userId = u.id
                 ) AS farmCount,
-                 'Owner' AS farmerType
+                 'Owner' AS farmerType,
+                 u.id AS ownerId
             FROM users u
             LEFT JOIN membershippayment mp ON u.id = mp.userId
             WHERE u.phoneNumber = ?
@@ -80,7 +81,8 @@ exports.loginUser = (phonenumber) => {
                     fs.*, 
                     mp.activeStatus AS paymentActiveStatus, 
                     1 AS farmCount,
-                    'Staff' AS farmerType
+                    'Staff' AS farmerType,
+                     fs.ownerId AS ownerId 
                 FROM farmstaff fs
                 LEFT JOIN membershippayment mp ON fs.ownerId = mp.userId
                  WHERE CONCAT(fs.phoneCode, fs.phoneNumber) = ?
