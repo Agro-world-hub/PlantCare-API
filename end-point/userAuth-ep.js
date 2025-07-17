@@ -406,6 +406,8 @@ exports.registerBankDetails = async (req, res) => {
 exports.uploadProfileImage = async (req, res) => {
     try {
         const userId = req.user.id;
+        const ownerId = req.user.ownerId
+        console.log("ownerID", ownerId)
 
         // console.log("R2_ACCOUNT_ID", process.env.R2_ACCOUNT_ID);
         // console.log("R2_BUCKET_NAME", process.env.R2_BUCKET_NAME);
@@ -419,7 +421,7 @@ exports.uploadProfileImage = async (req, res) => {
         //     delectfilesOnS3(existingProfileImage);
         // }
 
-        await delectfloders3(`users/profile-images/${userId}`)
+        await delectfloders3(`users/profile-images/owner${ownerId}/user${userId}`)
 
         let profileImageUrl = null;
 
@@ -427,7 +429,7 @@ exports.uploadProfileImage = async (req, res) => {
             const fileName = req.file.originalname;
             const imageBuffer = req.file.buffer;
 
-            const uploadedImage = await uploadFileToS3(imageBuffer, fileName, `users/profile-images/${userId}`);
+            const uploadedImage = await uploadFileToS3(imageBuffer, fileName, `users/profile-images/owner${ownerId}/user${userId}`);
             profileImageUrl = uploadedImage;
         } else {
         }
