@@ -176,3 +176,16 @@ exports.createPost = (userId, heading, message, postimage) => {
     });
   });
 };
+
+exports.deletePost = (postId) => {
+  return new Promise((resolve, reject) => {
+    const sql = "DELETE FROM publicforumposts WHERE id = ?";
+    db.plantcare.query(sql, [postId], (err, result) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(result.affectedRows > 0); 
+      }
+    });
+  });
+}
