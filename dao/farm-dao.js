@@ -222,6 +222,136 @@
 
 const db = require("../startup/database");
 
+// exports.createFarmWithStaff = async (farmData) => {
+//     let connection;
+
+//     try {
+//         // Get connection from pool
+//         connection = await new Promise((resolve, reject) => {
+//             db.plantcare.getConnection((err, conn) => {
+//                 if (err) return reject(err);
+//                 resolve(conn);
+//             });
+//         });
+
+//         // Start transaction
+//         await new Promise((resolve, reject) => {
+//             connection.beginTransaction(err => {
+//                 if (err) return reject(err);
+//                 resolve(true);
+//             });
+//         });
+
+//         // Get the current farm count for this user to generate farmIndex
+//         const getFarmCountSql = `SELECT COUNT(*) as farmCount FROM farms WHERE userId = ?`;
+//         const [countResult] = await connection.promise().query(getFarmCountSql, [farmData.userId]);
+//         const currentFarmCount = countResult[0].farmCount;
+//         const nextFarmIndex = currentFarmCount + 1;
+
+//         // Format phone numbers and validate
+//         if (farmData.staff && Array.isArray(farmData.staff)) {
+//             farmData.staff = farmData.staff.map(staff => {
+//                 // Ensure phone number has +94 prefix
+//                 let phoneNumber = staff.phoneNumber;
+//                 if (!phoneNumber.startsWith('+94')) {
+//                     if (phoneNumber.startsWith('0')) {
+//                         phoneNumber = '+94' + phoneNumber.substring(1);
+//                     } else {
+//                         phoneNumber = '+94' + phoneNumber;
+//                     }
+//                 }
+//                 return {
+//                     ...staff,
+//                     phoneNumber: phoneNumber.replace(/\D/g, '') // Remove non-digit characters
+//                 };
+//             });
+//         }
+
+//         // Insert farm with auto-generated farmIndex
+//         const insertFarmSql = `
+//             INSERT INTO farms 
+//             (userId, farmName, farmIndex, extentha, extentac, extentp, district, plotNo, street, city, staffCount, appUserCount, imageId)
+//             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+//         `;
+
+//         const farmValues = [
+//             farmData.userId,
+//             farmData.farmName,
+//             nextFarmIndex, // Auto-generated farmIndex
+//             farmData.extentha,
+//             farmData.extentac,
+//             farmData.extentp,
+//             farmData.district,
+//             farmData.plotNo,
+//             farmData.street,
+//             farmData.city,
+//             farmData.staffCount,
+//             farmData.appUserCount,
+//             farmData.farmImage
+//         ];
+
+//         const [farmResult] = await connection.promise().query(insertFarmSql, farmValues);
+//         const farmId = farmResult.insertId;
+//         const staffIds = [];
+
+//         // Insert staff if provided
+//         if (farmData.staff && farmData.staff.length > 0) {
+//             const insertStaffSql = `
+//                 INSERT INTO farmstaff 
+//                 (ownerId, farmId, firstName, lastName, phoneCode, phoneNumber, role, image)
+//                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+//             `;
+
+//             for (const staff of farmData.staff) {
+//                 const [staffResult] = await connection.promise().query(insertStaffSql, [
+//                     farmData.userId,
+//                     farmId,
+//                     staff.firstName,
+//                     staff.lastName,
+//                     '+94', // Hardcoded as we've formatted the number
+//                     staff.phoneNumber.replace('+94', ''), // Store without country code
+//                     staff.role,
+//                     staff.image || null
+//                 ]);
+//                 staffIds.push(staffResult.insertId);
+//             }
+//         }
+
+//         // Commit transaction
+//         await new Promise((resolve, reject) => {
+//             connection.commit(err => {
+//                 if (err) return reject(err);
+//                 resolve(true);
+//             });
+//         });
+
+//         return {
+//             success: true,
+//             farmId,
+//             farmIndex: nextFarmIndex, // Return the generated farmIndex
+//             staffIds,
+//             message: 'Farm and staff created successfully'
+//         };
+
+//     } catch (error) {
+//         // Rollback transaction if connection exists
+//         if (connection) {
+//             await new Promise(resolve => {
+//                 connection.rollback(() => resolve(true));
+//             });
+//         }
+//         console.error('Database error:', error);
+//         throw error;
+
+//     } finally {
+//         // Release connection back to pool
+//         if (connection) {
+//             connection.release();
+//         }
+//     }
+// };
+
+
 exports.createFarmWithStaff = async (farmData) => {
     let connection;
 
@@ -248,21 +378,25 @@ exports.createFarmWithStaff = async (farmData) => {
         const currentFarmCount = countResult[0].farmCount;
         const nextFarmIndex = currentFarmCount + 1;
 
-        // Format phone numbers and validate
+        // Validate and clean staff data
         if (farmData.staff && Array.isArray(farmData.staff)) {
             farmData.staff = farmData.staff.map(staff => {
-                // Ensure phone number has +94 prefix
+                // Clean phone number (remove any non-digit characters except +)
+                let phoneCode = staff.phoneCode || '+94';
                 let phoneNumber = staff.phoneNumber;
-                if (!phoneNumber.startsWith('+94')) {
-                    if (phoneNumber.startsWith('0')) {
-                        phoneNumber = '+94' + phoneNumber.substring(1);
-                    } else {
-                        phoneNumber = '+94' + phoneNumber;
-                    }
+
+                // Ensure phoneCode starts with +
+                if (!phoneCode.startsWith('+')) {
+                    phoneCode = '+' + phoneCode;
                 }
+
+                // Clean phoneNumber (remove any non-digit characters)
+                phoneNumber = phoneNumber.replace(/\D/g, '');
+
                 return {
                     ...staff,
-                    phoneNumber: phoneNumber.replace(/\D/g, '') // Remove non-digit characters
+                    phoneCode: phoneCode,
+                    phoneNumber: phoneNumber
                 };
             });
         }
@@ -308,8 +442,8 @@ exports.createFarmWithStaff = async (farmData) => {
                     farmId,
                     staff.firstName,
                     staff.lastName,
-                    '+94', // Hardcoded as we've formatted the number
-                    staff.phoneNumber.replace('+94', ''), // Store without country code
+                    staff.phoneCode,     // Use the phoneCode from frontend
+                    staff.phoneNumber,   // Use the phoneNumber from frontend
                     staff.role,
                     staff.image || null
                 ]);
@@ -755,6 +889,54 @@ exports.enrollSlaveCrop = (userId, cropId, startDate, onCulscropID, farmId) => {
                     resolve(result);
                 }
             });
+        });
+    });
+};
+
+
+
+
+exports.phoneNumberChecker = (phoneNumber) => {
+    return new Promise((resolve, reject) => {
+        const formattedPhoneNumber = `+${String(phoneNumber).replace(/^\+/, "")}`;
+        console.log("DAO - formatted phone number:", formattedPhoneNumber);
+
+        // Check both users table and farmstaff table
+        const checkQuery = `
+            SELECT phoneNumber FROM users WHERE phoneNumber = ?
+            UNION
+            SELECT CONCAT(phoneCode, phoneNumber) as phoneNumber FROM farmstaff WHERE CONCAT(phoneCode, phoneNumber) = ?
+        `;
+
+        db.plantcare.query(checkQuery, [formattedPhoneNumber, formattedPhoneNumber], (err, results) => {
+            if (err) {
+                console.error("Database error:", err);
+                reject(err);
+            } else {
+                console.log("DAO - query results:", results);
+                resolve(results);
+            }
+        });
+    });
+};
+
+
+
+
+exports.getCropCountByFarmId = (userId, farmId) => {
+    return new Promise((resolve, reject) => {
+        const query = `
+            SELECT COUNT(*) as cropCount
+            FROM plant_care.ongoingcultivationscrops occ
+            INNER JOIN plant_care.ongoingcultivations oc ON occ.ongoingCultivationId = oc.id
+            WHERE oc.userId = ? AND occ.farmId = ?
+        `;
+        db.plantcare.query(query, [userId, farmId], (err, results) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(results[0].cropCount);
+            }
         });
     });
 };

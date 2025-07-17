@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const farmDao = require("../dao/farm-dao");
-const { createFarm, createPayment } = require('../validations/farm-validation');
+const { createFarm, createPayment, signupCheckerSchema } = require('../validations/farm-validation');
+
 
 
 
@@ -320,5 +321,81 @@ exports.enroll = asyncHandler(async (req, res) => {
     } catch (err) {
         console.error("Error during enrollment:", err);
         res.status(500).json({ message: "Internal Server Error" });
+    }
+});
+
+
+
+// ENDPOINT
+exports.phoneNumberChecker = asyncHandler(async (req, res) => {
+    console.log("beforeeeeee")
+    try {
+        const { phoneNumber } = await signupCheckerSchema.validateAsync(req.body);
+        const results = await farmDao.phoneNumberChecker(phoneNumber);
+        console.log("checkkk", phoneNumber)
+        console.log("results from database:", results); // Add this debug log
+
+        let phoneNumberExists = false;
+
+        // Normalize the input phone number for comparison
+        const normalizedInputPhone = `+${String(phoneNumber).replace(/^\+/, "")}`;
+        console.log("normalized input:", normalizedInputPhone); // Add this debug log
+
+        results.forEach((user) => {
+            console.log("comparing with:", user.phoneNumber); // Add this debug log
+            if (user.phoneNumber === normalizedInputPhone) {
+                phoneNumberExists = true;
+            }
+        });
+
+        console.log("phoneNumberExists:", phoneNumberExists); // Add this debug log
+
+        if (phoneNumberExists) {
+            return res.status(409).json({
+                status: "error",
+                message: "This phone number already exists."
+            });
+        }
+
+        // Phone number is available
+        res.status(200).json({
+            status: "success",
+            message: "Phone number is available!"
+        });
+    } catch (err) {
+        console.error("Error in phoneNumberChecker:", err);
+        if (err.isJoi) {
+            return res.status(400).json({
+                status: "error",
+                message: err.details[0].message,
+            });
+        }
+        res.status(500).json({
+            status: "error",
+            message: "Internal Server Error!"
+        });
+    }
+});
+
+
+
+///farmcount
+
+exports.getCropCountByFarmId = asyncHandler(async (req, res) => {
+    try {
+        const farmId = req.params.farmId; // Changed from req.params.id to req.params.farmId
+        const userId = req.user.id;
+
+        // Get crop count - parameters are now in correct order
+        const cropCount = await farmDao.getCropCountByFarmId(userId, farmId);
+
+        if (cropCount === null || cropCount === undefined) {
+            return res.status(404).json({ message: "Farm not found or no crops found" });
+        }
+
+        res.status(200).json({ cropCount }); // Return as object for consistency
+    } catch (error) {
+        console.error("Error fetching crop count:", error);
+        res.status(500).json({ message: "Failed to fetch crop count" });
     }
 });

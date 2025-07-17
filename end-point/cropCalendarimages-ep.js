@@ -1,12 +1,12 @@
 const multer = require('multer');
 const imageupDao = require("../dao/cropCalendarimages-dao");
 const asyncHandler = require("express-async-handler");
-const uploadFileToS3  = require('../Middlewares/s3upload')
+const uploadFileToS3 = require('../Middlewares/s3upload')
 
 const storage = multer.memoryStorage();
 exports.upload = multer({
     storage: storage,
-    limits: { fileSize: 10 * 1024 * 1024 }, 
+    limits: { fileSize: 10 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
         const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/jpg'];
         if (!allowedMimeTypes.includes(file.mimetype)) {
@@ -16,7 +16,7 @@ exports.upload = multer({
     },
 });
 
-exports.uploadImage = asyncHandler(async(req, res) => {
+exports.uploadImage = asyncHandler(async (req, res) => {
     try {
 
         if (!req.file) {
@@ -40,7 +40,7 @@ exports.uploadImage = asyncHandler(async(req, res) => {
                 mimeType: req.file.mimetype,
                 size: req.file.size,
             },
-            result: result, 
+            result: result,
         });
     } catch (error) {
         if (error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE') {
@@ -49,12 +49,12 @@ exports.uploadImage = asyncHandler(async(req, res) => {
             });
         }
 
-        console.error('Error during image upload:', error); 
+        console.error('Error during image upload:', error);
         res.status(500).json({ message: 'Internal Server Error', error: error.message });
     }
 });
 
-exports.getRequiredImagesEndpoint = asyncHandler(async(req, res) => {
+exports.getRequiredImagesEndpoint = asyncHandler(async (req, res) => {
     try {
         const { cropId } = req.params;
 
@@ -73,9 +73,8 @@ exports.getRequiredImagesEndpoint = asyncHandler(async(req, res) => {
             requiredImages: requiredImages,
         });
     } catch (error) {
-        console.error('Error fetching required images:', error); 
+        console.error('Error fetching required images:', error);
         res.status(500).json({ message: 'Internal Server Error', error: error.message });
     }
-}); 
-
+});
 
