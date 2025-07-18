@@ -90,13 +90,14 @@ exports.createPost = asyncHandler(async (req, res) => {
   try {
     const { heading, message } = await createPostSchema.validateAsync(req.body);
     const userId = req.user.id;
+    const ownerId = req.user.ownerId;
 
     let postimage = null;
 
     if (req.file) {
       const fileName = req.file.originalname;
       const imageBuffer = req.file.buffer
-        const image = await uploadFileToS3(imageBuffer, fileName, "taskimages/image");
+        const image = await uploadFileToS3(imageBuffer, fileName, `plantcareuser/owner${ownerId}/user${userId}`);
       postimage = image; 
     } else {
     }
@@ -129,13 +130,10 @@ exports.deletePost = asyncHandler(async (req, res) => {
   console.log("Req body:", req.body);
   try {
     const { postId } = req.params;
-
     await postsDao.deletePost(postId);
-
+      await delectfilesOnS3(req.body.postImage);
     res.status(200).json({ message: "Post deleted successfully" });
-    if(res.statusCode === 200 && req.body.postimage) {
-      await delectfilesOnS3(req.body.postimage);
-    }
+
   } catch (err) {
     console.error("Error deleting post:", err);
 

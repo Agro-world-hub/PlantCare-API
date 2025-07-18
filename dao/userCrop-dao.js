@@ -473,9 +473,10 @@ exports.getSlaveCropCalendarDaysByUserAndCrop = (userId, cropCalendarId) => {
 exports.getSlaveCropCalendarPrgress = (userId, cropCalendarId) => {
     return new Promise((resolve, reject) => {
         const sql = `
-        SELECT status
-        FROM slavecropcalendardays 
-        WHERE userId = ? AND cropCalendarId = ?
+        SELECT sc.status, ocs.farmId
+        FROM slavecropcalendardays sc
+        LEFT JOIN ongoingcultivationscrops ocs ON ocs.id = sc.onCulscropID
+        WHERE sc.userId = ? AND sc.cropCalendarId = ?
     `;
         db.plantcare.query(sql, [userId, cropCalendarId], (err, results) => {
             if (err) {

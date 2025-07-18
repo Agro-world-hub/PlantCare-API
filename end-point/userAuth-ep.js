@@ -343,6 +343,7 @@ exports.registerBankDetails = async (req, res) => {
     } = req.body;
 
     const userId = req.user.id;
+    const ownerId = req.user.ownerId;
 
     try {
         const bankDetailsExist = await userAuthDao.checkBankDetailsExist(userId);
@@ -363,7 +364,7 @@ exports.registerBankDetails = async (req, res) => {
             );
 
             await new Promise((resolve, reject) => {
-                userAuthDao.createQrCode(userId)
+                userAuthDao.createQrCode(userId, ownerId)
                     .then(successMessage => {
                         console.log("QR code created successfully:", successMessage);
                         resolve(successMessage);
@@ -417,11 +418,11 @@ exports.uploadProfileImage = async (req, res) => {
         // console.log("R2_ENDPOINT", process.env.R2_ENDPOINT);
 
         const existingProfileImage = await userAuthDao.getUserProfileImage(userId);
-        // if (existingProfileImage) {
-        //     delectfilesOnS3(existingProfileImage);
-        // }
+        if (existingProfileImage) {
+            delectfilesOnS3(existingProfileImage);
+        }
 
-        await delectfloders3(`users/profile-images/owner${ownerId}/user${userId}`)
+        // await delectfloders3(`users/profile-images/owner${ownerId}/user${userId}`)
 
         let profileImageUrl = null;
 
@@ -429,7 +430,7 @@ exports.uploadProfileImage = async (req, res) => {
             const fileName = req.file.originalname;
             const imageBuffer = req.file.buffer;
 
-            const uploadedImage = await uploadFileToS3(imageBuffer, fileName, `users/profile-images/owner${ownerId}/user${userId}`);
+            const uploadedImage = await uploadFileToS3(imageBuffer, fileName, `plantcareuser/owner${ownerId}/user${userId}`);
             profileImageUrl = uploadedImage;
         } else {
         }
