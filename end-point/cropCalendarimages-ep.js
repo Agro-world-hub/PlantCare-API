@@ -23,14 +23,18 @@ exports.uploadImage = asyncHandler(async (req, res) => {
             return res.status(400).json({ message: 'No file uploaded.' });
         }
 
-        const { slaveId } = req.body;
+        const { slaveId, farmId, onCulscropID } = req.body;
+        const ownerId = req.user.ownerId
+        console.log("req body",ownerId, farmId, onCulscropID)
         if (!slaveId) {
             return res.status(400).json({ message: 'No slaveId provided.' });
         }
 
         const imageBuffer = req.file.buffer;
         const fileName = req.file.originalname;
-        const image = await uploadFileToS3(imageBuffer, fileName, "taskimages/image");
+        // const image = await uploadFileToS3(imageBuffer, fileName, `taskimages/image/owner${ownerId}/farm${farmId}/onCulscropID${onCulscropID}`);
+        const image = await uploadFileToS3(imageBuffer, fileName, `plantcareuser/owner${ownerId}/farm${farmId}/onCulscropID${onCulscropID}`);
+
 
         const result = await imageupDao.insertTaskImage(slaveId, image);
 

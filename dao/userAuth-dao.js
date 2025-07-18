@@ -458,7 +458,7 @@ exports.generateQRCode = (data, callback) => {
 //     }
 // };
 
-exports.createQrCode = async (userId) => {
+exports.createQrCode = async (userId, ownerId) => {
     try {
         const qrData = {
             userInfo: {
@@ -474,7 +474,7 @@ exports.createQrCode = async (userId) => {
         );
         const fileName = `qrCode_${userId}.png`;
 
-        const profileImageUrl = await uploadFileToS3(qrCodeBuffer, fileName, "users/farmerQr");
+        const profileImageUrl = await uploadFileToS3(qrCodeBuffer, fileName, `plantcareuser/owner${ownerId}`);
         await exports.updateQRCode(userId, profileImageUrl);
 
         return "QR code created and updated successfully";
