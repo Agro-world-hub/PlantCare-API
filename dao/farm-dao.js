@@ -940,3 +940,102 @@ exports.getCropCountByFarmId = (userId, farmId) => {
         });
     });
 };
+
+
+
+
+exports.updateFarm = async (farmData) => {
+    let connection;
+
+    try {
+        // Get connection from pool
+        connection = await new Promise((resolve, reject) => {
+            db.plantcare.getConnection((err, conn) => {
+                if (err) return reject(err);
+                resolve(conn);
+            });
+        });
+
+        // Start transaction
+        await new Promise((resolve, reject) => {
+            connection.beginTransaction(err => {
+                if (err) return reject(err);
+                resolve(true);
+            });
+        });
+
+        // Update farm - Change 'farmId' to your actual primary key column name
+        // Common alternatives: 'id', 'farm_id', 'FarmId'
+        const updateFarmSql = `
+            UPDATE farms 
+            SET 
+                farmName = ?, 
+                farmIndex = ?, 
+                extentha = ?, 
+                extentac = ?, 
+                extentp = ?, 
+                district = ?, 
+                plotNo = ?, 
+                street = ?, 
+                city = ?, 
+                staffCount = ?, 
+                imageId = ?
+            WHERE id = ? AND userId = ?
+        `;
+        // ↑ Changed 'farmId' to 'id' - replace with your actual column name
+
+        const farmValues = [
+            farmData.farmName,
+            farmData.farmIndex,
+            farmData.extentha,
+            farmData.extentac,
+            farmData.extentp,
+            farmData.district,
+            farmData.plotNo,
+            farmData.street,
+            farmData.city,
+            farmData.staffCount,
+            farmData.farmImage,
+            farmData.farmId, // This should match whatever you're passing from the endpoint
+            farmData.userId
+        ];
+
+        const [updateResult] = await connection.promise().query(updateFarmSql, farmValues);
+
+        // Check if any rows were affected
+        if (updateResult.affectedRows === 0) {
+            throw new Error('No farm was updated. Please check if the farm exists and you have permission to update it.');
+        }
+
+        // Commit transaction
+        await new Promise((resolve, reject) => {
+            connection.commit(err => {
+                if (err) return reject(err);
+                resolve(true);
+            });
+        });
+
+        return {
+            success: true,
+            farmId: farmData.farmId,
+            affectedRows: updateResult.affectedRows,
+            message: 'Farm updated successfully'
+        };
+
+    } catch (error) {
+        // Rollback transaction if connection exists
+        if (connection) {
+            await new Promise(resolve => {
+                connection.rollback(() => resolve(true));
+            });
+        }
+        console.error('Database error:', error);
+        throw error;
+
+    } finally {
+        // Release connection back to pool
+        if (connection) {
+            connection.release();
+        }
+    }
+};

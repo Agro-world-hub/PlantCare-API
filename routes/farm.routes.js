@@ -25,7 +25,7 @@ router.post("/enroll-crop/:farmId", auth, farmEp.enroll);
 
 router.post("/members-phoneNumber-checker", farmEp.phoneNumberChecker);
 
-
+router.put('/update-farm', auth, farmEp.UpdateFarm);
 
 
 module.exports = router;
