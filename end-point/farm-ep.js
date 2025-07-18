@@ -1,6 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const farmDao = require("../dao/farm-dao");
-const { createFarm, createPayment, signupCheckerSchema, updateFarm } = require('../validations/farm-validation');
+const { createFarm, createPayment, signupCheckerSchema, updateFarm, createStaffMember } = require('../validations/farm-validation');
 
 
 
@@ -479,5 +479,176 @@ exports.UpdateFarm = asyncHandler(async (req, res) => {
             message: "Internal Server Error",
             error: process.env.NODE_ENV === 'development' ? err.message : undefined
         });
+    }
+});
+
+
+
+// exports.CreateNewStaffMember = asyncHandler(async (req, res) => {
+//     console.log('Staff member creation request:', req.body);
+//     try {
+//         const userId = req.user.id;
+//         const { farmId } = req.params; // Get farmId from URL params
+//         console.log('User ID:', userId, 'Farm ID:', farmId);
+
+//         // Create input object for validation
+//         const input = {
+//             ...req.body,
+//             farmId // Include farmId in input for validation
+//         };
+
+//         // Validate input (you'll need to create/update your validation schema)
+//         const { value, error } = createStaffMember.validate(input); // Note: changed from createFarm
+//         if (error) {
+//             return res.status(400).json({
+//                 status: "error",
+//                 message: error.details[0].message,
+//             });
+//         }
+
+//         console.log("Validated input:", value);
+
+//         const {
+//             firstName,
+//             lastName,
+//             phoneNumber,
+//             countryCode,
+//             role
+//         } = value;
+
+//         // Create staff member
+//         const result = await farmDao.CreateStaffMember({
+//             userId,
+//             farmId,
+//             firstName,
+//             lastName,
+//             phoneNumber,
+//             countryCode,
+//             role
+//         });
+
+//         console.log("Staff member creation result:", result);
+
+//         res.status(201).json({
+//             status: "success",
+//             message: "Staff member created successfully.",
+//             staffId: result.staffId,
+//             data: result.data
+//         });
+
+//     } catch (err) {
+//         console.error("Error creating staff member:", err);
+//         res.status(500).json({
+//             status: "error",
+//             message: "Internal Server Error",
+//             error: process.env.NODE_ENV === 'development' ? err.message : undefined
+//         });
+//     }
+// });
+
+exports.CreateNewStaffMember = asyncHandler(async (req, res) => {
+    console.log('Staff member creation request:', req.body);
+    try {
+        const userId = req.user.id;
+        const { farmId } = req.params; // Get farmId from URL params
+        console.log('User ID:', userId, 'Farm ID:', farmId);
+
+        // Create input object for validation
+        const input = {
+            ...req.body,
+            farmId // Include farmId in input for validation
+        };
+
+        // Validate input (you'll need to create/update your validation schema)
+        const { value, error } = createStaffMember.validate(input); // Note: changed from createFarm
+        if (error) {
+            return res.status(400).json({
+                status: "error",
+                message: error.details[0].message,
+            });
+        }
+
+        console.log("Validated input:", value);
+
+        const {
+            firstName,
+            lastName,
+            phoneNumber,
+            countryCode,
+            role
+        } = value;
+
+        // Create staff member
+        const result = await farmDao.CreateStaffMember({
+            userId,
+            farmId,
+            firstName,
+            lastName,
+            phoneNumber,
+            countryCode,
+            role
+        });
+
+        console.log("Staff member creation result:", result);
+
+        res.status(201).json({
+            status: "success",
+            message: "Staff member created successfully.",
+            staffId: result.staffId,
+            data: result.data
+        });
+
+    } catch (err) {
+        console.error("Error creating staff member:", err);
+        res.status(500).json({
+            status: "error",
+            message: "Internal Server Error",
+            error: process.env.NODE_ENV === 'development' ? err.message : undefined
+        });
+    }
+});
+
+
+exports.getStaffMember = asyncHandler(async (req, res) => {
+    try {
+        const { staffMemberId } = req.params; // Fixed: destructure to get the actual value
+
+        // Get staff member data
+        const staffMemberData = await farmDao.getStaffMember(staffMemberId);
+
+        if (!staffMemberData || staffMemberData.length === 0) {
+            return res.status(404).json({ message: "Staff member not found" });
+        }
+
+        // Return single staff member (first result)
+        res.status(200).json(staffMemberData[0]);
+    } catch (error) {
+        console.error("Error fetching Staff member:", error);
+        res.status(500).json({ message: "Failed to fetch staff member" });
+    }
+});
+
+
+exports.updateStaffMember = asyncHandler(async (req, res) => {
+    try {
+        const { staffMemberId } = req.params;
+        const { firstName, lastName, phoneNumber, countryCode, role } = req.body;
+
+        const result = await farmDao.updateStaffMember(staffMemberId, {
+            firstName,
+            lastName,
+            phoneNumber,
+            phoneCode: countryCode,
+            role
+        });
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Staff member not found" });
+        }
+
+        res.status(200).json({ message: "Staff member updated successfully" });
+    } catch (error) {
+        console.error("Error updating staff member:", error);
+        res.status(500).json({ message: "Failed to update staff member" });
     }
 });

@@ -75,6 +75,15 @@ const updateFarm = Joi.object({
 
 });
 
+const createStaffMember = Joi.object({
+    farmId: Joi.number().integer().positive().required(),
+    firstName: Joi.string().min(2).max(50).required(),
+    lastName: Joi.string().min(2).max(50).required(),
+    phoneNumber: Joi.string().pattern(/^\d{7,15}$/).required(),
+    countryCode: Joi.string().pattern(/^\+\d{1,4}$/).required(),
+    role: Joi.string().required(),
+});
+
 exports.ongoingCultivationSchema = Joi.object({
     limit: Joi.number().optional(), // For pagination, optional
     offset: Joi.number().optional(), // For pagination, optional
@@ -140,5 +149,6 @@ module.exports = {
     createPayment,
     enrollSchema,
     signupCheckerSchema: exports.signupCheckerSchema,
-    updateFarm
+    updateFarm,
+    createStaffMember
 };
