@@ -1,6 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const farmDao = require("../dao/farm-dao");
-const { createFarm, createPayment, signupCheckerSchema } = require('../validations/farm-validation');
+const { createFarm, createPayment, signupCheckerSchema, updateFarm } = require('../validations/farm-validation');
 
 
 
@@ -49,7 +49,7 @@ exports.CreateFarm = asyncHandler(async (req, res) => {
         } = value;
 
         // Create farm and staff in a transaction
-        const result = await farmDao.createFarmWithStaff({
+        const result = await farmDao.updateFarm({
             userId,
             farmName,
             farmImage,
@@ -397,5 +397,87 @@ exports.getCropCountByFarmId = asyncHandler(async (req, res) => {
     } catch (error) {
         console.error("Error fetching crop count:", error);
         res.status(500).json({ message: "Failed to fetch crop count" });
+    }
+});
+
+
+
+exports.UpdateFarm = asyncHandler(async (req, res) => {
+    console.log('Farm update request:', req.body);
+
+    try {
+        const userId = req.user.id;
+        const input = { ...req.body, userId };
+
+        console.log('User ID:', userId);
+
+        // Validate input - you might want to create a separate validation schema for updates
+        const { value, error } = updateFarm.validate(input);
+        if (error) {
+            return res.status(400).json({
+                status: "error",
+                message: error.details[0].message,
+            });
+        }
+
+        console.log("Validated input:", value);
+
+        const {
+            farmId, // This should be provided to identify which farm to update
+            farmName,
+            farmIndex,
+            farmImage,
+            extentha,
+            extentac,
+            extentp,
+            district,
+            plotNo,
+            street,
+            city,
+            staffCount
+        } = value;
+
+        // Check if farmId is provided
+        if (!farmId) {
+            return res.status(400).json({
+                status: "error",
+                message: "farmId is required for updating a farm",
+            });
+        }
+
+        // Update farm
+        const result = await farmDao.updateFarm({
+            userId,
+            farmId,
+            farmName,
+            farmImage,
+            farmIndex,
+            extentha,
+            extentac,
+            extentp,
+            district,
+            plotNo,
+            street,
+            city,
+            staffCount
+        });
+
+        console.log("Farm update result:", result);
+
+        res.status(200).json({
+            status: "success",
+            message: "Farm updated successfully.",
+            farmId: result.farmId,
+            updatedRows: result.affectedRows
+        });
+
+    } catch (err) {
+        console.error("Error updating farm:", err);
+
+        res.status(500).json({
+            status: "error",
+            message: "Internal Server Error",
+            error: process.env.NODE_ENV === 'development' ? err.message : undefined
+        });
     }
 });

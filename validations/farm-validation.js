@@ -48,6 +48,33 @@ const createPayment = Joi.object({
     activeStatus: Joi.number().valid(0, 1).default(1)
 });
 
+
+const updateFarm = Joi.object({
+    // User ID added by middleware
+    userId: Joi.number().required(),
+
+    // Basic farm details
+    farmId: Joi.number().required(),
+    farmName: Joi.string().required(),
+    farmIndex: Joi.number().optional().default(1), // Uncommented this line
+    farmImage: Joi.number().optional().default(1),
+
+    // Extent details
+    extentha: Joi.string().required(),
+    extentac: Joi.string().required(),
+    extentp: Joi.string().required(),
+
+    // Location details
+    district: Joi.string().required(),
+    plotNo: Joi.string().required(),
+    street: Joi.string().required(),
+    city: Joi.string().required(),
+
+    // Staff details
+    staffCount: Joi.string().required(),
+
+});
+
 exports.ongoingCultivationSchema = Joi.object({
     limit: Joi.number().optional(), // For pagination, optional
     offset: Joi.number().optional(), // For pagination, optional
@@ -112,5 +139,6 @@ module.exports = {
     createFarm,
     createPayment,
     enrollSchema,
-    signupCheckerSchema: exports.signupCheckerSchema
+    signupCheckerSchema: exports.signupCheckerSchema,
+    updateFarm
 };
