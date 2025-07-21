@@ -27,5 +27,11 @@ router.post("/members-phoneNumber-checker", farmEp.phoneNumberChecker);
 
 router.put('/update-farm', auth, farmEp.UpdateFarm);
 
+router.post('/create-new-staffmember/:farmId', auth, farmEp.CreateNewStaffMember);
+
+router.get('/get-staffMmber-byId/:staffMemberId', auth, farmEp.getStaffMember)
+
+router.put('/update-staffmember/:staffMemberId', auth, farmEp.updateStaffMember)
+
 
 module.exports = router;
