@@ -189,3 +189,38 @@ exports.deletePost = (postId) => {
     });
   });
 }
+
+exports.getPostbyId = (postId) => {
+  console.log("postid", postId)
+   return new Promise((resolve, reject) => {
+    const sql = `SELECT * FROM publicforumposts WHERE id = ?`;
+    db.plantcare.query(sql, [postId], (err, result) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(result[0]);
+        console.log(result)
+      }
+    });
+  });
+}
+
+exports.updatePost = (postId, heading, message, postimage) => {
+  return new Promise((resolve, reject) => {
+    // Update the post by its postId
+    const sql = `
+      UPDATE publicforumposts 
+      SET heading = ?, message = ?, postimage = ?
+      WHERE id = ?
+    `;
+    
+    // If postimage is null (no new image), pass NULL in the query
+    db.plantcare.query(sql, [heading, message, postimage || null, postId], (err, result) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(result); // Return result of the update operation
+      }
+    });
+  });
+};

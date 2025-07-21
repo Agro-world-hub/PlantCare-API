@@ -10,5 +10,7 @@ router.get('/get/:chatId', postsEp.getReplies);
 router.post('/add/reply', auth, postsEp.createReply);
 router.post('/add/post', auth, upload.single('postimage'), postsEp.createPost);
 router.delete('/delete/:postId', auth, postsEp.deletePost);
+router.get('/getpost/:postId', postsEp.getPostbyId); 
+router.put('/updatepost/:postId', auth, upload.single('postimage'),postsEp.updatepost)
 
 module.exports = router;

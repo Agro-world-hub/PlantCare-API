@@ -5,10 +5,11 @@ const {
   getRepliesSchema,
   createReplySchema,
   createPostSchema,
+  updatepostschema
 } = require("../validations/publicForum-validation");
 const postsDao = require("../dao/publicForum-dao");
 const uploadFileToS3  = require('../Middlewares/s3upload')
-const delectfilesOnS3 = require('../Middlewares/s3delete')
+const delectfilesOnS3 = require('../Middlewares/s3delete');
 
 exports.getPosts = asyncHandler(async (req, res) => {
   try {
@@ -147,3 +148,45 @@ exports.deletePost = asyncHandler(async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+exports.getPostbyId =  asyncHandler(async (req,res) => {
+  const {postId }= req.params;
+  try{
+ const result = await postsDao.getPostbyId(postId);
+ res.status(200).json(result)
+  }catch{
+
+  }
+})
+
+exports.updatepost = asyncHandler(async (req,res) => {
+    console.log("hittttttt update post by id")
+
+   const {postId }= req.params;
+   console.log(postId, req.body)
+
+     const { heading, message , prepostimage} = await updatepostschema.validateAsync(req.body);
+    const userId = req.user.id;
+    const ownerId = req.user.ownerId;
+
+    let postimage = null;
+
+    if (prepostimage){
+      await delectfilesOnS3(req.body.prepostimage);
+    }
+    if (req.file) {
+      const fileName = req.file.originalname;
+      const imageBuffer = req.file.buffer
+        const image = await uploadFileToS3(imageBuffer, fileName, `plantcareuser/owner${ownerId}/user${userId}`);
+      postimage = image; 
+    } else {
+    }
+
+    const update = await postsDao.updatePost(
+      postId,
+      heading,
+      message,
+      postimage
+    );
+
+    res.status(200).json({ message: "Post update succuess"});
+})
