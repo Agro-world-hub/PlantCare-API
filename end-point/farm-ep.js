@@ -1,6 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const farmDao = require("../dao/farm-dao");
-const { createFarm, createPayment, signupCheckerSchema, updateFarm, createStaffMember } = require('../validations/farm-validation');
+const { createFarm, createPayment, signupCheckerSchema, updateFarm, createStaffMember, getSlaveCropCalendarDaysSchema } = require('../validations/farm-validation');
 
 
 
@@ -49,7 +49,7 @@ exports.CreateFarm = asyncHandler(async (req, res) => {
         } = value;
 
         // Create farm and staff in a transaction
-        const result = await farmDao.updateFarm({
+        const result = await farmDao.createFarmWithStaff({
             userId,
             farmName,
             farmImage,
@@ -91,6 +91,7 @@ exports.getFarms = asyncHandler(async (req, res) => {
     try {
         const userId = req.user.id;
         const farms = await farmDao.getAllFarmByUserId(userId);
+        console.log("far,ss", farms)
 
         if (!farms || farms.length === 0) {
             return res.status(404).json({ message: "No farms found" });
@@ -650,5 +651,45 @@ exports.updateStaffMember = asyncHandler(async (req, res) => {
     } catch (error) {
         console.error("Error updating staff member:", error);
         res.status(500).json({ message: "Failed to update staff member" });
+    }
+});
+
+/////////////renew
+
+exports.getrenew = asyncHandler(async (req, res) => {
+    try {
+        const userId = req.user.ownerId;
+        const membershipData = await farmDao.getrenew(userId);
+
+        if (!membershipData) {
+            return res.status(404).json({
+                success: false,
+                message: "Membership not found",
+                needsRenewal: true
+            });
+        }
+
+        // Check if renewal is needed based on expireDate
+        const currentDate = new Date();
+        const expireDate = new Date(membershipData.expireDate);
+        const needsRenewal = currentDate > expireDate;
+
+        res.status(200).json({
+            success: true,
+            data: {
+                id: membershipData.id,
+                userId: membershipData.userId,
+                expireDate: membershipData.expireDate,
+                needsRenewal: needsRenewal,
+                status: needsRenewal ? 'expired' : 'active',
+                daysRemaining: needsRenewal ? 0 : Math.ceil((expireDate - currentDate) / (1000 * 60 * 60 * 24))
+            }
+        });
+    } catch (error) {
+        console.error("Error fetching user membership:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch user membership"
+        });
     }
 });

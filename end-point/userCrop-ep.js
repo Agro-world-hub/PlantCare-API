@@ -309,7 +309,7 @@ exports.UpdateOngoingCultivationScrops = asyncHandler(async (req, res) => {
     try {
         const { extentha, extentac, extentp, onCulscropID } = req.body;
 
-        if (!extentha || !extentac || !extentp ) {
+        if (!extentha || !extentac || !extentp) {
             return res.status(400).json({ message: "Extent and Start Date are required." });
         }
 
@@ -326,31 +326,79 @@ exports.UpdateOngoingCultivationScrops = asyncHandler(async (req, res) => {
 });
 
 
+// exports.getSlaveCropCalendarDaysByUserAndCrop = asyncHandler(async (req, res) => {
+//     try {
+//         await getSlaveCropCalendarDaysSchema.validateAsync(req.params);
+
+//         const userId = req.user.id;
+//         const cropCalendarId = req.params.cropCalendarId;
+
+//         const results = await cropDao.getSlaveCropCalendarDaysByUserAndCrop(userId, cropCalendarId);
+
+//         if (results.length === 0) {
+//             return res.status(404).json({
+//                 message: "No records found for the given userId and cropCalendarId.",
+//             });
+//         }
+
+
+//         return res.status(200).json(results);
+
+//     } catch (err) {
+//         console.error("Error in getSlaveCropCalendarDaysByUserAndCrop:", err);
+
+//         if (err.isJoi) {
+//             return res.status(400).json({
+//                 status: 'error',
+//                 message: err.details[0].message,
+//             });
+//         }
+
+//         return res.status(500).json({ message: "Internal Server Error!" });
+//     }
+// });
+
 exports.getSlaveCropCalendarDaysByUserAndCrop = asyncHandler(async (req, res) => {
     try {
+        // Debug: Log all parameters
+        console.log("DEBUG: req.params:", req.params);
+        console.log("DEBUG: req.query:", req.query);
+        console.log("DEBUG: Route parameters received:");
+        console.log("  - cropCalendarId:", req.params.cropCalendarId);
+        console.log("  - farmId:", req.params.farmId);
+
+        // Validate parameters
         await getSlaveCropCalendarDaysSchema.validateAsync(req.params);
 
         const userId = req.user.id;
         const cropCalendarId = req.params.cropCalendarId;
+        const farmId = req.params.farmId;
 
-        const results = await cropDao.getSlaveCropCalendarDaysByUserAndCrop(userId, cropCalendarId);
+        console.log("DEBUG: Validated parameters:");
+        console.log("  - userId:", userId);
+        console.log("  - cropCalendarId:", cropCalendarId);
+        console.log("  - farmId:", farmId);
+
+        const results = await cropDao.getSlaveCropCalendarDaysByUserAndCrop(userId, cropCalendarId, farmId);
 
         if (results.length === 0) {
             return res.status(404).json({
-                message: "No records found for the given userId and cropCalendarId.",
+                message: "No records found for the given userId, cropCalendarId, and farmId.",
             });
         }
 
-
+        console.log("DEBUG: Results found:", results.length);
         return res.status(200).json(results);
 
     } catch (err) {
         console.error("Error in getSlaveCropCalendarDaysByUserAndCrop:", err);
 
         if (err.isJoi) {
+            console.log("DEBUG: Validation error details:", err.details);
             return res.status(400).json({
                 status: 'error',
                 message: err.details[0].message,
+                received_params: req.params
             });
         }
 
@@ -359,15 +407,17 @@ exports.getSlaveCropCalendarDaysByUserAndCrop = asyncHandler(async (req, res) =>
 });
 
 
+
 exports.getSlaveCropCalendarPrgress = asyncHandler(async (req, res) => {
     try {
         await getSlaveCropCalendarDaysSchema.validateAsync(req.params);
 
         const userId = req.user.id;
         const cropCalendarId = req.params.cropCalendarId;
+        const farmId = req.params.farmId
 
 
-        const results = await cropDao.getSlaveCropCalendarPrgress(userId, cropCalendarId);
+        const results = await cropDao.getSlaveCropCalendarPrgress(userId, cropCalendarId, farmId);
 
         if (results.length === 0) {
             return res.status(404).json({

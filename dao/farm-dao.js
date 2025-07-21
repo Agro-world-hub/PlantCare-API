@@ -485,14 +485,52 @@ exports.createFarmWithStaff = async (farmData) => {
     }
 };
 
+// exports.getAllFarmByUserId = async (userId) => {
+//     return new Promise((resolve, reject) => {
+//         const query = `
+//         SELECT id,userId, farmName, farmIndex, extentha, extentac, extentp, district, plotNo, street, city, staffCount, appUserCount, imageId
+//         FROM farms
+//         WHERE userId = ?
+//         ORDER BY createdAt DESC
+//       `;
+//         db.plantcare.query(query, [userId], (error, results) => {
+//             if (error) {
+//                 console.error("Error fetching farms:", error);
+//                 reject(error);
+//             } else {
+//                 resolve(results);
+//             }
+//         });
+//     });
+// };
+
 exports.getAllFarmByUserId = async (userId) => {
     return new Promise((resolve, reject) => {
         const query = `
-        SELECT id,userId, farmName, farmIndex, extentha, extentac, extentp, district, plotNo, street, city, staffCount, appUserCount, imageId
-        FROM farms
-        WHERE userId = ?
-        ORDER BY createdAt DESC
-      `;
+            SELECT 
+                f.id,
+                f.userId, 
+                f.farmName, 
+                f.farmIndex, 
+                f.extentha, 
+                f.extentac, 
+                f.extentp, 
+                f.district, 
+                f.plotNo, 
+                f.street, 
+                f.city, 
+                f.staffCount, 
+                f.appUserCount, 
+                f.imageId,
+                COALESCE(COUNT(occ.farmId), 0) as farmCropCount
+            FROM farms f
+            LEFT JOIN ongoingcultivationscrops occ ON f.id = occ.farmId
+            WHERE f.userId = ?
+            GROUP BY f.id, f.userId, f.farmName, f.farmIndex, f.extentha, f.extentac, f.extentp, 
+                     f.district, f.plotNo, f.street, f.city, f.staffCount, f.appUserCount, f.imageId
+            ORDER BY f.createdAt DESC
+        `;
+
         db.plantcare.query(query, [userId], (error, results) => {
             if (error) {
                 console.error("Error fetching farms:", error);
@@ -664,22 +702,59 @@ exports.createPaymentAndUpdateMembership = async (paymentData) => {
 
 ////cultivation
 
+// exports.getOngoingCultivationsByUserIdAndFarmId = (userId, farmId, callback) => {
+//     const sql = `
+//         SELECT * 
+//         FROM ongoingcultivations c 
+//         JOIN ongoingcultivationscrops oc ON c.id = oc.ongoingCultivationId
+//         JOIN cropcalender cc ON oc.cropCalendar = cc.id
+//         JOIN cropvariety cr ON cc.cropVarietyId = cr.id 
+//         WHERE c.userId = ? AND oc.farmId = ?
+//         ORDER BY oc.ongoingCultivationId ASC, oc.cropCalendar ASC, oc.farmId ASC
+//     `;
+
+//     db.plantcare.query(sql, [userId, farmId], (err, results) => {
+//         if (err) {
+//             console.error("Database error:", err);
+//             return callback(err, null);
+//         }
+//         callback(null, results);
+//     });
+// };
+
 exports.getOngoingCultivationsByUserIdAndFarmId = (userId, farmId, callback) => {
     const sql = `
-        SELECT * 
+        SELECT 
+            c.id,
+            c.userId,
+            oc.startedAt,
+            oc.farmId,
+            oc.cropCalendar,
+            cr.id as cropId,
+            cr.varietyNameEnglish,
+            cr.varietyNameSinhala,
+            cr.varietyNameTamil,
+            cr.image,
+            DATE_FORMAT(oc.startedAt, '%Y-%m-%d') as staredAt
         FROM ongoingcultivations c 
         JOIN ongoingcultivationscrops oc ON c.id = oc.ongoingCultivationId
         JOIN cropcalender cc ON oc.cropCalendar = cc.id
         JOIN cropvariety cr ON cc.cropVarietyId = cr.id 
         WHERE c.userId = ? AND oc.farmId = ?
-        ORDER BY oc.ongoingCultivationId ASC, oc.cropCalendar ASC, oc.farmId ASC
+        ORDER BY oc.startedAt DESC, oc.cropCalendar ASC
     `;
+
+    console.log('DEBUG: Executing query with userId:', userId, 'farmId:', farmId);
 
     db.plantcare.query(sql, [userId, farmId], (err, results) => {
         if (err) {
             console.error("Database error:", err);
             return callback(err, null);
         }
+
+        console.log('DEBUG: Query results count:', results.length);
+        console.log('DEBUG: Sample result farmIds:', results.slice(0, 3).map(r => r.farmId));
+
         callback(null, results);
     });
 };
@@ -1298,6 +1373,29 @@ exports.updateStaffMember = async (staffMemberId, staffData) => {
                 reject(error);
             } else {
                 resolve(results);
+            }
+        });
+    });
+};
+
+//////////////renew
+
+exports.getrenew = async (userId) => {
+    return new Promise((resolve, reject) => {
+        const query = `
+            SELECT id, userId, expireDate, activeStatus, plan, payment
+            FROM membershippayment
+            WHERE userId = ? AND activeStatus = 1
+            ORDER BY expireDate DESC
+            LIMIT 1
+        `;
+
+        db.plantcare.query(query, [userId], (error, results) => {
+            if (error) {
+                console.error("Error fetching user membership:", error);
+                reject(error);
+            } else {
+                resolve(results.length > 0 ? results[0] : null);
             }
         });
     });
