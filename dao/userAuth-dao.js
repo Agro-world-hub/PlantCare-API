@@ -58,7 +58,7 @@ exports.loginUser = (phonenumber) => {
                     FROM farms f 
                     WHERE f.userId = u.id
                 ) AS farmCount,
-                 'Owner' AS farmerType,
+                 'Owner' AS role,
                  u.id AS ownerId
             FROM users u
             LEFT JOIN membershippayment mp ON u.id = mp.userId
@@ -81,7 +81,6 @@ exports.loginUser = (phonenumber) => {
                     fs.*, 
                     mp.activeStatus AS paymentActiveStatus, 
                     1 AS farmCount,
-                    'Staff' AS farmerType,
                      fs.ownerId AS ownerId 
                 FROM farmstaff fs
                 LEFT JOIN membershippayment mp ON fs.ownerId = mp.userId
@@ -187,7 +186,7 @@ exports.insertUser = (firstName, lastName, phoneNumber, NICnumber, district, far
 //     });
 // };
 
-exports.getUserProfileById = (userId) => {
+exports.getUserProfileById = (userId, ownerId) => {
     return new Promise((resolve, reject) => {
         // First, check if the user exists in the users table
         const usersSql = `
@@ -200,7 +199,8 @@ exports.getUserProfileById = (userId) => {
                 LEFT(profileImage, 256) as profileImage,
                 LEFT(farmerQr, 256) as farmerQr,
                 membership,
-                activeStatus
+                activeStatus,
+                'Owner' AS role
             FROM users 
             WHERE id = ?
         `;
@@ -229,7 +229,8 @@ exports.getUserProfileById = (userId) => {
                         ...user,
                         membership: user.membership || null,
                         paymentActiveStatus: user.activeStatus === 1 ? 1 : 0, // 1 for active, 0 for inactive
-                        farmCount: farmCount
+                        farmCount: farmCount,
+                        role:user.role
                     };
 
                     return resolve(userProfile);
@@ -242,11 +243,8 @@ exports.getUserProfileById = (userId) => {
                         firstName,
                         lastName,
                         phoneNumber,
-                        NICnumber,
-                        LEFT(profileImage, 256) as profileImage,
-                        LEFT(farmerQr, 256) as farmerQr,
-                        membership,
-                        activeStatus
+                        LEFT(Image, 256) as profileImage,
+                        role
                     FROM farmstaff 
                     WHERE id = ?
                 `;
@@ -264,7 +262,7 @@ exports.getUserProfileById = (userId) => {
                         // But we can still check if there are any farms associated with this staff member
                         const farmCountSql = "SELECT COUNT(*) as farmCount FROM farms WHERE userId = ?";
 
-                        db.plantcare.query(farmCountSql, [userId], (err, farmCountResults) => {
+                        db.plantcare.query(farmCountSql, [ownerId], (err, farmCountResults) => {
                             if (err) {
                                 return reject(err);
                             }
@@ -276,7 +274,8 @@ exports.getUserProfileById = (userId) => {
                                 ...farmstaff,
                                 membership: farmstaff.membership || null,
                                 paymentActiveStatus: farmstaff.activeStatus === 1 ? 1 : 0, // 1 for active, 0 for inactive
-                                farmCount: farmCount
+                                farmCount: farmCount,
+                                role:farmstaff.role
                             };
 
                             return resolve(farmstaffProfile);
