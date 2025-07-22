@@ -522,13 +522,14 @@ exports.getAllFarmByUserId = async (userId) => {
                 f.staffCount, 
                 f.appUserCount, 
                 f.imageId,
+                f.isBlock,
                 COALESCE(COUNT(occ.farmId), 0) as farmCropCount
             FROM farms f
             LEFT JOIN ongoingcultivationscrops occ ON f.id = occ.farmId
             WHERE f.userId = ?
             GROUP BY f.id, f.userId, f.farmName, f.farmIndex, f.extentha, f.extentac, f.extentp, 
-                     f.district, f.plotNo, f.street, f.city, f.staffCount, f.appUserCount, f.imageId
-            ORDER BY f.createdAt DESC
+                     f.district, f.plotNo, f.street, f.city, f.staffCount, f.appUserCount, f.imageId, f.isBlock
+            ORDER BY f.id DESC
         `;
 
         db.plantcare.query(query, [userId], (error, results) => {
@@ -730,6 +731,7 @@ exports.getOngoingCultivationsByUserIdAndFarmId = (userId, farmId, callback) => 
             oc.startedAt,
             oc.farmId,
             oc.cropCalendar,
+            oc.isBlock,
             cr.id as cropId,
             cr.varietyNameEnglish,
             cr.varietyNameSinhala,
@@ -1380,23 +1382,128 @@ exports.updateStaffMember = async (staffMemberId, staffData) => {
 
 //////////////renew
 
+// exports.getrenew = async (userId) => {
+//     return new Promise((resolve, reject) => {
+//         const query = `
+//             SELECT id, userId, expireDate, activeStatus, plan, payment
+//             FROM membershippayment
+//             WHERE userId = ? AND activeStatus = 1
+//             ORDER BY expireDate DESC
+//             LIMIT 1
+//         `;
+
+//         db.plantcare.query(query, [userId], (error, results) => {
+//             if (error) {
+//                 console.error("Error fetching user membership:", error);
+//                 reject(error);
+//             } else {
+//                 resolve(results.length > 0 ? results[0] : null);
+//             }
+//         });
+//     });
+// };
+
 exports.getrenew = async (userId) => {
     return new Promise((resolve, reject) => {
         const query = `
-            SELECT id, userId, expireDate, activeStatus, plan, payment
-            FROM membershippayment
-            WHERE userId = ? AND activeStatus = 1
-            ORDER BY expireDate DESC
+            SELECT id, userId, farmName, isBlock, district, city, 
+                   staffCount, appUserCount, imageId
+            FROM farms
+            WHERE userId = ?
+            ORDER BY id DESC
             LIMIT 1
         `;
-
         db.plantcare.query(query, [userId], (error, results) => {
             if (error) {
-                console.error("Error fetching user membership:", error);
+                console.error("Error fetching user farm:", error);
                 reject(error);
             } else {
                 resolve(results.length > 0 ? results[0] : null);
             }
+        });
+    });
+};
+
+// exports.deleteFarm = (farmId) => {
+//     return new Promise((resolve, reject) => {
+//         // First check if farm exists
+//         const checkSql = "SELECT id FROM farms WHERE id = ?";
+//         db.plantcare.query(checkSql, [farmId], (err, checkResult) => {
+//             if (err) {
+//                 reject(err);
+//                 return;
+//             }
+
+//             if (checkResult.length === 0) {
+//                 resolve(false); // Farm doesn't exist
+//                 return;
+//             }
+
+//             // Farm exists, proceed with deletion
+//             const deleteSql = "DELETE FROM farms WHERE id = ?";
+//             db.plantcare.query(deleteSql, [farmId], (err, result) => {
+//                 if (err) {
+//                     reject(err);
+//                 } else {
+//                     resolve(result.affectedRows > 0);
+//                 }
+//             });
+//         });
+//     });
+// };
+
+exports.deleteFarm = (farmId) => {
+    return new Promise((resolve, reject) => {
+        // First check if farm exists and get its details
+        const checkSql = "SELECT id, userId, farmIndex FROM farms WHERE id = ?";
+        db.plantcare.query(checkSql, [farmId], (err, checkResult) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+
+            if (checkResult.length === 0) {
+                resolve(false); // Farm doesn't exist
+                return;
+            }
+
+            const farmToDelete = checkResult[0];
+            const { userId, farmIndex } = farmToDelete;
+
+            // Delete the farm first
+            const deleteSql = "DELETE FROM farms WHERE id = ?";
+            db.plantcare.query(deleteSql, [farmId], (err, deleteResult) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                if (deleteResult.affectedRows === 0) {
+                    resolve(false);
+                    return;
+                }
+
+                // Now update farmIndex for remaining farms of the same user
+                // Decrease farmIndex by 1 for all farms with farmIndex greater than deleted farm's index
+                const updateIndexSql = `
+                    UPDATE farms 
+                    SET farmIndex = farmIndex - 1 
+                    WHERE userId = ? AND farmIndex > ?
+                `;
+
+                db.plantcare.query(updateIndexSql, [userId, farmIndex], (err, updateResult) => {
+                    if (err) {
+                        console.error("Error updating farm indexes:", err);
+                        // Even if index update fails, the farm was deleted successfully
+                        // We'll still return true but log the error
+                        resolve(true);
+                        return;
+                    }
+
+                    console.log(`Farm deleted successfully. ${updateResult.affectedRows} farm indexes were reordered.`);
+                    resolve(true);
+                });
+            });
         });
     });
 };

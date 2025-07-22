@@ -1,7 +1,8 @@
 const asyncHandler = require("express-async-handler");
 const farmDao = require("../dao/farm-dao");
 const { createFarm, createPayment, signupCheckerSchema, updateFarm, createStaffMember, getSlaveCropCalendarDaysSchema } = require('../validations/farm-validation');
-
+const delectfilesOnS3 = require('../Middlewares/s3delete');
+const delectfloders3 = require('../Middlewares/s3folderdelete')
 
 
 
@@ -288,11 +289,11 @@ exports.enroll = asyncHandler(async (req, res) => {
         const cropCountResult = await farmDao.checkCropCountByFarm(cultivationId, farmId);
         const cropCount = cropCountResult[0].count;
 
-        if (cropCount >= 3) {
-            return res
-                .status(400)
-                .json({ message: "You have already enrolled in 3 crops for this farm" });
-        }
+        // if (cropCount >= 3) {
+        //     return res
+        //         .status(400)
+        //         .json({ message: "You have already enrolled in 3 crops for this farm" });
+        // }
 
         // Updated: Check enrolled crops for specific farm
         const enrolledCrops = await farmDao.checkEnrollCropByFarm(cultivationId, farmId);
@@ -656,40 +657,182 @@ exports.updateStaffMember = asyncHandler(async (req, res) => {
 
 /////////////renew
 
+// exports.getrenew = asyncHandler(async (req, res) => {
+//     try {
+//         const userId = req.user.ownerId;
+//         const membershipData = await farmDao.getrenew(userId);
+
+//         if (!membershipData) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: "Membership not found",
+//                 needsRenewal: true
+//             });
+//         }
+
+//         // Check if renewal is needed based on expireDate
+//         const currentDate = new Date();
+//         const expireDate = new Date(membershipData.expireDate);
+//         const needsRenewal = currentDate > expireDate;
+
+//         res.status(200).json({
+//             success: true,
+//             data: {
+//                 id: membershipData.id,
+//                 userId: membershipData.userId,
+//                 expireDate: membershipData.expireDate,
+//                 needsRenewal: needsRenewal,
+//                 status: needsRenewal ? 'expired' : 'active',
+//                 daysRemaining: needsRenewal ? 0 : Math.ceil((expireDate - currentDate) / (1000 * 60 * 60 * 24))
+//             }
+//         });
+//     } catch (error) {
+//         console.error("Error fetching user membership:", error);
+//         res.status(500).json({
+//             success: false,
+//             message: "Failed to fetch user membership"
+//         });
+//     }
+// });
+
+
 exports.getrenew = asyncHandler(async (req, res) => {
     try {
         const userId = req.user.ownerId;
-        const membershipData = await farmDao.getrenew(userId);
+        const farmData = await farmDao.getrenew(userId);
 
-        if (!membershipData) {
+        if (!farmData) {
             return res.status(404).json({
                 success: false,
-                message: "Membership not found",
+                message: "Farm not found",
                 needsRenewal: true
             });
         }
 
-        // Check if renewal is needed based on expireDate
-        const currentDate = new Date();
-        const expireDate = new Date(membershipData.expireDate);
-        const needsRenewal = currentDate > expireDate;
+        // Check renewal status based on isBlock field
+        // isBlock = 0 means active, isBlock = 1 means needs renewal
+        const needsRenewal = farmData.isBlock === 1;
 
         res.status(200).json({
             success: true,
             data: {
-                id: membershipData.id,
-                userId: membershipData.userId,
-                expireDate: membershipData.expireDate,
+                id: farmData.id,
+                userId: farmData.userId,
+                farmName: farmData.farmName,
                 needsRenewal: needsRenewal,
-                status: needsRenewal ? 'expired' : 'active',
-                daysRemaining: needsRenewal ? 0 : Math.ceil((expireDate - currentDate) / (1000 * 60 * 60 * 24))
+                status: needsRenewal ? 'blocked' : 'active',
+                isBlock: farmData.isBlock,
+                district: farmData.district,
+                city: farmData.city,
+                staffCount: farmData.staffCount,
+                appUserCount: farmData.appUserCount
             }
         });
+
     } catch (error) {
-        console.error("Error fetching user membership:", error);
+        console.error("Error fetching user farm:", error);
         res.status(500).json({
             success: false,
-            message: "Failed to fetch user membership"
+            message: "Failed to fetch user farm"
+        });
+    }
+});
+
+// exports.deleteFarm = asyncHandler(async (req, res) => {
+//     console.log("Deleting farm...");
+//     console.log("Request params:", req.params);
+//     console.log("Req body:", req.body);
+
+//     try {
+//         const { farmId } = req.params; // Fixed: removed .farmId
+//         const ownerId = req.user.ownerId;
+
+//         console.log("Farm ID:", farmId);
+//         console.log("Owner ID:", ownerId);
+
+//         // Delete farm from database
+//         const deleteResult = await farmDao.deleteFarm(farmId);
+
+//         if (!deleteResult) {
+//             return res.status(404).json({
+//                 status: "error",
+//                 message: "Farm not found or already deleted"
+//             });
+//         }
+
+//         // Delete S3 folder
+//         await delectfloders3(`plantcareuser/owner${ownerId}/farm${farmId}`);
+
+//         res.status(200).json({
+//             status: "success",
+//             message: "Farm deleted successfully"
+//         });
+
+//     } catch (err) {
+//         console.error("Error deleting farm:", err);
+
+//         if (err.isJoi) {
+//             return res.status(400).json({
+//                 status: "error",
+//                 message: err.details[0].message,
+//             });
+//         }
+
+//         res.status(500).json({
+//             status: "error",
+//             error: "Internal Server Error"
+//         });
+//     }
+// });
+
+exports.deleteFarm = asyncHandler(async (req, res) => {
+    console.log("Deleting farm...");
+    console.log("Request params:", req.params);
+    console.log("Req body:", req.body);
+
+    try {
+        const { farmId } = req.params;
+        const ownerId = req.user.ownerId;
+
+        console.log("Farm ID:", farmId);
+        console.log("Owner ID:", ownerId);
+
+        // Delete farm from database (this will also reorder farmIndex)
+        const deleteResult = await farmDao.deleteFarm(farmId);
+
+        if (!deleteResult) {
+            return res.status(404).json({
+                status: "error",
+                message: "Farm not found or already deleted"
+            });
+        }
+
+        // Delete S3 folder
+        try {
+            await delectfloders3(`plantcareuser/owner${ownerId}/farm${farmId}`);
+        } catch (s3Error) {
+            console.warn("S3 deletion warning:", s3Error);
+            // Continue even if S3 deletion fails
+        }
+
+        res.status(200).json({
+            status: "success",
+            message: "Farm deleted successfully and farm indexes reordered"
+        });
+
+    } catch (err) {
+        console.error("Error deleting farm:", err);
+
+        if (err.isJoi) {
+            return res.status(400).json({
+                status: "error",
+                message: err.details[0].message,
+            });
+        }
+
+        res.status(500).json({
+            status: "error",
+            error: "Internal Server Error"
         });
     }
 });
