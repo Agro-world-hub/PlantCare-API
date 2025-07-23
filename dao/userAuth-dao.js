@@ -237,17 +237,19 @@ exports.getUserProfileById = (userId, ownerId) => {
                 });
             } else {
                 // If no user found in users table, check the farmstaff table
-                const farmstaffSql = `
-                    SELECT 
-                        id,
-                        firstName,
-                        lastName,
-                        phoneNumber,
-                        LEFT(Image, 256) as profileImage,
-                        role
-                    FROM farmstaff 
-                    WHERE id = ?
-                `;
+                    const farmstaffSql = `
+                        SELECT 
+                            farmstaff.id,
+                            farmstaff.firstName,
+                            farmstaff.lastName,
+                            farmstaff.phoneNumber,
+                            LEFT(farmstaff.Image, 256) as profileImage,
+                            LEFT(users.farmerQr, 256) as farmerQr, 
+                            farmstaff.role
+                        FROM farmstaff 
+                        LEFT JOIN users ON farmstaff.ownerId = users.id 
+                        WHERE farmstaff.id = ?
+                    `;
 
                 db.plantcare.query(farmstaffSql, [userId], (err, farmstaffResults) => {
                     if (err) {

@@ -40,6 +40,7 @@ exports.getPaginatedPosts = (limit, offset) => {
       SELECT 
         p.id,
         p.userId,
+        p.staffId,
         p.heading,
         p.message,
         p.postimage,
@@ -118,25 +119,61 @@ exports.getTotalPostsCount = () => {
 //     });
 //   });
 // };
+// exports.getRepliesByChatId = (chatId) => {
+//   return new Promise((resolve, reject) => {
+//     const sql = `
+//             SELECT 
+//                 r.replyId, 
+//                 r.replyMessage, 
+//                 r.createdAt, 
+//                 IFNULL(u.firstName, 'Admin') AS userName  -- If replyId is null, use 'Admin' as the userName
+//             FROM 
+//                 publicforumreplies r
+//             JOIN 
+//                 publicforumposts p ON r.chatId = p.id
+//             LEFT JOIN  -- Use LEFT JOIN to handle cases where there's no matching user
+//                 users u ON r.replyId = u.id
+//             WHERE 
+//                 r.chatId = ?
+//             ORDER BY 
+//                 r.createdAt DESC
+//         `;
+//     db.plantcare.query(sql, [chatId], (err, results) => {
+//       if (err) {
+//         reject(err);
+//       } else {
+//         resolve(results);
+//         console.log(results);
+//       }
+//     });
+//   });
+// };
+
 exports.getRepliesByChatId = (chatId) => {
   return new Promise((resolve, reject) => {
     const sql = `
-            SELECT 
-                r.replyId, 
-                r.replyMessage, 
-                r.createdAt, 
-                IFNULL(u.firstName, 'Admin') AS userName  -- If replyId is null, use 'Admin' as the userName
-            FROM 
-                publicforumreplies r
-            JOIN 
-                publicforumposts p ON r.chatId = p.id
-            LEFT JOIN  -- Use LEFT JOIN to handle cases where there's no matching user
-                users u ON r.replyId = u.id
-            WHERE 
-                r.chatId = ?
-            ORDER BY 
-                r.createdAt DESC
-        `;
+      SELECT 
+          r.replyId, 
+          r.replyStaffId,
+          r.replyMessage, 
+          r.createdAt, 
+          CASE 
+            WHEN r.replyStaffId IS NOT NULL THEN f.firstName
+            ELSE u.firstName
+          END AS userName
+      FROM 
+          publicforumreplies r
+      JOIN 
+          publicforumposts p ON r.chatId = p.id
+      LEFT JOIN   
+          users u ON r.replyId = u.id
+      LEFT JOIN
+          farmstaff f ON r.replyStaffId = f.id
+      WHERE 
+          r.chatId = ?
+      ORDER BY 
+          r.createdAt DESC
+    `;
     db.plantcare.query(sql, [chatId], (err, results) => {
       if (err) {
         reject(err);
@@ -149,11 +186,35 @@ exports.getRepliesByChatId = (chatId) => {
 };
 
 
-exports.createReply = (chatId, replyId, replyMessage) => {
+
+// exports.createReply = (chatId, replyId, replyMessage, userId, role) => {
+//   return new Promise((resolve, reject) => {
+//     const sql =
+//       "INSERT INTO publicforumreplies (chatId, replyId, replyMessage) VALUES (?, ?, ?)";
+//     db.plantcare.query(sql, [chatId, replyId, replyMessage], (err, result) => {
+//       if (err) {
+//         reject(err);
+//       } else {
+//         resolve(result.insertId); 
+//       }
+//     });
+//   });
+// };
+exports.createReply = (chatId, replyId, replyMessage, userId, role) => {
   return new Promise((resolve, reject) => {
-    const sql =
-      "INSERT INTO publicforumreplies (chatId, replyId, replyMessage) VALUES (?, ?, ?)";
-    db.plantcare.query(sql, [chatId, replyId, replyMessage], (err, result) => {
+    let sql;
+    let values;
+
+    // Check role and insert accordingly
+    if (role === "Owner") {
+      sql = "INSERT INTO publicforumreplies (chatId, replyId, replyMessage) VALUES (?, ?, ?)";
+      values = [chatId, replyId, replyMessage];
+    } else {
+      sql = "INSERT INTO publicforumreplies (chatId, replyId, replyMessage,replyStaffId) VALUES (?, ?, ?, ?)";
+      values = [chatId, replyId, replyMessage, userId]; // Assign staffId if role is not Owner
+    }
+
+    db.plantcare.query(sql, values, (err, result) => {
       if (err) {
         reject(err);
       } else {
@@ -163,11 +224,36 @@ exports.createReply = (chatId, replyId, replyMessage) => {
   });
 };
 
-exports.createPost = (userId, heading, message, postimage) => {
+
+// exports.createPost = (userId, heading, message, postimage, ownerId) => {
+//   return new Promise((resolve, reject) => {
+//     const sql =
+//       "INSERT INTO publicforumposts (userId, heading, message, postimage) VALUES (?, ?, ?, ?)";
+//     db.plantcare.query(sql, [userId, heading, message, postimage], (err, result) => {
+//       if (err) {
+//         reject(err);
+//       } else {
+//         resolve(result.insertId); 
+//       }
+//     });
+//   });
+// };
+exports.createPost = (userId, heading, message, postimage, ownerId, role) => {
   return new Promise((resolve, reject) => {
-    const sql =
-      "INSERT INTO publicforumposts (userId, heading, message, postimage) VALUES (?, ?, ?, ?)";
-    db.plantcare.query(sql, [userId, heading, message, postimage], (err, result) => {
+    let sql;
+    let values;
+
+    if (role==="Owner") {
+      sql =
+      "INSERT INTO publicforumposts (userId, heading, message, postimage) VALUES (?, ?, ?, ?)"
+      values = [userId, heading, message, postimage];
+    } else {
+      sql =
+        "INSERT INTO publicforumposts (userId, heading, message, postimage, staffId) VALUES (?, ?, ?, ?, ?)";
+      values = [ownerId, heading, message, postimage, userId];
+    }
+
+    db.plantcare.query(sql, values, (err, result) => {
       if (err) {
         reject(err);
       } else {
