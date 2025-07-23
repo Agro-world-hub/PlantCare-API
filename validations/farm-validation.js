@@ -142,6 +142,11 @@ exports.signupCheckerSchema = Joi.object({
 
 });
 
+const getSlaveCropCalendarDaysSchema = Joi.object({
+    cropCalendarId: Joi.number().integer().required(),
+    farmId: Joi.number().integer().required()
+});
+
 
 // Export both schemas in a single module.exports
 module.exports = {
@@ -150,5 +155,6 @@ module.exports = {
     enrollSchema,
     signupCheckerSchema: exports.signupCheckerSchema,
     updateFarm,
-    createStaffMember
+    createStaffMember,
+    getSlaveCropCalendarDaysSchema
 };

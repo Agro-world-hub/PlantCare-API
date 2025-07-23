@@ -33,5 +33,9 @@ router.get('/get-staffMmber-byId/:staffMemberId', auth, farmEp.getStaffMember)
 
 router.put('/update-staffmember/:staffMemberId', auth, farmEp.updateStaffMember)
 
+router.get('/get-renew', auth, farmEp.getrenew);
+
+router.delete('/delete-farm/:farmId', auth, farmEp.deleteFarm);
+
 
 module.exports = router;
