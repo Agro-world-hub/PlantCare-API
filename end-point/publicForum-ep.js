@@ -64,12 +64,15 @@ exports.createReply = asyncHandler(async (req, res) => {
     const { chatId, replyMessage } = await createReplySchema.validateAsync(
       req.body
     );
-    const replyId = req.user.id;
-
+    const replyId = req.user.ownerId;
+    const userId = req.user.id;
+    const role = req.user.role
     const newReplyId = await postsDao.createReply(
       chatId,
       replyId,
-      replyMessage
+      replyMessage,
+      userId,
+      role
     );
 
     res.status(201).json({ message: "Reply created", replyId: newReplyId });
@@ -92,6 +95,7 @@ exports.createPost = asyncHandler(async (req, res) => {
     const { heading, message } = await createPostSchema.validateAsync(req.body);
     const userId = req.user.id;
     const ownerId = req.user.ownerId;
+    const role = req.user.role
 
     let postimage = null;
 
@@ -107,7 +111,9 @@ exports.createPost = asyncHandler(async (req, res) => {
       userId,
       heading,
       message,
-      postimage
+      postimage,
+      ownerId,
+      role
     );
 
     res.status(201).json({ message: "Post created", postId: newPostId });

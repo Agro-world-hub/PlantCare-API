@@ -35,7 +35,7 @@ exports.loginUser = async (req, res) => {
         // }
         // );
         const token = jwt.sign({
-            id: user.id, phoneNumber: user.phoneNumber, membership: user.membership, ownerId: user.ownerId
+            id: user.id, phoneNumber: user.phoneNumber, membership: user.membership, ownerId: user.ownerId, role:user.role
 
         },
             process.env.JWT_SECRET || Tl, {
@@ -58,7 +58,8 @@ exports.loginUser = async (req, res) => {
             user: {
                 membership: user.membership,
                 paymentActiveStatus: user.paymentActiveStatus,
-                farmCount: user.farmCount
+                farmCount: user.farmCount,
+                role: user.role
             }
         });
     } catch (err) {
@@ -167,21 +168,22 @@ exports.SignupUser = asyncHandler(async (req, res) => {
 exports.getProfileDetails = asyncHandler(async (req, res) => {
     try {
         const userId = req.user.id;
+        const ownerId = req.user.ownerId
 
         // Retrieve user profile from the database using the DAO function
-        const user = await userProfileDao.getUserProfileById(userId);
+        const user = await userProfileDao.getUserProfileById(userId, ownerId);
 
         console.log("usetttt", user)
 
         if (!user) {
             return res.status(404).json({
-                status: "error",
+                status: "error",    
                 message: "User not found",
             });
         }
 
         // Extract the additional fields from the user object
-        const { id, membership, paymentActiveStatus, farmCount, ...userProfile } = user;
+        const { id, membership, paymentActiveStatus, farmCount,role, ...userProfile } = user;
 
         res.status(200).json({
             status: "success",
@@ -190,7 +192,8 @@ exports.getProfileDetails = asyncHandler(async (req, res) => {
                 id: id,
                 membership: membership,
                 paymentActiveStatus: paymentActiveStatus,
-                farmCount: farmCount
+                farmCount: farmCount,
+                role: role
             }
         });
     } catch (err) {
