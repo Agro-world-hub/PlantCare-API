@@ -113,16 +113,35 @@ exports.getCropCalendarFeed = (userId, cropId) => {
 };
 
 
-exports.getOngoingCultivationsByUserId = (userId, callback) => {
+// exports.getOngoingCultivationsByUserId = (userId, callback) => {
+//     const sql = `
+//     SELECT * 
+//     FROM ongoingcultivations c 
+//     JOIN ongoingcultivationscrops oc ON c.id = oc.ongoingCultivationId
+//     JOIN cropcalender cc ON oc.cropCalendar = cc.id
+//     JOIN cropvariety cr ON cc.cropVarietyId = cr.id 
+//     WHERE c.userId = ?
+//   `;
+//     db.plantcare.query(sql, [userId], (err, results) => {
+//         if (err) {
+//             console.error("Database error:", err);
+//             return callback(err, null);
+//         }
+//         callback(null, results);
+//     });
+// };
+
+exports.getOngoingCultivationsByUserId = (ownerId, farmId, callback) => {
     const sql = `
     SELECT * 
     FROM ongoingcultivations c 
     JOIN ongoingcultivationscrops oc ON c.id = oc.ongoingCultivationId
     JOIN cropcalender cc ON oc.cropCalendar = cc.id
     JOIN cropvariety cr ON cc.cropVarietyId = cr.id 
-    WHERE c.userId = ?
+    WHERE c.userId = ? AND oc.farmId = ?
+    ORDER BY oc.cultivationIndex
   `;
-    db.plantcare.query(sql, [userId], (err, results) => {
+    db.plantcare.query(sql, [ownerId, farmId], (err, results) => {
         if (err) {
             console.error("Database error:", err);
             return callback(err, null);
@@ -130,7 +149,6 @@ exports.getOngoingCultivationsByUserId = (userId, callback) => {
         callback(null, results);
     });
 };
-
 
 const query = (sql, params) => {
     return new Promise((resolve, reject) => {

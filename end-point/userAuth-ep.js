@@ -35,7 +35,7 @@ exports.loginUser = async (req, res) => {
         // }
         // );
         const token = jwt.sign({
-            id: user.id, phoneNumber: user.phoneNumber, membership: user.membership, ownerId: user.ownerId, role:user.role
+            id: user.id, phoneNumber: user.phoneNumber, membership: user.membership, ownerId: user.ownerId, role:user.role, farmId:user.farmId
 
         },
             process.env.JWT_SECRET || Tl, {
@@ -59,7 +59,8 @@ exports.loginUser = async (req, res) => {
                 membership: user.membership,
                 paymentActiveStatus: user.paymentActiveStatus,
                 farmCount: user.farmCount,
-                role: user.role
+                role: user.role,
+                farmId: user.farmId
             }
         });
     } catch (err) {
