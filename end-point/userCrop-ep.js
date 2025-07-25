@@ -111,7 +111,7 @@ exports.CropCalanderFeed = asyncHandler(async (req, res) => {
             });
         }
 
-        const userId = req.user.id;
+        const userId = req.user.ownerId;
         const cropId = req.params.cropid;
 
         const results = await cropDao.getCropCalendarFeed(userId, cropId);
@@ -144,9 +144,11 @@ exports.OngoingCultivaionGetById = asyncHandler(async (req, res) => {
             });
         }
 
-        const userId = req.user.id;
+        const ownerId = req.user.ownerId;
+        const farmId = req.user.farmId;
+        console.log("farm and usrid", farmId, ownerId)
 
-        cropDao.getOngoingCultivationsByUserId(userId, (err, results) => {
+        cropDao.getOngoingCultivationsByUserId(ownerId, farmId, (err, results) => {
             if (err) {
                 console.error("Error fetching data from DAO:", err);
                 return res.status(500).json({
@@ -181,7 +183,7 @@ exports.enroll = asyncHandler(async (req, res) => {
         const extentac = req.body.extentac || '0';
         const extentp = req.body.extentp || '0';
         const startDate = req.body.startDate;
-        const userId = req.user.id;
+        const userId = req.user.ownerId;
 
         const { error } = enrollSchema.validate({
             extentha,
@@ -370,7 +372,7 @@ exports.getSlaveCropCalendarDaysByUserAndCrop = asyncHandler(async (req, res) =>
         // Validate parameters
         await getSlaveCropCalendarDaysSchema.validateAsync(req.params);
 
-        const userId = req.user.id;
+        const userId = req.user.ownerId;
         const cropCalendarId = req.params.cropCalendarId;
         const farmId = req.params.farmId;
 
@@ -409,10 +411,11 @@ exports.getSlaveCropCalendarDaysByUserAndCrop = asyncHandler(async (req, res) =>
 
 
 exports.getSlaveCropCalendarPrgress = asyncHandler(async (req, res) => {
+    console.log("hittt")
     try {
         await getSlaveCropCalendarDaysSchema.validateAsync(req.params);
 
-        const userId = req.user.id;
+        const userId = req.user.ownerId;
         const cropCalendarId = req.params.cropCalendarId;
         const farmId = req.params.farmId
 
@@ -447,6 +450,7 @@ exports.updateCropCalendarStatus = asyncHandler(async (req, res) => {
         await updateCropCalendarStatusSchema.validateAsync(req.body);
 
         const { id, status } = req.body;
+        // const userId = req.user.ownerId;
         console.log(id)
         const currentTime = new Date();
 
@@ -465,7 +469,7 @@ exports.updateCropCalendarStatus = asyncHandler(async (req, res) => {
             cropCalendarId,
             days,
             startingDate,
-            userId,
+            userId
         } = currentTask;
 
         if (currentStatus === "completed" && status === "pending") {
@@ -651,7 +655,7 @@ exports.addGeoLocation = asyncHandler(async (req, res) => {
 
 exports.getUploadedImagesCount = asyncHandler(async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = req.user.ownerId;
         const cropId = req.params.cropId;
 
         const results = await cropDao.getUploadedImagesCount(userId, cropId);

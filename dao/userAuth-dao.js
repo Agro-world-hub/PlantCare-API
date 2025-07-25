@@ -59,6 +59,7 @@ exports.loginUser = (phonenumber) => {
                     WHERE f.userId = u.id
                 ) AS farmCount,
                  'Owner' AS role,
+                 NULL AS farmId,
                  u.id AS ownerId
             FROM users u
             LEFT JOIN membershippayment mp ON u.id = mp.userId

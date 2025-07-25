@@ -46,15 +46,22 @@ exports.getPaginatedPosts = (limit, offset) => {
         p.postimage,
         p.createdAt,
         COUNT(r.chatId) AS replyCount,
-        COALESCE(CONCAT(u.firstName, ' ', u.lastName), CONCAT(s.firstName, ' ', s.lastName)) AS userName
-      FROM 
+COALESCE(
+          CONCAT(
+            CASE 
+              WHEN p.staffId IS NOT NULL THEN CONCAT(s.firstName, ' ', s.lastName)
+              ELSE CONCAT(u.firstName, ' ', u.lastName)
+            END
+          )
+        ) AS userName
+       FROM 
         publicforumposts p
       LEFT JOIN 
         publicforumreplies r ON p.id = r.chatId
       LEFT JOIN
         users u ON p.userId = u.id
       LEFT JOIN
-        farmstaff s ON p.userId = s.id
+        farmstaff s ON p.staffId = s.id
       GROUP BY 
         p.id, u.firstName, u.lastName, s.firstName, s.lastName
       ORDER BY 
