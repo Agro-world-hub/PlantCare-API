@@ -117,7 +117,7 @@ exports.getCropCalendarFeed = (userId, cropId) => {
 
 exports.getOngoingCultivationsByUserId = (ownerId, farmId, callback) => {
     const sql = `
-    SELECT * 
+    SELECT *, oc.id AS ongoingCropId, oc.id AS onCulscropID 
     FROM ongoingcultivations c 
     JOIN ongoingcultivationscrops oc ON c.id = oc.ongoingCultivationId
     JOIN cropcalender cc ON oc.cropCalendar = cc.id

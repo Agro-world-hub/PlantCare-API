@@ -206,7 +206,7 @@ exports.createCropCertificatePayment = asyncHandler(async (req, res) => {
 exports.getCropHvaeCertificate = asyncHandler(async (req, res) => {
     try {
         const cropId = req.params.cropId;
-        const userId = req.user.id;
+        const userId = req.user.ownerId || req.user.id;
 
         const certificates = await certificateDao.getCropHvaeCertificate(
             cropId,
@@ -238,7 +238,7 @@ exports.getCropHvaeCertificate = asyncHandler(async (req, res) => {
 exports.getCropCertificateByid = asyncHandler(async (req, res) => {
     try {
         const cropId = req.params.cropId;
-        const userId = req.user.id;
+        const userId = req.user.ownerId || req.user.id;
 
         const certificates = await certificateDao.getCropCertificateByid(
             cropId,
@@ -391,7 +391,7 @@ exports.getFarmcertificateCrop = asyncHandler(async (req, res) => {
 exports.getFarmCertificate = asyncHandler(async (req, res) => {
     try {
         const farmId = req.params.farmId;
-        const userId = req.user.id;
+        const userId = req.user.ownerId || req.user.id;
 
         const certificates = await certificateDao.getFarmCertificate(
             farmId,
@@ -422,7 +422,7 @@ exports.getFarmCertificate = asyncHandler(async (req, res) => {
 exports.getFarmCertificateTask = asyncHandler(async (req, res) => {
     try {
         const farmId = req.params.farmId;
-        const userId = req.user.id;
+        const userId = req.user.ownerId || req.user.id;
 
         let certificates = await certificateDao.getFarmCertificateTask(
             farmId,
@@ -522,7 +522,7 @@ exports.getCropNames = asyncHandler(async (req, res) => {
 
 exports.getFarms = asyncHandler(async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = req.user.ownerId || req.user.id;
         const farmId = req.params.farmId;
 
         const farms = await certificateDao.getAllFarmByUserId(userId, farmId);

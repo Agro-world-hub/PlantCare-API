@@ -205,7 +205,7 @@ exports.CreatePayment = asyncHandler(async (req, res) => {
 
 exports.OngoingCultivaionGetById = asyncHandler(async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = req.user.ownerId || req.user.id;
         const farmId = req.params.farmId;
 
         if (!farmId) {
