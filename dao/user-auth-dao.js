@@ -165,8 +165,8 @@ exports.getUserProfileById = (userId, ownerId, userrole) => {
                     u.city,
                     u.route,
                     u.language,
-                    LEFT(u.profileImage, 256) AS profileImage,
-                    LEFT(u.farmerQr, 256) AS farmerQr,
+                    u.profileImage,
+                    u.farmerQr,
                     u.membership,
                     COALESCE(mp.activeStatus, 0) as activeStatus,
                     'Owner' AS role
@@ -215,26 +215,27 @@ exports.getUserProfileById = (userId, ownerId, userrole) => {
             });
         } else if (["Manager", "Supervisor", "Laborer"].includes(userrole)) {
             const farmstaffSql = `
-                SELECT 
-                    farmstaff.id,
-                    farmstaff.firstName,
-                    farmstaff.lastName,
-                     CASE 
-                        WHEN farmstaff.phoneNumber IS NOT NULL AND farmstaff.phoneNumber != '' 
-                        THEN CONCAT(farmstaff.phoneCode, farmstaff.phoneNumber)
-                        ELSE farmstaff.phoneNumber
-                    END as phoneNumber,
-                    LEFT(farmstaff.Image, 256) as profileImage,
-                    LEFT(users.farmerQr, 256) as farmerQr, 
-                    farmstaff.role,
-                    farmstaff.farmId,
-                    farms.farmName,
-                    farms.imageId
-                FROM farmstaff 
-                LEFT JOIN users ON farmstaff.ownerId = users.id 
-                LEFT JOIN farms ON farmstaff.farmId = farms.id
-                WHERE farmstaff.id = ?
-            `;
+    SELECT 
+        farmstaff.id,
+        farmstaff.firstName,
+        farmstaff.lastName,
+         CASE 
+            WHEN farmstaff.phoneNumber IS NOT NULL AND farmstaff.phoneNumber != '' 
+            THEN CONCAT(farmstaff.phoneCode, farmstaff.phoneNumber)
+            ELSE farmstaff.phoneNumber
+        END as phoneNumber,
+        farmstaff.nic AS NICnumber,
+        farmstaff.Image as profileImage,
+        users.farmerQr as farmerQr,
+        farmstaff.role,
+        farmstaff.farmId,
+        farms.farmName,
+        farms.imageId
+    FROM farmstaff 
+    LEFT JOIN users ON farmstaff.ownerId = users.id 
+    LEFT JOIN farms ON farmstaff.farmId = farms.id
+    WHERE farmstaff.id = ?
+`;
 
             db.plantcare.query(farmstaffSql, [userId], (err, farmstaffResults) => {
                 if (err) {
@@ -534,7 +535,7 @@ exports.deleteUserById = async (userId) => {
 
 exports.getFeedbackOptions = async () => {
     return new Promise((resolve, reject) => {
-        const query = "SELECT * FROM feedbacklist";
+        const query = "SELECT * FROM feedbacklist ORDER BY orderNumber ASC, id ASC";
 
         db.plantcare.query(query, (err, result) => {
             if (err) {

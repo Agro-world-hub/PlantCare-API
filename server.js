@@ -8,10 +8,7 @@ require("dotenv").config();
 const {
   plantcare,
   collectionofficer,
-  marketPlace,
   admin,
-  investments,
-  govishop,
 } = require("./startup/database");
 
 // Import routes
@@ -34,6 +31,7 @@ const calendartaskImages = require("./routes/crop-calendar-images-routes");
 const reportRoutes = require("./routes/report-routes");
 const pentionRoutes = require("./routes/pension-routes");
 const goviShopRoutes = require("./routes/govi-shop-routes");
+const { startCronJobs } = require("./startup/cron");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -89,7 +87,7 @@ const configureMiddleware = () => {
 const registerRoutes = () => {
   const authorBasePath = process.env.AUTHOR || "/api";
 
-  // Public routes (no auth required)
+  // Public routes 
   app.use("/api/news", newsRoutes);
   app.use("/api/crop", cropRoutes);
   app.use("/api/market-price", MarketPriceRoutes);
@@ -173,10 +171,7 @@ const initializeServer = () => {
     console.log("\n🔍 Testing database connections...");
     testDatabaseConnection(plantcare, "PlantCare");
     testDatabaseConnection(collectionofficer, "CollectionOfficer");
-    testDatabaseConnection(marketPlace, "MarketPlace");
     testDatabaseConnection(admin, "Admin");
-    testDatabaseConnection(investments, "Investment");
-    testDatabaseConnection(govishop, "Govishop");
 
     // Start server
     app.listen(port, () => {
@@ -186,6 +181,9 @@ const initializeServer = () => {
       console.log(`📝 Test endpoint: http://localhost:${port}/test`);
       console.log(`\n✅ All systems operational\n`);
     });
+
+    // Start background cron / interval jobs
+    startCronJobs();
 
   } catch (error) {
     console.error("❌ Failed to initialize server:", error);
